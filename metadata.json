@@ -1,0 +1,6 @@
+{
+  "name": "PRIME AI",
+  "description": "Your 24/7 Autonomous AI COO & CEO Digital Twin - Neural voice cloning, executive tone matrices, high-velocity inbox triage, Closer AI sales coaching, Hiring AI candidate ranking, Growth Lab audits, Strategy Board 90-day plans, Board Pack generator, Ad Spend & Invoices Cash Flow Guard, and D3.js Executive ROI Calculator for subscription cost justification.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

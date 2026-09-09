@@ -1,0 +1,19 @@
+{
+  "name": "PRIME AI — Your 24/7 AI Chief of Operations",
+  "short_name": "PRIME AI",
+  "description": "Autonomous Executive Inbox Triage, Sales Coaching, Meeting AI Synthesis, Growth Audits, and 90-Day Strategy Board for modern enterprises.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0A0A0A",
+  "theme_color": "#FFD700",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["business", "productivity", "utilities"]
+}
