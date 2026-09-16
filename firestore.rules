@@ -2,7 +2,22 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     match /profiles/{userId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
+      allow read, write: if true;
+    }
+    match /analytics_visitors/{visitorId} {
+      allow read, write: if true;
+    }
+    match /analytics_summary/{docId} {
+      allow read, write: if true;
+    }
+    match /visitor_sessions/{sessionId} {
+      allow read, write: if true;
+    }
+    match /feedback_tickets/{ticketId} {
+      allow read, write: if true;
+    }
+    match /admin_leads/{leadId} {
+      allow read, write: if true;
     }
     match /documents/{docId} {
       allow read, write: if request.auth != null && (resource == null || resource.data.userId == request.auth.uid) && (request.resource.data.userId == request.auth.uid);

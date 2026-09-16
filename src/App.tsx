@@ -32,7 +32,7 @@ import { MobileInstallModal } from './components/MobileInstallModal';
 import { TrialBanner } from './components/TrialBanner';
 import { FeaturePaywallOverlay } from './components/FeaturePaywallOverlay';
 import { UpgradePaywallModal } from './components/UpgradePaywallModal';
-import { fetchUserEmails } from './services/db';
+import { fetchUserEmails, logVisitorSession } from './services/db';
 import { 
   LayoutDashboard, 
   Inbox, 
@@ -76,6 +76,7 @@ function AppContent() {
   const [mobileInstallModalOpen, setMobileInstallModalOpen] = useState(false);
   const [isDemoMode, setIsDemoMode] = useState(false);
   const [pendingEmailsCount, setPendingEmailsCount] = useState(0);
+  const [savePromptReason, setSavePromptReason] = useState<string | null>(null);
 
   // Global Cmd + K / Ctrl + K shortcut
   useEffect(() => {
@@ -87,6 +88,18 @@ function AppContent() {
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
+  // Global listener for "Save" actions while in demo mode
+  useEffect(() => {
+    const handleSaveAuthPrompt = (e: any) => {
+      const reason = e.detail?.reason || "Enter your email to save your changes and activate full 14-day free access.";
+      setAuthMode('signup');
+      setSavePromptReason(reason);
+      setAuthModalOpen(true);
+    };
+    window.addEventListener('prime_prompt_save_auth', handleSaveAuthPrompt as any);
+    return () => window.removeEventListener('prime_prompt_save_auth', handleSaveAuthPrompt as any);
   }, []);
 
   // Sync route on auth state changes (Rule 4: Free users can still login and see dashboard)
@@ -115,16 +128,31 @@ function AppContent() {
     }
   }, [user, currentView]);
 
-  const handleOpenAuth = (mode: 'login' | 'signup' | 'verify-email' | 'forgot-password') => {
+  // Real-time visitor & session tracking (Tracks Demo vs Registered Account visitors)
+  useEffect(() => {
+    if (loading) return;
+    const vType = user ? 'REGISTERED_ACCOUNT' : (isDemoMode ? 'DEMO_GUEST' : 'LANDING_VISITOR');
+    logVisitorSession({
+      visitorType: vType,
+      userId: user?.uid,
+      userEmail: user?.email || undefined,
+      userName: profile?.displayName || user?.displayName || undefined,
+      companyId: profile?.companyId,
+      companyName: profile?.companyName,
+      entryPath: currentView === 'landing' ? '/' : `/${currentView}`
+    }).catch(() => {});
+  }, [user, isDemoMode, currentView, loading]);
+
+  const handleOpenAuth = (mode: 'login' | 'signup' | 'verify-email' | 'forgot-password', reason?: string) => {
     setAuthMode(mode);
+    setSavePromptReason(reason || null);
     setAuthModalOpen(true);
   };
 
   const handleNavigate = (view: string) => {
     if (['dashboard', 'radar', 'inbox', 'plans', 'white-label', 'admin', 'closer', 'hiring', 'meetings', 'growth', 'strategy', 'board-pack', 'docs', 'brain', 'twin', 'ad-spend', 'cashflow-guard', 'roi-calculator', 'feedback'].includes(view)) {
       if (!user && !isDemoMode) {
-        handleOpenAuth('login');
-        return;
+        setIsDemoMode(true);
       }
       setCurrentView(view as any);
     } else {
@@ -368,8 +396,8 @@ function AppContent() {
             {currentView === 'feedback' && <FeedbackHubView />}
           </main>
 
-          {/* Mobile Bottom Navigation Bar (6 Tabs: Command, Radar, Inbox, Brain, Plans, Admin) */}
-          <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#0E0E0E]/95 backdrop-blur-xl border-t border-white/5 grid grid-cols-6 items-center py-2.5 px-1">
+          {/* Mobile Bottom Navigation Bar */}
+          <div className={`md:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#0E0E0E]/95 backdrop-blur-xl border-t border-white/5 grid ${isAdmin ? 'grid-cols-6' : 'grid-cols-5'} items-center py-2.5 px-1`}>
             <button
               onClick={() => handleNavigate('dashboard')}
               className={`flex flex-col items-center justify-center gap-1 text-[9px] sm:text-[10px] font-bold ${
@@ -421,15 +449,17 @@ function AppContent() {
               <CreditCard className="w-4 h-4" />
               <span className="truncate">Plans</span>
             </button>
-            <button
-              onClick={() => handleNavigate('admin')}
-              className={`flex flex-col items-center justify-center gap-1 text-[9px] sm:text-[10px] font-bold ${
-                currentView === 'admin' ? 'text-emerald-400' : 'text-white/40'
-              }`}
-            >
-              <ShieldCheck className="w-4 h-4" />
-              <span className="truncate">Admin</span>
-            </button>
+            {isAdmin && (
+              <button
+                onClick={() => handleNavigate('admin')}
+                className={`flex flex-col items-center justify-center gap-1 text-[9px] sm:text-[10px] font-bold ${
+                  currentView === 'admin' ? 'text-emerald-400' : 'text-white/40'
+                }`}
+              >
+                <ShieldCheck className="w-4 h-4" />
+                <span className="truncate">Admin</span>
+              </button>
+            )}
           </div>
         </div>
       )}
@@ -441,10 +471,15 @@ function AppContent() {
       <AuthModal
         isOpen={authModalOpen}
         initialMode={authMode}
-        onClose={() => setAuthModalOpen(false)}
+        savePromptReason={savePromptReason}
+        onClose={() => {
+          setAuthModalOpen(false);
+          setSavePromptReason(null);
+        }}
         onSuccess={() => {
           setIsDemoMode(false);
           setAuthModalOpen(false);
+          setSavePromptReason(null);
           setCurrentView('dashboard');
         }}
       />

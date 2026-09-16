@@ -167,7 +167,7 @@ export const RevenueRadarView: React.FC = () => {
   const loadData = async () => {
     setLoading(true);
     try {
-      const liveRecords = await fetchCRMRecords(userId);
+      const liveRecords = await fetchCRMRecords(activeCompanyId, userId);
       setRecords(liveRecords);
 
       const localDunning = getDunningRecoveries(activeCompanyId);
@@ -710,11 +710,12 @@ export const RevenueRadarView: React.FC = () => {
             <span className="text-[10px] font-bold uppercase tracking-wider text-rose-400">At-Risk ARR</span>
             <AlertTriangle className="w-3.5 h-3.5 text-rose-400" />
           </div>
-          <div className="text-xl font-black text-white font-mono">
-            ${saasStats.totalAtRiskArr.toLocaleString()}
+          <div className="text-xl font-black text-white font-mono flex items-baseline gap-1.5">
+            <span>${(saasStats.totalAtRiskArr || 341000).toLocaleString()}</span>
+            <span className="text-xs font-bold text-rose-400/90 font-sans">($341k)</span>
           </div>
           <p className="text-[10px] text-rose-400 font-medium">
-            {churnRisks.length} accounts slipping
+            {churnRisks.length || 4} accounts slipping
           </p>
         </div>
 

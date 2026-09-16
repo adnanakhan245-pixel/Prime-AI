@@ -35,6 +35,60 @@ interface AiDraftModalState {
   copied: boolean;
 }
 
+const DEMO_INBOX_EMAILS: EmailItem[] = [
+  {
+    id: 'demo_email_1',
+    userId: 'demo_user',
+    companyId: 'demo_company',
+    sender: 'Marc Vance',
+    senderEmail: 'marc.vance@enterprise-oracle.com',
+    subject: 'Q3 Enterprise Expansion & Custom SLA Finalization ($420k ARR)',
+    snippet: 'We reviewed the master agreement and are ready to lock in the 3-year term...',
+    fullBody: 'Hello Executive Team,\n\nFollowing our executive alignment call on Thursday, Oracle Alliances is prepared to sign the $420,000 multi-year expansion contract. Before our CFO signs off on Friday, we need written confirmation on 99.99% uptime guarantees and dedicated engineering SLA response within 15 minutes.\n\nPlease confirm approval so we can route the DocuSign.\n\nBest,\nMarc Vance\nEVP Global Alliances',
+    urgency: 'HIGH',
+    category: 'CLIENT',
+    receivedAt: new Date(Date.now() - 14 * 60 * 1000).toISOString(),
+    status: 'PENDING_REVIEW',
+    aiKeyTakeaway: 'Oracle is ready to execute a $420,000 ARR 3-year contract expansion pending final written confirmation on 99.99% SLA uptime.',
+    aiSuggestedAction: 'Approve the SLA guarantees and dispatch the closing confirmation to Marc Vance before Friday 5 PM.',
+    aiDraftReply: 'Hi Marc,\n\nThank you for following up. We are pleased to confirm our full executive approval on the 99.99% uptime SLA and 15-minute response window.\n\nOur VP of Engineering has co-signed the guarantee appendix. Please proceed with routing the DocuSign for mutual execution.\n\nBest regards,\nExecutive Office | PRIME AI'
+  },
+  {
+    id: 'demo_email_2',
+    userId: 'demo_user',
+    companyId: 'demo_company',
+    sender: 'Elena Rostova',
+    senderEmail: 'elena@benchmarkvp.com',
+    subject: 'Follow-up: Series B Lead Investor Syndicate & Pre-Emptive Terms',
+    snippet: 'Our investment committee met this morning and we would like to schedule a private partner session...',
+    fullBody: 'Dear Founder,\n\nOur investment committee convened this morning to review your ARR trajectory and the 78% net retention metrics. We are eager to lead the upcoming round and have drafted a pre-emptive term sheet.\n\nAre you available for a 20-minute private partner sync tomorrow at 2:00 PM EST?\n\nWarm regards,\nElena Rostova\nGeneral Partner, Benchmark',
+    urgency: 'HIGH',
+    category: 'INVESTOR',
+    receivedAt: new Date(Date.now() - 60 * 60 * 1000).toISOString(),
+    status: 'PENDING_REVIEW',
+    aiKeyTakeaway: 'Benchmark Investment Committee completed review with strong conviction to lead Series B with pre-emptive terms; requested 20-minute sync tomorrow.',
+    aiSuggestedAction: 'Confirm 2:00 PM EST partner calendar slot and attach updated Q3 audit brief.',
+    aiDraftReply: 'Hi Elena,\n\nThank you for the update and your committee\'s conviction. Tomorrow at 2:00 PM EST works seamlessly for our executive team.\n\nI have locked the slot and attached our latest Q3 audited growth metrics. Looking forward to our discussion.\n\nBest regards,\nExecutive Office | PRIME AI'
+  },
+  {
+    id: 'demo_email_3',
+    userId: 'demo_user',
+    companyId: 'demo_company',
+    sender: 'David Chen',
+    senderEmail: 'david.chen@globallogistics.io',
+    subject: 'Contract Renegotiation: 25% Volume Discount Request on GPU Infrastructure',
+    snippet: 'Due to our planned scale to 500k monthly transactions, we are requesting volume pricing...',
+    fullBody: 'Hello Operations Team,\n\nAs our transaction volume surpasses 500,000 monthly operations, we are evaluating our infrastructure vendor allocations. We are requesting a 25% volume discount on Tier-3 compute tiers or a customized 2-year rollover discount.\n\nLet us know if you can accommodate this before our quarterly budget freeze.\n\nSincerely,\nDavid Chen\nCTO, Global Logistics Corp',
+    urgency: 'MEDIUM',
+    category: 'CLIENT',
+    receivedAt: new Date(Date.now() - 180 * 60 * 1000).toISOString(),
+    status: 'PENDING_REVIEW',
+    aiKeyTakeaway: 'Enterprise client requesting 25% discount due to 500k monthly volume scale before their quarterly budget freeze.',
+    aiSuggestedAction: 'Offer alternative 15% annual commit discount or custom dedicated GPU routing without margin degradation.',
+    aiDraftReply: 'Hi David,\n\nThank you for sharing your growth projections. To support your scale without impacting dedicated compute availability, we can offer a 15% discount structured under a 24-month annual commit with priority GPU routing.\n\nLet us know if this aligns with your budget objectives so we can prepare the addendum.\n\nBest regards,\nExecutive Office | PRIME AI'
+  }
+];
+
 export const InboxView: React.FC = () => {
   const { user, profile, companyId } = useAuth();
   const [emails, setEmails] = useState<EmailItem[]>([]);
@@ -53,23 +107,42 @@ export const InboxView: React.FC = () => {
   const [aiModal, setAiModal] = useState<AiDraftModalState | null>(null);
 
   const loadEmails = async () => {
-    if (!user) return;
+    if (!user) {
+      setEmails(DEMO_INBOX_EMAILS);
+      if (!selectedEmail) {
+        setSelectedEmail(DEMO_INBOX_EMAILS[0]);
+        setDraftContent(DEMO_INBOX_EMAILS[0].aiDraftReply || '');
+      }
+      setLoading(false);
+      return;
+    }
     try {
       setLoading(true);
       const data = await fetchUserEmails(companyId, user.uid);
-      setEmails(data);
-      if (data.length > 0 && !selectedEmail) {
-        setSelectedEmail(data[0]);
-        setDraftContent(data[0].aiDraftReply || '');
-      } else if (selectedEmail) {
-        const found = data.find(e => e.id === selectedEmail.id);
-        if (found) {
-          setSelectedEmail(found);
-          setDraftContent(found.aiDraftReply || '');
+      if (data.length === 0) {
+        setEmails(DEMO_INBOX_EMAILS);
+        if (!selectedEmail) {
+          setSelectedEmail(DEMO_INBOX_EMAILS[0]);
+          setDraftContent(DEMO_INBOX_EMAILS[0].aiDraftReply || '');
+        }
+      } else {
+        setEmails(data);
+        if (data.length > 0 && !selectedEmail) {
+          setSelectedEmail(data[0]);
+          setDraftContent(data[0].aiDraftReply || '');
+        } else if (selectedEmail) {
+          const found = data.find(e => e.id === selectedEmail.id);
+          if (found) {
+            setSelectedEmail(found);
+            setDraftContent(found.aiDraftReply || '');
+          }
         }
       }
     } catch (err) {
       console.error('Error fetching emails:', err);
+      setEmails(DEMO_INBOX_EMAILS);
+      setSelectedEmail(DEMO_INBOX_EMAILS[0]);
+      setDraftContent(DEMO_INBOX_EMAILS[0].aiDraftReply || '');
     } finally {
       setLoading(false);
     }
@@ -130,13 +203,19 @@ export const InboxView: React.FC = () => {
 
   // Approve & Send from Modal -> Saves to Supabase table 'emails' with status='sent'
   const handleModalApproveAndSend = async () => {
-    if (!user || !aiModal) return;
+    if (!aiModal) return;
+    if (!user) {
+      window.dispatchEvent(new CustomEvent('prime_prompt_save_auth', {
+        detail: { reason: 'Enter your email to approve, sync, and dispatch your executive emails.' }
+      }));
+      return;
+    }
     try {
       setAiModal(prev => prev ? { ...prev, sending: true } : null);
       const finalReply = aiModal.isEditing ? aiModal.editedText : aiModal.draftReply;
 
       // 1. Save to Supabase table 'emails' with status='sent'
-      const supabaseResult = await saveSentEmailToSupabase(user.uid, aiModal.email, finalReply);
+      await saveSentEmailToSupabase(user.uid, aiModal.email, finalReply);
 
       // 2. Update local DB & Firestore email status
       await updateEmailStatus(companyId, user.uid, aiModal.email.id, 'SENT', finalReply);
@@ -153,7 +232,13 @@ export const InboxView: React.FC = () => {
   };
 
   const handleApproveAndSend = async () => {
-    if (!user || !selectedEmail) return;
+    if (!selectedEmail) return;
+    if (!user) {
+      window.dispatchEvent(new CustomEvent('prime_prompt_save_auth', {
+        detail: { reason: 'Enter your email to approve, sync, and dispatch your executive emails.' }
+      }));
+      return;
+    }
     try {
       await saveSentEmailToSupabase(user.uid, selectedEmail, draftContent);
       await updateEmailStatus(companyId, user.uid, selectedEmail.id, 'SENT', draftContent);
@@ -165,7 +250,13 @@ export const InboxView: React.FC = () => {
   };
 
   const handleIgnore = async () => {
-    if (!user || !selectedEmail) return;
+    if (!selectedEmail) return;
+    if (!user) {
+      window.dispatchEvent(new CustomEvent('prime_prompt_save_auth', {
+        detail: { reason: 'Enter your email to save and archive decisions in your workspace.' }
+      }));
+      return;
+    }
     try {
       await updateEmailStatus(companyId, user.uid, selectedEmail.id, 'IGNORED');
       showToast(`✓ Email from ${selectedEmail.sender} marked as Ignored & Archived in Supabase.`);
@@ -178,7 +269,12 @@ export const InboxView: React.FC = () => {
   // 1-Click Approve directly from Inbox card
   const handleOneClickApprove = async (email: EmailItem, e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
-    if (!user) return;
+    if (!user) {
+      window.dispatchEvent(new CustomEvent('prime_prompt_save_auth', {
+        detail: { reason: 'Enter your email to approve, sync, and dispatch your executive emails.' }
+      }));
+      return;
+    }
     try {
       const replyBody = email.aiDraftReply || `Hi ${email.sender.split(' ')[0]},\n\nThank you for reaching out regarding "${email.subject}". Our executive team has reviewed and fully approved the milestones.\n\nOur operations lead will dispatch finalized confirmation by end of day.\n\nBest regards,\nExecutive Office | ${profile?.companyName || 'Apex Enterprises'}`;
       await saveSentEmailToSupabase(user.uid, email, replyBody);
@@ -194,7 +290,12 @@ export const InboxView: React.FC = () => {
   // 1-Click Reject directly from Inbox card
   const handleOneClickReject = async (email: EmailItem, e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
-    if (!user) return;
+    if (!user) {
+      window.dispatchEvent(new CustomEvent('prime_prompt_save_auth', {
+        detail: { reason: 'Enter your email to save and archive decisions in your workspace.' }
+      }));
+      return;
+    }
     try {
       await updateEmailStatus(companyId, user.uid, email.id, 'IGNORED');
       showToast(`✓ 1-Click Rejected: ${email.sender} archived in Supabase.`);

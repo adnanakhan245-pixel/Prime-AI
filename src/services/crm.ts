@@ -68,14 +68,17 @@ export function getSupabaseClient(): SupabaseClient | null {
   }
 }
 
-// Seed initial realistic company CRM deals isolated to companyId - empty by default for fresh tenant workspaces
+// Seed initial realistic company CRM deals isolated to companyId - empty for fresh workspace
 export function getInitialSeedCRMData(companyId: string, userId: string, companyName?: string): CRMRecord[] {
   return [];
 }
 
-// Empty by default for pure real workspace data
+// Enterprise CRM Telemetry dataset - returns empty array to ensure zero fake/sample deals
 export function getSampleEnterpriseCRMData(companyId: string, userId: string, companyName?: string): CRMRecord[] {
   return [];
+}
+
+function _legacySampleCRMData(companyId: string, userId: string, companyName?: string): CRMRecord[] {
   const now = Date.now();
   const dayMs = 24 * 60 * 60 * 1000;
   const cName = companyName || 'Company';
@@ -447,29 +450,44 @@ export async function fetchCRMRecords(companyId: string, userId?: string): Promi
     const raw = localStorage.getItem(CRM_STORAGE_KEY_PREFIX + resolvedCompanyId);
     if (raw) {
       const records: CRMRecord[] = JSON.parse(raw);
-      // Purge any legacy sample/mock records
-      const genuineRecords = records.filter(r => 
-        !r.id.startsWith('crm_risk_') && 
-        !r.id.startsWith('crm_hot_') && 
-        !r.id.startsWith('crm_pipe_') &&
-        r.accountName !== 'Stellar Dynamics Corp' &&
-        r.accountName !== 'Vanguard Health Systems' &&
-        r.accountName !== 'Nexis Logistics International' &&
-        r.accountName !== 'OmniCloud Infrastructure' &&
-        r.accountName !== 'Aegis BioTech Global' &&
-        r.accountName !== 'Finova Financial Tech' &&
-        r.accountName !== 'Horizon Media Group' &&
-        r.accountName !== 'Apex Quantum Technologies'
-      );
-      if (genuineRecords.length !== records.length) {
-        saveRecordsToLocal(resolvedCompanyId, genuineRecords);
+      if (Array.isArray(records)) {
+        // Strip out any previously seeded sample / mock deals
+        const genuine = records.filter(r => 
+          r && 
+          !r.id.startsWith('crm_risk_') && 
+          !r.id.startsWith('crm_hot_') && 
+          !r.id.startsWith('crm_pipe_') &&
+          r.accountName !== 'Stellar Dynamics Corp' &&
+          r.accountName !== 'Vanguard Health Systems' &&
+          r.accountName !== 'Apex Logistics International' &&
+          r.accountName !== 'Meridian Capital Group' &&
+          r.accountName !== 'CyberShield Defense Systems' &&
+          r.accountName !== 'Kallisto AI Robotics' &&
+          r.accountName !== 'Nexus Media Labs' &&
+          r.accountName !== 'Horizon Aerospace'
+        );
+        if (genuine.length !== records.length) {
+          saveRecordsToLocal(resolvedCompanyId, genuine);
+        }
+        return genuine.map(r => {
+          const lastDate = r.lastContactDate || new Date().toISOString();
+          const dateParsed = new Date(lastDate).getTime();
+          const daysAgo = isNaN(dateParsed) ? 0 : Math.max(0, Math.floor((Date.now() - dateParsed) / (1000 * 60 * 60 * 24)));
+          return { 
+            ...r, 
+            companyId: resolvedCompanyId, 
+            daysSinceLastContact: daysAgo,
+            dealValue: Number(r.dealValue || 0),
+            stage: r.stage || 'Active Client',
+            type: r.type || 'CLIENT',
+            healthScore: Number(r.healthScore || 70)
+          };
+        });
       }
-      return genuineRecords.map(r => {
-        const daysAgo = Math.max(0, Math.floor((Date.now() - new Date(r.lastContactDate).getTime()) / (1000 * 60 * 60 * 24)));
-        return { ...r, companyId: resolvedCompanyId, daysSinceLastContact: daysAgo };
-      });
     }
-  } catch (e) {}
+  } catch (e) {
+    console.warn('Error reading CRM from localStorage:', e);
+  }
 
   return [];
 }
@@ -652,31 +670,37 @@ export async function attachAIActionToRecord(
 // --- STRICT FILTERING RULES ---
 
 export function filterAtRiskClients(records: CRMRecord[]): CRMRecord[] {
+  if (!Array.isArray(records)) return [];
   return records.filter(record => {
+    if (!record) return false;
     const isClient = record.type === 'CLIENT' || record.stage === 'Active Client' || record.stage === 'Churn Risk';
-    const isSilentOver10Days = record.daysSinceLastContact > 10;
-    const isHighValueOver10k = record.dealValue > 10000;
+    const isSilentOver10Days = (record.daysSinceLastContact || 0) > 10;
+    const isHighValueOver10k = (record.dealValue || 0) > 10000;
 
     return isClient && isSilentOver10Days && isHighValueOver10k;
   });
 }
 
 export function filterHotLeads(records: CRMRecord[]): CRMRecord[] {
+  if (!Array.isArray(records)) return [];
   return records.filter(record => {
-    const isNegotiationStage = record.stage.toLowerCase() === 'negotiation';
-    const isHighValueOver20k = record.dealValue > 20000;
+    if (!record) return false;
+    const stageStr = (record.stage || '').toLowerCase();
+    const isNegotiationStage = stageStr === 'negotiation';
+    const isHighValueOver20k = (record.dealValue || 0) > 20000;
 
     return isNegotiationStage && isHighValueOver20k;
   });
 }
 
 export function calculateRadarStats(records: CRMRecord[]): RevenueRadarStats {
-  const atRisk = filterAtRiskClients(records);
-  const hotLeads = filterHotLeads(records);
+  const safeRecords = Array.isArray(records) ? records.filter(Boolean) : [];
+  const atRisk = filterAtRiskClients(safeRecords);
+  const hotLeads = filterHotLeads(safeRecords);
 
-  const atRiskPipelineValue = atRisk.reduce((acc, r) => acc + (r.dealValue || 0), 0);
-  const hotLeadsPipelineValue = hotLeads.reduce((acc, r) => acc + (r.dealValue || 0), 0);
-  const totalPipelineValue = records.reduce((acc, r) => acc + (r.dealValue || 0), 0);
+  const atRiskPipelineValue = atRisk.reduce((acc, r) => acc + (r?.dealValue || 0), 0);
+  const hotLeadsPipelineValue = hotLeads.reduce((acc, r) => acc + (r?.dealValue || 0), 0);
+  const totalPipelineValue = safeRecords.reduce((acc, r) => acc + (r?.dealValue || 0), 0);
 
   return {
     atRiskCount: atRisk.length,
@@ -684,6 +708,6 @@ export function calculateRadarStats(records: CRMRecord[]): RevenueRadarStats {
     hotLeadsCount: hotLeads.length,
     hotLeadsPipelineValue,
     totalPipelineValue,
-    totalAccountsCount: records.length,
+    totalAccountsCount: safeRecords.length,
   };
 }

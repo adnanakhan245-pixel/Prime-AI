@@ -43,7 +43,10 @@ import {
   FeedbackTicket,
   FeedbackStatus,
   FeedbackType,
-  ChangelogItem
+  ChangelogItem,
+  VisitorSessionRecord,
+  VisitorTrafficStats,
+  VisitorType
 } from '../types';
 import { getSupabaseClient } from './crm';
 
@@ -339,6 +342,13 @@ export async function fetchAdminDashboardData(): Promise<AdminDashboardData> {
   const activeTrialsCount = companiesList.filter(c => c.status === 'trialing').length;
   const paidCompaniesCount = companiesList.filter(c => c.status === 'active').length;
 
+  let visitorStats: VisitorTrafficStats | undefined;
+  try {
+    visitorStats = await fetchVisitorAnalytics();
+  } catch (err) {
+    console.warn('Failed to load visitor analytics for admin:', err);
+  }
+
   return {
     totalUsers,
     totalMRR,
@@ -349,7 +359,8 @@ export async function fetchAdminDashboardData(): Promise<AdminDashboardData> {
     activeTrialsCount,
     paidCompaniesCount,
     companies: companiesList,
-    users: usersList
+    users: usersList,
+    visitorStats
   };
 }
 
@@ -817,14 +828,25 @@ export async function fetchUserDocuments(userId: string): Promise<DocumentItem[]
     if (!snapshot.empty) {
       const docs: DocumentItem[] = [];
       snapshot.forEach(d => docs.push({ id: d.id, ...d.data() } as DocumentItem));
-      const sorted = docs.sort((a, b) => new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime());
+      const sorted = docs
+        .filter(d => !d.id.startsWith('doc_q3_') && !d.id.startsWith('doc_apex_') && !d.title.includes('Q3 Enterprise Board Pack') && !d.title.includes('Apex Operations Scaling'))
+        .sort((a, b) => new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime());
       setLocalStore('docs_' + userId, sorted);
       return sorted;
     }
   } catch (err) {}
 
   const local = getLocalStore<DocumentItem[]>('docs_' + userId, []);
-  return local;
+  const genuine = local.filter(d => 
+    !d.id.startsWith('doc_q3_') &&
+    !d.id.startsWith('doc_apex_') &&
+    !d.title.includes('Q3 Enterprise Board Pack') &&
+    !d.title.includes('Apex Operations Scaling')
+  );
+  if (genuine.length !== local.length) {
+    setLocalStore('docs_' + userId, genuine);
+  }
+  return genuine;
 }
 
 export async function saveDocument(documentData: Omit<DocumentItem, 'id'>): Promise<DocumentItem> {
@@ -926,6 +948,7 @@ export async function fetchUserActivities(userId: string, maxItems = 10): Promis
       const acts: ActivityItem[] = [];
       snapshot.forEach(d => acts.push({ id: d.id, ...d.data() } as ActivityItem));
       const sorted = acts
+        .filter(a => a.id !== '1' && a.id !== '2' && a.id !== '3' && !a.id.includes('_001') && !a.id.includes('_002') && !a.id.includes('_003'))
         .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
         .slice(0, maxItems);
       setLocalStore('acts_' + userId, sorted);
@@ -934,7 +957,16 @@ export async function fetchUserActivities(userId: string, maxItems = 10): Promis
   } catch (err) {}
 
   const local = getLocalStore<ActivityItem[]>('acts_' + userId, []);
-  const genuine = local.filter(a => a.id !== '1' && a.id !== '2' && a.id !== '3');
+  const genuine = local.filter(a => 
+    a.id !== '1' && a.id !== '2' && a.id !== '3' &&
+    !a.id.includes('_001') && !a.id.includes('_002') && !a.id.includes('_003') &&
+    !a.title.includes('Approved Board Pack Response') &&
+    !a.title.includes('Analyzed Q3 Operations Strategy') &&
+    !a.title.includes('Triage: $420k Enterprise Contract')
+  );
+  if (genuine.length !== local.length) {
+    setLocalStore('acts_' + userId, genuine);
+  }
   return genuine.slice(0, maxItems);
 }
 
@@ -1307,7 +1339,13 @@ export async function fetchUserHiringAnalyses(userId: string): Promise<HiringAna
 
   // 2. Return local storage
   const localHiring = getLocalStore<HiringAnalysis[]>(`hiring_${userId}`, []);
-  return localHiring;
+  const genuine = localHiring.filter(h => 
+    !h.topCandidates?.some(c => c.name === 'Alexandra Chen' && c.match_score === 96)
+  );
+  if (genuine.length !== localHiring.length) {
+    setLocalStore(`hiring_${userId}`, genuine);
+  }
+  return genuine;
 }
 
 // ==========================================
@@ -2552,22 +2590,226 @@ export async function fetchChangelogs(): Promise<ChangelogItem[]> {
         'White-label portal now supports custom CNAME domains and client login branding.',
         'Added automated CEO Briefing voice synthesis in 5 executive tones.'
       ]
-    },
-    {
-      version: 'v2.1.0',
-      releaseDate: 'July 2026',
-      title: 'AI Document Intelligence & Fast Contract Risk Flagging',
-      description: 'Ultra-fast PDF parsing and legal contract risk analysis with sub-second execution.',
-      tag: 'IMPROVEMENT',
-      requestedByCompany: 'Apex Growth Labs',
-      changes: [
-        'Instant multi-page PDF analysis for legal contracts and NDA liabilities.',
-        'Added 1-click executive action items extraction directly to calendar.',
-        'Sub-second query response time on high-volume document stores.'
-      ]
     }
   ];
 }
+
+// =========================================================================
+// 12. REAL-TIME VISITOR & SESSION TRAFFIC INTELLIGENCE (DEMO VS REGISTERED)
+// =========================================================================
+
+function detectVisitorDevice(): { deviceType: 'Desktop' | 'Mobile' | 'Tablet'; browser: string } {
+  if (typeof window === 'undefined') {
+    return { deviceType: 'Desktop', browser: 'Chrome' };
+  }
+  const ua = navigator.userAgent || '';
+  let deviceType: 'Desktop' | 'Mobile' | 'Tablet' = 'Desktop';
+  if (/iPad|Tablet|(android(?!.*mobile))/i.test(ua)) {
+    deviceType = 'Tablet';
+  } else if (/Mobile|Android|iP(hone|od)|IEMobile|BlackBerry|Kindle|Silk-Accelerated/i.test(ua)) {
+    deviceType = 'Mobile';
+  }
+
+  let browser = 'Chrome';
+  if (/Edg/i.test(ua)) browser = 'Edge';
+  else if (/Firefox|FxiOS/i.test(ua)) browser = 'Firefox';
+  else if (/Safari/i.test(ua) && !/Chrome/i.test(ua)) browser = 'Safari';
+  else if (/Chrome|CriOS/i.test(ua)) browser = 'Chrome';
+  else if (/MSIE|Trident/i.test(ua)) browser = 'IE';
+
+  return { deviceType, browser };
+}
+
+function detectReferrer(): string {
+  if (typeof document === 'undefined') return 'Direct Access';
+  const ref = document.referrer;
+  if (!ref) return 'Direct / Link Share';
+  try {
+    const url = new URL(ref);
+    const host = url.hostname.toLowerCase();
+    if (host.includes('t.co') || host.includes('twitter') || host.includes('x.com')) return 'Twitter / X';
+    if (host.includes('linkedin.com') || host.includes('lnkd.in')) return 'LinkedIn';
+    if (host.includes('google')) return 'Google Search';
+    if (host.includes('facebook') || host.includes('instagram')) return 'Meta / Instagram';
+    if (host.includes('reddit')) return 'Reddit';
+    return url.hostname;
+  } catch (e) {
+    return 'Web Referral';
+  }
+}
+
+function getTodayDateKey(): string {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+const VISITOR_SESSION_STORAGE_KEY = 'prime_active_session_id';
+
+export function getOrCreateSessionId(): string {
+  const todayKey = getTodayDateKey();
+  try {
+    const existing = sessionStorage.getItem(VISITOR_SESSION_STORAGE_KEY);
+    if (existing && existing.startsWith(`sess_${todayKey}`)) {
+      return existing;
+    }
+    const newId = `sess_${todayKey}_${Math.random().toString(36).substring(2, 8)}`;
+    sessionStorage.setItem(VISITOR_SESSION_STORAGE_KEY, newId);
+    return newId;
+  } catch (e) {
+    return `sess_${todayKey}_${Date.now().toString(36)}`;
+  }
+}
+
+export interface LogVisitorOptions {
+  visitorType: VisitorType;
+  userId?: string;
+  userEmail?: string;
+  userName?: string;
+  companyId?: string;
+  companyName?: string;
+  entryPath?: string;
+}
+
+export async function logVisitorSession(options: LogVisitorOptions): Promise<VisitorSessionRecord> {
+  const sessionId = getOrCreateSessionId();
+  const dateKey = getTodayDateKey();
+  const now = new Date().toISOString();
+  const { deviceType, browser } = detectVisitorDevice();
+  const referrer = detectReferrer();
+
+  const existingSessions = getLocalStore<VisitorSessionRecord[]>('all_visitor_sessions', []);
+  const existing = existingSessions.find(s => s.id === sessionId);
+
+  const isSignupConversion = existing && existing.visitorType === 'DEMO_GUEST' && options.visitorType === 'REGISTERED_ACCOUNT';
+
+  const record: VisitorSessionRecord = {
+    id: sessionId,
+    visitorType: options.visitorType,
+    userId: options.userId || existing?.userId,
+    userEmail: options.userEmail || existing?.userEmail,
+    userName: options.userName || existing?.userName,
+    companyId: options.companyId || existing?.companyId,
+    companyName: options.companyName || existing?.companyName,
+    entryPath: options.entryPath || existing?.entryPath || '/',
+    deviceType: deviceType,
+    browser: browser,
+    referrer: referrer,
+    timestamp: existing ? existing.timestamp : now,
+    dateKey: dateKey,
+    actionsCount: (existing?.actionsCount || 0) + 1,
+    lastActiveAt: now,
+    convertedToSignup: isSignupConversion || existing?.convertedToSignup || false,
+  };
+
+  const updatedSessions = [record, ...existingSessions.filter(s => s.id !== sessionId)];
+  setLocalStore('all_visitor_sessions', updatedSessions);
+
+  // Sync to Firestore
+  try {
+    await setDoc(doc(db, 'visitor_sessions', sessionId), record, { merge: true });
+  } catch (e) {
+    // Local fallback resilient
+  }
+
+  return record;
+}
+
+export async function fetchVisitorAnalytics(): Promise<VisitorTrafficStats> {
+  const todayKey = getTodayDateKey();
+  let sessions: VisitorSessionRecord[] = [];
+
+  // 1. Try reading from Firestore
+  try {
+    const colRef = collection(db, 'visitor_sessions');
+    const snap = await getDocs(query(colRef, orderBy('lastActiveAt', 'desc'), limit(150)));
+    if (!snap.empty) {
+      snap.forEach(d => {
+        sessions.push(d.data() as VisitorSessionRecord);
+      });
+    }
+  } catch (e) {
+    // fallback
+  }
+
+  // Merge with local storage
+  const rawLocal = getLocalStore<VisitorSessionRecord[]>('all_visitor_sessions', []);
+  // Filter out any mock baseline sessions that were previously injected
+  const localSessions = rawLocal.filter(s => !s.id.includes('_demo_0') && !s.id.includes('_reg_0'));
+  if (localSessions.length !== rawLocal.length) {
+    setLocalStore('all_visitor_sessions', localSessions);
+  }
+
+  const mergedMap = new Map<string, VisitorSessionRecord>();
+  for (const s of sessions) {
+    if (!s.id.includes('_demo_0') && !s.id.includes('_reg_0')) {
+      mergedMap.set(s.id, s);
+    }
+  }
+  for (const s of localSessions) {
+    mergedMap.set(s.id, s);
+  }
+  sessions = Array.from(mergedMap.values());
+
+  // Calculate stats purely from real traffic
+  const nowMs = Date.now();
+  const fifteenMinsAgo = nowMs - 15 * 60 * 1000;
+
+  const todaySessions = sessions.filter(s => s.dateKey === todayKey);
+  const demoToday = todaySessions.filter(s => s.visitorType === 'DEMO_GUEST' || s.visitorType === 'LANDING_VISITOR');
+  const regToday = todaySessions.filter(s => s.visitorType === 'REGISTERED_ACCOUNT');
+
+  const activeNow = sessions.filter(s => {
+    const actTime = new Date(s.lastActiveAt).getTime();
+    return actTime >= fifteenMinsAgo;
+  }).length;
+
+  const convertedCount = todaySessions.filter(s => s.convertedToSignup).length;
+  const conversionRate = demoToday.length > 0 ? Math.round((convertedCount / demoToday.length) * 100) : 0;
+
+  const totalDemoAllTime = sessions.filter(s => s.visitorType === 'DEMO_GUEST' || s.visitorType === 'LANDING_VISITOR').length;
+  const totalRegAllTime = sessions.filter(s => s.visitorType === 'REGISTERED_ACCOUNT').length;
+
+  // Build 7-day daily trend
+  const dailyTrend: Array<{ dateKey: string; formattedDate: string; demoCount: number; registeredCount: number; totalCount: number }> = [];
+  
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(nowMs - i * 24 * 60 * 60 * 1000);
+    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    const daySessions = sessions.filter(s => s.dateKey === key);
+    const dayDemo = daySessions.filter(s => s.visitorType === 'DEMO_GUEST' || s.visitorType === 'LANDING_VISITOR').length;
+    const dayReg = daySessions.filter(s => s.visitorType === 'REGISTERED_ACCOUNT').length;
+
+    // Format readable label (e.g. "Today", "Yesterday", or "Tue 15")
+    let label = d.toLocaleDateString('en-US', { weekday: 'short', day: 'numeric' });
+    if (i === 0) label = 'Today';
+    else if (i === 1) label = 'Yesterday';
+
+    dailyTrend.push({
+      dateKey: key,
+      formattedDate: label,
+      demoCount: dayDemo,
+      registeredCount: dayReg,
+      totalCount: dayDemo + dayReg
+    });
+  }
+
+  // Sort recent sessions descending
+  const recentSessions = [...sessions].sort((a, b) => new Date(b.lastActiveAt).getTime() - new Date(a.lastActiveAt).getTime());
+
+  return {
+    totalVisitorsToday: todaySessions.length,
+    demoVisitorsToday: demoToday.length,
+    registeredUsersToday: regToday.length,
+    activeNowCount: Math.max(activeNow, 1),
+    conversionRateTodayPct: conversionRate,
+    totalVisitorsAllTime: sessions.length,
+    totalDemoAllTime,
+    totalRegisteredAllTime: totalRegAllTime,
+    dailyTrend,
+    recentSessions: recentSessions.slice(0, 50)
+  };
+}
+
 
 
 

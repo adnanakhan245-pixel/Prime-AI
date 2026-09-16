@@ -50,22 +50,14 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenAuth, onEnterDem
         <div className="bg-gradient-to-r from-amber-500/20 via-[#FFD700]/15 to-amber-500/20 border-b border-[#FFD700]/30 py-2.5 px-4 text-center text-xs sm:text-sm font-bold text-[#FFD700] flex flex-wrap items-center justify-center gap-3">
           <div className="flex items-center gap-2">
             <Sparkles className="w-4 h-4 text-[#FFD700] animate-pulse" />
-            <span>🎉 14-Day Free Trial (No Card Needed) — Or Test Drive Instantly:</span>
+            <span>🎉 Instant Live Access (No Registration or Card Needed) — Test Drive Now:</span>
           </div>
           <div className="flex items-center gap-2">
-            {onEnterDemo && (
-              <button 
-                onClick={onEnterDemo} 
-                className="px-3 py-1 rounded-full bg-amber-400/20 border border-amber-400/40 text-amber-300 text-xs font-black hover:bg-amber-400/30 transition-all cursor-pointer flex items-center gap-1 shadow-sm"
-              >
-                <span>🎮 Explore Live Sandbox →</span>
-              </button>
-            )}
             <button 
-              onClick={() => onOpenAuth('signup')} 
-              className="px-3 py-1 rounded-full bg-[#FFD700] text-black text-xs font-black hover:bg-white transition-all cursor-pointer shadow-sm"
+              onClick={onEnterDemo || (() => onOpenAuth('signup'))} 
+              className="px-3.5 py-1 rounded-full bg-[#FFD700] text-black text-xs font-black hover:bg-white transition-all cursor-pointer shadow-sm flex items-center gap-1"
             >
-              Claim 14 Days Free
+              <span>🎮 Launch Live Workspace Instantly →</span>
             </button>
           </div>
         </div>
@@ -75,28 +67,28 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenAuth, onEnterDem
           {/* Executive Badge */}
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-zinc-900/90 border border-amber-500/30 text-amber-300 text-xs font-semibold uppercase tracking-widest mb-6 shadow-[0_0_20px_rgba(255,215,0,0.15)]">
             <Crown className="w-4 h-4 text-amber-400" />
-            <span>14-Day Free Trial • No Credit Card Required</span>
+            <span>Autonomous Operations for Founders &amp; Executives • Instant Live Access</span>
           </div>
 
           {/* Hero Headline */}
           <h1 className="text-4xl sm:text-6xl lg:text-7xl font-extrabold tracking-tight font-sans max-w-5xl mx-auto leading-[1.1]">
-            PRIME AI — Your 24/7 <br />
-            <span className="gold-gradient-text font-serif">AI Chief of Operations</span>
+            Reclaim 223 Hours/Month. <br />
+            <span className="gold-gradient-text font-serif">Your AI C-Suite That Actually Does The Work.</span>
           </h1>
 
           {/* Subtitle */}
-          <p className="mt-6 text-lg sm:text-xl text-zinc-400 max-w-2xl mx-auto font-normal leading-relaxed">
-            Stop doing busywork. Let AI run your business. Executive inbox triage, autonomous document intelligence, and strategic operations command.
+          <p className="mt-6 text-lg sm:text-xl text-zinc-300 max-w-3xl mx-auto font-normal leading-relaxed">
+            Stop drowning in executive busywork. PRIME AI deploys an autonomous 24/7 AI COO, Closer, Cash Flow Guard, and Strategy Twin that actively triages inboxes, audits contracts, coaches sales pipelines, and prepares board packs.
           </p>
 
           {/* Hero CTAs */}
           <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
             <button
-              onClick={() => onOpenAuth('signup')}
+              onClick={onEnterDemo || (() => onOpenAuth('signup'))}
               className="w-full sm:w-auto px-8 py-4 rounded-xl text-base font-extrabold text-black bg-gradient-to-r from-[#FFD700] via-amber-300 to-[#FFC700] hover:brightness-110 shadow-[0_0_35px_rgba(255,215,0,0.45)] transition-all flex items-center justify-center gap-2.5 cursor-pointer group scale-105"
             >
               <Crown className="w-5 h-5 text-black" />
-              <span>Start 14-Day Free Trial</span>
+              <span>Explore Live Workspace Instantly</span>
               <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
             </button>
 
@@ -106,7 +98,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenAuth, onEnterDem
                 className="w-full sm:w-auto px-7 py-4 rounded-xl text-base font-bold text-[#FFD700] bg-[#FFD700]/10 hover:bg-[#FFD700]/20 border border-[#FFD700]/40 hover:border-[#FFD700] transition-all flex items-center justify-center gap-2.5 cursor-pointer shadow-[0_0_25px_rgba(255,215,0,0.15)] group"
               >
                 <Sparkles className="w-5 h-5 text-[#FFD700] animate-pulse" />
-                <span>Explore Live Demo (No Sign-Up)</span>
+                <span>Test Drive Sandbox (No Email Required)</span>
                 <ChevronRight className="w-4 h-4 text-[#FFD700] transition-transform group-hover:translate-x-1" />
               </button>
             )}
@@ -122,13 +114,13 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenAuth, onEnterDem
           {/* Free Trial Guarantee Sub-Pill */}
           <div className="mt-4 flex flex-wrap items-center justify-center gap-4 text-xs text-amber-400/90 font-medium">
             <span className="flex items-center gap-1.5">
-              <Check className="w-4 h-4 text-[#FFD700]" /> 14 Days 100% Free Access
+              <Check className="w-4 h-4 text-[#FFD700]" /> Instant Access (No Email or Signup Required)
+            </span>
+            <span className="flex items-center gap-1.5">
+              <Check className="w-4 h-4 text-[#FFD700]" /> 100% Free 14-Day Full Access
             </span>
             <span className="flex items-center gap-1.5">
               <Check className="w-4 h-4 text-[#FFD700]" /> No Credit Card Required
-            </span>
-            <span className="flex items-center gap-1.5">
-              <Check className="w-4 h-4 text-[#FFD700]" /> Instant 60-Second Setup
             </span>
           </div>
 
@@ -306,11 +298,15 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenAuth, onEnterDem
       {/* 3 CORE PILLARS / CARDS SECTION */}
       <section id="features" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 border-t border-zinc-800/80">
         <div className="text-center max-w-3xl mx-auto mb-16">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-amber-400/10 border border-amber-400/20 text-amber-300 text-xs font-semibold uppercase tracking-wider mb-4">
+            <Crown className="w-3.5 h-3.5 text-amber-400" />
+            <span>Autonomous Executive Infrastructure</span>
+          </div>
           <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight">
-            The Three Pillars of <span className="gold-gradient-text">PRIME AI</span>
+            Your Autonomous <span className="gold-gradient-text">AI C-Suite Fleet</span>
           </h2>
           <p className="mt-4 text-zinc-400 text-base">
-            Engineered exclusively for CEOs, Founders, and C-Suite Executives who refuse to waste hours on operational friction.
+            Engineered exclusively for CEOs, Founders, and C-Suite Executives to eliminate operational friction and reclaim 223+ hours every month.
           </p>
         </div>
 
@@ -344,10 +340,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenAuth, onEnterDem
             </div>
             <div className="mt-6 pt-4 border-t border-zinc-800/80">
               <button 
-                onClick={() => onOpenAuth('signup')} 
+                onClick={onEnterDemo || (() => onOpenAuth('signup'))} 
                 className="text-xs font-bold text-amber-400 group-hover:text-amber-300 flex items-center gap-1.5 cursor-pointer"
               >
-                <span>Explore Inbox Triage</span>
+                <span>Launch Inbox Triage Now</span>
                 <ChevronRight className="w-3.5 h-3.5" />
               </button>
             </div>
@@ -382,10 +378,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenAuth, onEnterDem
             </div>
             <div className="mt-6 pt-4 border-t border-zinc-800/80">
               <button 
-                onClick={() => onOpenAuth('signup')} 
+                onClick={onEnterDemo || (() => onOpenAuth('signup'))} 
                 className="text-xs font-bold text-amber-400 group-hover:text-amber-300 flex items-center gap-1.5 cursor-pointer"
               >
-                <span>Explore Document Intelligence</span>
+                <span>Launch Document Intelligence</span>
                 <ChevronRight className="w-3.5 h-3.5" />
               </button>
             </div>
@@ -420,10 +416,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenAuth, onEnterDem
             </div>
             <div className="mt-6 pt-4 border-t border-zinc-800/80">
               <button 
-                onClick={() => onOpenAuth('signup')} 
+                onClick={onEnterDemo || (() => onOpenAuth('signup'))} 
                 className="text-xs font-bold text-amber-400 group-hover:text-amber-300 flex items-center gap-1.5 cursor-pointer"
               >
-                <span>Consult PRIME Brain</span>
+                <span>Launch PRIME Brain</span>
                 <ChevronRight className="w-3.5 h-3.5" />
               </button>
             </div>
@@ -520,11 +516,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenAuth, onEnterDem
               </div>
 
               <button
-                onClick={() => onOpenAuth('signup')}
+                onClick={onEnterDemo || (() => onOpenAuth('signup'))}
                 className="w-full py-3.5 rounded-xl text-sm font-bold text-black bg-gradient-to-r from-amber-300 via-yellow-400 to-amber-500 hover:brightness-110 transition-all flex items-center justify-center gap-2 cursor-pointer shadow-[0_0_20px_rgba(255,215,0,0.25)]"
               >
                 <Crown className="w-4 h-4" />
-                <span>Claim Your Productivity Gains</span>
+                <span>Test Drive Interactive Productivity Hub</span>
               </button>
             </div>
           </div>
@@ -578,10 +574,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenAuth, onEnterDem
             </div>
             <div className="mt-6">
               <button
-                onClick={() => onOpenAuth('signup')}
+                onClick={onEnterDemo || (() => onOpenAuth('signup'))}
                 className="w-full py-3 rounded-xl text-xs font-bold text-white bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 transition-all cursor-pointer flex items-center justify-center gap-1.5"
               >
-                <span>Start 14-Day Trial</span>
+                <span>Launch Live Sandbox</span>
                 <ArrowRight className="w-3.5 h-3.5 text-[#FFD700]" />
               </button>
             </div>
@@ -625,11 +621,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenAuth, onEnterDem
             </div>
             <div className="mt-6">
               <button
-                onClick={() => onOpenAuth('signup')}
+                onClick={onEnterDemo || (() => onOpenAuth('signup'))}
                 className="w-full py-3 rounded-xl text-xs font-extrabold text-black bg-gradient-to-r from-amber-300 via-yellow-400 to-amber-500 hover:brightness-110 transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-[0_0_20px_rgba(255,215,0,0.25)]"
               >
                 <Crown className="w-3.5 h-3.5" />
-                <span>Start 14-Day Free Trial</span>
+                <span>Test Drive Growth Suite</span>
               </button>
             </div>
           </div>
@@ -672,11 +668,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenAuth, onEnterDem
             </div>
             <div className="mt-6">
               <button
-                onClick={() => onOpenAuth('signup')}
+                onClick={onEnterDemo || (() => onOpenAuth('signup'))}
                 className="w-full py-3 rounded-xl text-xs font-extrabold text-white bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-[0_0_20px_rgba(99,102,241,0.3)]"
               >
                 <Sparkles className="w-3.5 h-3.5" />
-                <span>Deploy Agency Portal</span>
+                <span>Launch Agency Portal</span>
               </button>
             </div>
           </div>
@@ -713,10 +709,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenAuth, onEnterDem
             </div>
             <div className="mt-6">
               <button
-                onClick={() => onOpenAuth('signup')}
+                onClick={onEnterDemo || (() => onOpenAuth('signup'))}
                 className="w-full py-3 rounded-xl text-xs font-bold text-white bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 transition-all cursor-pointer"
               >
-                Contact Enterprise Sales
+                Explore Enterprise Features
               </button>
             </div>
           </div>
@@ -735,11 +731,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenAuth, onEnterDem
           </p>
           <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
             <button
-              onClick={() => onOpenAuth('signup')}
+              onClick={onEnterDemo || (() => onOpenAuth('signup'))}
               className="px-8 py-4 rounded-xl text-sm font-extrabold text-black bg-gradient-to-r from-amber-300 via-yellow-400 to-amber-500 hover:brightness-110 shadow-[0_0_30px_rgba(255,215,0,0.3)] transition-all cursor-pointer inline-flex items-center gap-2"
             >
               <Crown className="w-4 h-4" />
-              <span>Start Your Free 14-Day Trial</span>
+              <span>Launch Live Workspace Now</span>
             </button>
             {onEnterDemo && (
               <button
@@ -747,7 +743,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenAuth, onEnterDem
                 className="px-6 py-4 rounded-xl text-sm font-bold text-[#FFD700] bg-[#FFD700]/10 hover:bg-[#FFD700]/20 border border-[#FFD700]/30 transition-all cursor-pointer inline-flex items-center gap-2"
               >
                 <Sparkles className="w-4 h-4 text-[#FFD700]" />
-                <span>Test Drive Live Sandbox First</span>
+                <span>Test Drive Sandbox First</span>
               </button>
             )}
           </div>

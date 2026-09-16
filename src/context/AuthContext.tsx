@@ -29,6 +29,7 @@ import {
   SAAS_PLANS
 } from '../services/subscription';
 import { createNewCompanyWorkspace, fetchCompanyById } from '../services/db';
+import { recordLeadSignup, recordVisitorHit } from '../services/analytics';
 
 interface AuthContextType {
   user: User | null;
@@ -80,6 +81,38 @@ const USER_PROFILE_STORAGE_KEY = 'prime_ai_user_profile';
 const ACTIVE_COMPANY_ID_KEY = 'prime_ai_active_company_id';
 const EMAIL_VERIFIED_KEY = 'prime_ai_email_verified_';
 const VERIFICATION_CODE_KEY = 'prime_ai_verify_code_';
+const REGISTERED_ACCOUNTS_KEY = 'prime_ai_registered_accounts';
+
+export interface RegisteredAccountRecord {
+  uid: string;
+  email: string;
+  password: string;
+  fullName: string;
+  companyName: string;
+  companyId: string;
+  industry: string;
+  role: string;
+  plan: PlanTier;
+  createdAt: string;
+  emailVerified: boolean;
+}
+
+export function getStoredAccounts(): Record<string, RegisteredAccountRecord> {
+  try {
+    const raw = localStorage.getItem(REGISTERED_ACCOUNTS_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch (e) {
+    return {};
+  }
+}
+
+export function saveStoredAccount(account: RegisteredAccountRecord): void {
+  try {
+    const accounts = getStoredAccounts();
+    accounts[account.email.toLowerCase().trim()] = account;
+    localStorage.setItem(REGISTERED_ACCOUNTS_KEY, JSON.stringify(accounts));
+  } catch (e) {}
+}
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
@@ -147,7 +180,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       let resolvedCompanyId = localStorage.getItem(ACTIVE_COMPANY_ID_KEY) || 'comp_apex_01';
       let resolvedCompanyName = 'Apex Enterprises';
 
-      // 1. Check Supabase 'users' table to identify assigned company_id
+      // 1. Check registered accounts registry first for user workspace mapping
+      const storedAccounts = getStoredAccounts();
+      const localAccount = u.email ? storedAccounts[u.email.toLowerCase().trim()] : null;
+      if (localAccount) {
+        resolvedCompanyId = localAccount.companyId || resolvedCompanyId;
+        resolvedCompanyName = localAccount.companyName || resolvedCompanyName;
+      }
+
+      // 2. Check Supabase 'users' table to identify assigned company_id
       if (supabase && u.uid) {
         try {
           const { data, error } = await supabase
@@ -290,23 +331,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               setProfile(null);
             }
           } else {
-            // No saved session found; check if user explicitly requested demo before or start as null for clean auth
-            const hadSession = localStorage.getItem('prime_ai_had_session');
-            if (hadSession === 'true') {
-              const defaultUser = {
-                uid: 'user_ceo_01',
-                email: 'ceo@apexenterprise.com',
-                displayName: 'Alexander Vance',
-                photoURL: null,
-                emailVerified: true,
-                isAnonymous: false,
-              } as unknown as User;
-              setUser(defaultUser);
-              await fetchProfile(defaultUser);
-            } else {
-              setUser(null);
-              setProfile(null);
-            }
+            // No saved session found; clean logged-out state
+            setUser(null);
+            setProfile(null);
           }
           setLoading(false);
         }
@@ -443,10 +470,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (result.user) {
         localStorage.setItem('prime_ai_had_session', 'true');
         setUser(result.user);
+        localStorage.setItem(USER_SESSION_STORAGE_KEY, JSON.stringify(result.user));
         await fetchProfile(result.user);
       }
     } catch (error: any) {
       console.warn('Google sign in popup notice:', error);
+      if (error?.code === 'auth/popup-closed-by-user') {
+        throw new Error('Google Sign-In window was closed. Please try again.');
+      }
       throw error;
     } finally {
       setLoading(false);
@@ -456,23 +487,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signInWithEmail = async (email: string, pass: string) => {
     setLoading(true);
     try {
-      localStorage.setItem('prime_ai_had_session', 'true');
-      const isLocallyVerified = localStorage.getItem(EMAIL_VERIFIED_KEY + email) === 'true';
+      const normalizedEmail = email.trim().toLowerCase();
+      if (!normalizedEmail || !pass) {
+        throw new Error('Please enter both your work email and password.');
+      }
+
+      const isLocallyVerified = localStorage.getItem(EMAIL_VERIFIED_KEY + normalizedEmail) === 'true';
       const supabase = getSupabaseClient();
       
       // 1. Try Supabase Auth password sign-in
       if (supabase) {
         try {
           const { data, error } = await supabase.auth.signInWithPassword({
-            email,
+            email: normalizedEmail,
             password: pass,
           });
 
           if (!error && data.user) {
             const supaUser = {
               uid: data.user.id,
-              email: data.user.email || null,
-              displayName: data.user.user_metadata?.full_name || email.split('@')[0] || 'Executive Leader',
+              email: data.user.email || normalizedEmail,
+              displayName: data.user.user_metadata?.full_name || normalizedEmail.split('@')[0] || 'Executive Leader',
               photoURL: null,
               emailVerified: isLocallyVerified || Boolean(data.user.confirmed_at),
               isAnonymous: false,
@@ -480,6 +515,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
             setUser(supaUser);
             localStorage.setItem(USER_SESSION_STORAGE_KEY, JSON.stringify(supaUser));
+            localStorage.setItem('prime_ai_had_session', 'true');
             await fetchProfile(supaUser);
             return;
           }
@@ -489,20 +525,86 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       // 2. Try Firebase Auth sign-in
-      const result = await signInWithEmailAndPassword(auth, email, pass);
-      if (result.user) {
-        const verifiedStatus = isLocallyVerified || result.user.emailVerified;
-        const appUser = {
-          ...result.user,
-          emailVerified: verifiedStatus,
-        } as unknown as User;
+      try {
+        const result = await signInWithEmailAndPassword(auth, normalizedEmail, pass);
+        if (result.user) {
+          const verifiedStatus = isLocallyVerified || result.user.emailVerified;
+          const appUser = {
+            ...result.user,
+            email: result.user.email || normalizedEmail,
+            emailVerified: verifiedStatus,
+          } as unknown as User;
 
-        setUser(appUser);
-        localStorage.setItem(USER_SESSION_STORAGE_KEY, JSON.stringify(appUser));
-        await fetchProfile(appUser);
+          setUser(appUser);
+          localStorage.setItem(USER_SESSION_STORAGE_KEY, JSON.stringify(appUser));
+          localStorage.setItem('prime_ai_had_session', 'true');
+          await fetchProfile(appUser);
+          return;
+        }
+      } catch (fbErr: any) {
+        console.warn('Firebase signIn notice:', fbErr?.code || fbErr?.message);
       }
+
+      // 3. Fallback: Check local & Firestore registered accounts repository
+      const storedAccounts = getStoredAccounts();
+      const localAccount = storedAccounts[normalizedEmail];
+
+      if (localAccount) {
+        if (localAccount.password === pass) {
+          const verifiedStatus = isLocallyVerified || localAccount.emailVerified;
+          const appUser = {
+            uid: localAccount.uid,
+            email: localAccount.email,
+            displayName: localAccount.fullName,
+            photoURL: null,
+            emailVerified: verifiedStatus,
+            isAnonymous: false,
+          } as unknown as User;
+
+          const userProfile: UserProfile = {
+            uid: localAccount.uid,
+            email: localAccount.email,
+            displayName: localAccount.fullName,
+            companyId: localAccount.companyId,
+            companyName: localAccount.companyName,
+            role: localAccount.role || 'Chief Executive Officer',
+            plan: localAccount.plan || 'Pro',
+            emailVerified: verifiedStatus,
+            createdAt: localAccount.createdAt,
+            stats: {
+              emailsHandled: 16,
+              docsAnalyzed: 8,
+              hoursSaved: 32.0,
+            }
+          };
+
+          setUser(appUser);
+          setProfile(userProfile);
+          setCompanyId(localAccount.companyId);
+          setCompanyName(localAccount.companyName);
+          localStorage.setItem(USER_SESSION_STORAGE_KEY, JSON.stringify(appUser));
+          localStorage.setItem(USER_PROFILE_STORAGE_KEY, JSON.stringify(userProfile));
+          localStorage.setItem(ACTIVE_COMPANY_ID_KEY, localAccount.companyId);
+          localStorage.setItem('prime_ai_had_session', 'true');
+
+          await loadCompanyWorkspace(localAccount.companyId, localAccount.uid, localAccount.companyName);
+          await fetchSubscriptionData(localAccount.companyId, localAccount.uid);
+          return;
+        } else {
+          throw new Error('غلط پاس ورڈ۔ براہ کرم دوبارہ چیک کریں / Incorrect password. Please check your password or reset it.');
+        }
+      }
+
+      // 4. Check if demo executive email
+      if (normalizedEmail === 'ceo@apexenterprise.com' || normalizedEmail === 'demo@primeai.com') {
+        await loginAsDemoUser();
+        return;
+      }
+
+      // If no account found anywhere:
+      throw new Error('اس ای میل کا کوئی اکاؤنٹ نہیں ملا۔ براہ کرم "نیا اکاؤنٹ بنائیں" پر کلک کریں / No account found with this email. Please click "Create Account" to sign up for free.');
     } catch (error: any) {
-      console.warn('Email sign-in notice:', error);
+      console.warn('Email sign-in error:', error);
       throw error;
     } finally {
       setLoading(false);
@@ -519,7 +621,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   ): Promise<string> => {
     setLoading(true);
     try {
-      localStorage.setItem('prime_ai_had_session', 'true');
+      const normalizedEmail = email.trim().toLowerCase();
+      if (!normalizedEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
+        throw new Error('Please enter a valid business email address.');
+      }
+      if (!pass || pass.length < 6) {
+        throw new Error('پاس ورڈ کم از کم 6 حروف کا ہونا چاہیے / Password must be at least 6 characters.');
+      }
+      if (!compName || !compName.trim()) {
+        throw new Error('براہ کرم اپنی کمپنی کا نام درج کریں / Please provide your company or workspace name.');
+      }
+
+      // Check if email already registered in local accounts store
+      const storedAccounts = getStoredAccounts();
+      if (storedAccounts[normalizedEmail]) {
+        throw new Error('اس ای میل کا اکاؤنٹ پہلے سے موجود ہے۔ براہ کرم لاگ ان کریں / An account with this email already exists. Please sign in with your password.');
+      }
+
       const supabase = getSupabaseClient();
       let createdUserId: string = 'user_' + Date.now().toString(36);
 
@@ -527,7 +645,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (supabase) {
         try {
           const { data, error } = await supabase.auth.signUp({
-            email,
+            email: normalizedEmail,
             password: pass,
             options: {
               data: {
@@ -546,26 +664,31 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
       }
 
-      // 2. Fallback to Firebase Auth signup if needed
-      if (!createdUserId.startsWith('user_')) {
-        // Supabase created successfully
-      } else {
+      // 2. Try Firebase Auth signup if needed
+      if (createdUserId.startsWith('user_')) {
         try {
-          const result = await createUserWithEmailAndPassword(auth, email, pass);
+          const result = await createUserWithEmailAndPassword(auth, normalizedEmail, pass);
           createdUserId = result.user.uid;
           if (fullName) {
             await updateProfile(result.user, { displayName: fullName }).catch(() => {});
           }
-        } catch (e) {}
+        } catch (fbErr: any) {
+          console.warn('Firebase createUser notice:', fbErr?.code || fbErr?.message);
+          if (fbErr?.code === 'auth/email-already-in-use') {
+            throw new Error('اس ای میل کا اکاؤنٹ پہلے سے موجود ہے۔ براہ کرم لاگ ان کریں / This email is already registered. Please sign in instead.');
+          }
+          // Deterministic user ID fallback for local resilience
+          createdUserId = 'user_' + Math.abs(normalizedEmail.split('').reduce((a, b) => (((a << 5) - a) + b.charCodeAt(0)) | 0, 0)).toString(36) + '_' + Date.now().toString(36).slice(-4);
+        }
       }
 
       // 3. Generate verification PIN
       const pin = Math.floor(100000 + Math.random() * 900000).toString();
-      localStorage.setItem(VERIFICATION_CODE_KEY + email, pin);
+      localStorage.setItem(VERIFICATION_CODE_KEY + normalizedEmail, pin);
       localStorage.setItem('prime_ai_latest_pin', pin);
 
       // 4. MULTI-TENANT ONBOARDING STEP: Create Company Workspace
-      const newCompany = await createNewCompanyWorkspace(createdUserId, email, compName, industry);
+      const newCompany = await createNewCompanyWorkspace(createdUserId, normalizedEmail, compName, industry);
       setCompany(newCompany);
       setCompanyId(newCompany.id);
       setCompanyName(newCompany.name);
@@ -576,24 +699,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       await saveSubscriptionToSupabase(newTrial);
       setSubscription(newTrial);
 
+      // Auto-verify user email on signup for a frictionless, realistic enterprise onboarding
+      localStorage.setItem(EMAIL_VERIFIED_KEY + normalizedEmail, 'true');
+
       const appUser = {
         uid: createdUserId,
-        email: email,
+        email: normalizedEmail,
         displayName: fullName || 'Executive Leader',
         photoURL: null,
-        emailVerified: false,
+        emailVerified: true,
         isAnonymous: false,
       } as unknown as User;
 
       const newProfile: UserProfile = {
         uid: createdUserId,
-        email: email,
+        email: normalizedEmail,
         displayName: fullName || 'Executive Leader',
         companyId: newCompany.id,
         companyName: compName,
         role: 'Chief Executive Officer',
         plan: 'Pro',
-        emailVerified: false,
+        emailVerified: true,
         createdAt: new Date().toISOString(),
         stats: {
           emailsHandled: 0,
@@ -602,14 +728,46 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
       };
 
+      // 6. Save in Registered Accounts Store
+      saveStoredAccount({
+        uid: createdUserId,
+        email: normalizedEmail,
+        password: pass,
+        fullName: fullName || 'Executive Leader',
+        companyName: compName,
+        companyId: newCompany.id,
+        industry: industry || 'Enterprise SaaS',
+        role: 'Chief Executive Officer',
+        plan: 'Pro',
+        createdAt: new Date().toISOString(),
+        emailVerified: true,
+      });
+
+      // 7. Persist to Firestore profiles
+      try {
+        const docRef = doc(db, 'profiles', createdUserId);
+        await setDoc(docRef, newProfile, { merge: true });
+      } catch (e) {}
+
+      // 8. Set active user & profile
       setUser(appUser);
       setProfile(newProfile);
       localStorage.setItem(USER_SESSION_STORAGE_KEY, JSON.stringify(appUser));
       localStorage.setItem(USER_PROFILE_STORAGE_KEY, JSON.stringify(newProfile));
+      localStorage.setItem('prime_ai_had_session', 'true');
+
+      // 9. Real-time Lead Tracking for Founder
+      recordLeadSignup({
+        email: normalizedEmail,
+        fullName: fullName || 'Executive Leader',
+        companyName: compName,
+        industry: industry || 'Enterprise SaaS',
+        plan: '14-Day Pro Trial'
+      }).catch(() => {});
 
       return pin;
     } catch (error: any) {
-      console.warn('Sign-up notice:', error);
+      console.warn('Sign-up error:', error);
       throw error;
     } finally {
       setLoading(false);
@@ -621,18 +779,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       localStorage.removeItem(USER_SESSION_STORAGE_KEY);
       localStorage.removeItem(USER_PROFILE_STORAGE_KEY);
       localStorage.removeItem('prime_ai_had_session');
+      localStorage.removeItem(ACTIVE_COMPANY_ID_KEY);
       
       const supabase = getSupabaseClient();
       if (supabase) {
-        await supabase.auth.signOut();
+        await supabase.auth.signOut().catch(() => {});
       }
-      await fbSignOut(auth);
+      await fbSignOut(auth).catch(() => {});
     } catch (error) {
       console.error('Sign-out error:', error);
     } finally {
       setUser(null);
       setProfile(null);
       setSubscription(null);
+      setCompany(null);
+      setCompanyId('comp_apex_01');
+      setCompanyName('Apex Enterprises');
     }
   };
 
@@ -744,9 +906,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const aiActionsRemaining = subscription ? subscription.aiActionsRemaining : 50;
   const isEmailVerified = Boolean(user?.emailVerified || profile?.emailVerified);
   
-  // Admin role check: application owner, email with admin, or explicit master account
-  const isSuperAdminEmail = user?.email === 'adnanakhan245@gmail.com' || user?.email === 'ceo@apexenterprise.com' || user?.email?.includes('admin');
-  const isAdmin = Boolean(isSuperAdminEmail || profile?.role === 'Super Admin' || profile?.role === 'Master Admin');
+  // Admin role check: STRICTLY restricted exclusively to master owner
+  const isMasterOwner = user?.email?.toLowerCase().trim() === 'adnanakhan245@gmail.com';
+  const isAdmin = Boolean(isMasterOwner);
 
   const isFeatureLocked = (featureKey: string) => {
     if (isAdmin) return false;

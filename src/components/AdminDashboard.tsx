@@ -29,11 +29,23 @@ import {
   Share2,
   Mail,
   UserCheck,
-  Copy
+  Copy,
+  Activity,
+  Globe,
+  Laptop,
+  Smartphone,
+  Eye,
+  Filter,
+  MousePointerClick,
+  Calendar,
+  BarChart3,
+  Radio,
+  UserPlus,
+  Compass
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { fetchAdminDashboardData, fetchAllFeedbacks, updateFeedbackStatus } from '../services/db';
-import { AdminDashboardData, AdminUserRecord, CompanySummary, FeedbackTicket, FeedbackStatus } from '../types';
+import { fetchAdminDashboardData, fetchAllFeedbacks, updateFeedbackStatus, logVisitorSession } from '../services/db';
+import { AdminDashboardData, AdminUserRecord, CompanySummary, FeedbackTicket, FeedbackStatus, VisitorSessionRecord } from '../types';
 import { MarketingStudio } from './MarketingStudio';
 
 interface AdminDashboardProps {
@@ -48,10 +60,35 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) =>
   const [searchQuery, setSearchQuery] = useState('');
   const [planFilter, setPlanFilter] = useState<string>('all');
   const [switchingCompanyId, setSwitchingCompanyId] = useState<string | null>(null);
-  const [adminTab, setAdminTab] = useState<'users' | 'tenants' | 'feedback' | 'marketing'>('users');
+  const [adminTab, setAdminTab] = useState<'traffic' | 'users' | 'tenants' | 'feedback' | 'marketing'>('traffic');
   const [userSearch, setUserSearch] = useState('');
   const [userRoleFilter, setUserRoleFilter] = useState('all');
+  const [trafficFilter, setTrafficFilter] = useState<'all' | 'today' | 'demo' | 'registered' | 'mobile'>('all');
+  const [trafficSearch, setTrafficSearch] = useState('');
+  const [simulatingTraffic, setSimulatingTraffic] = useState(false);
   const [copiedEmail, setCopiedEmail] = useState<string | null>(null);
+
+  const handleSimulateTraffic = async (type: 'DEMO_GUEST' | 'REGISTERED_ACCOUNT') => {
+    setSimulatingTraffic(true);
+    try {
+      const samplePaths = ['/inbox', '/closer', '/cashflow-guard', '/roi-calculator', '/marketing', '/strategy'];
+      const randomPath = samplePaths[Math.floor(Math.random() * samplePaths.length)];
+      const isReg = type === 'REGISTERED_ACCOUNT';
+      const fakeEmail = isReg ? `executive.${Math.random().toString(36).substring(2, 6)}@enterprise.io` : undefined;
+      const fakeName = isReg ? `Enterprise Executive` : undefined;
+
+      await logVisitorSession({
+        visitorType: type,
+        userEmail: fakeEmail,
+        userName: fakeName,
+        companyName: isReg ? 'Apex Enterprise' : undefined,
+        entryPath: randomPath
+      });
+      await loadData();
+    } finally {
+      setSimulatingTraffic(false);
+    }
+  };
 
   const handleCopyEmail = (email: string) => {
     navigator.clipboard.writeText(email);
@@ -156,6 +193,33 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) =>
     return matchesQuery && matchesRole;
   });
 
+  const todayKey = new Date().toISOString().split('T')[0];
+  const allTrafficSessions = data?.visitorStats?.recentSessions || [];
+  
+  const filteredSessions = allTrafficSessions.filter(s => {
+    const q = trafficSearch.toLowerCase();
+    const matchesSearch = !q || 
+      (s.userEmail && s.userEmail.toLowerCase().includes(q)) ||
+      (s.userName && s.userName.toLowerCase().includes(q)) ||
+      (s.entryPath && s.entryPath.toLowerCase().includes(q)) ||
+      (s.browser && s.browser.toLowerCase().includes(q)) ||
+      (s.referrer && s.referrer.toLowerCase().includes(q)) ||
+      s.id.toLowerCase().includes(q);
+
+    let matchesFilter = true;
+    if (trafficFilter === 'today') {
+      matchesFilter = s.dateKey === todayKey;
+    } else if (trafficFilter === 'demo') {
+      matchesFilter = s.visitorType === 'DEMO_GUEST' || s.visitorType === 'LANDING_VISITOR';
+    } else if (trafficFilter === 'registered') {
+      matchesFilter = s.visitorType === 'REGISTERED_ACCOUNT';
+    } else if (trafficFilter === 'mobile') {
+      matchesFilter = s.deviceType === 'Mobile' || s.deviceType === 'Tablet';
+    }
+
+    return matchesSearch && matchesFilter;
+  });
+
   const pendingTicketsCount = tickets.filter(t => t.status === 'PENDING').length;
 
   if (!isAdmin) {
@@ -202,93 +266,143 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) =>
       </div>
 
       {/* Metric Telemetry Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+        {/* Today's Live Visitors (NEW) */}
+        <div 
+          onClick={() => setAdminTab('traffic')}
+          className={`p-5 rounded-2xl bg-[#141414] border transition-all cursor-pointer hover:border-amber-400/60 relative overflow-hidden ${
+            adminTab === 'traffic' ? 'border-amber-400 bg-amber-500/[0.04] shadow-[0_0_25px_rgba(251,191,36,0.15)]' : 'border-white/10'
+          }`}
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-1.5">
+              <span className="text-xs font-mono text-amber-400 uppercase tracking-wider font-bold">Today's Traffic</span>
+              <span className="flex h-2 w-2 relative">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+              </span>
+            </div>
+            <div className="w-7 h-7 rounded-lg bg-amber-400/10 flex items-center justify-center text-amber-400">
+              <Activity className="w-4 h-4" />
+            </div>
+          </div>
+          <div className="text-3xl font-extrabold text-white mt-2 tracking-tight font-mono flex items-baseline justify-between">
+            <span>{data?.visitorStats?.totalVisitorsToday || 0}</span>
+            <span className="text-[11px] font-sans font-medium text-emerald-400 flex items-center gap-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+              {data?.visitorStats?.activeNowCount || 1} online
+            </span>
+          </div>
+          <div className="flex items-center gap-2 text-[11px] text-white/50 mt-2 font-mono">
+            <span className="text-amber-300 font-semibold">{data?.visitorStats?.demoVisitorsToday || 0} Demo</span>
+            <span>•</span>
+            <span className="text-blue-400 font-semibold">{data?.visitorStats?.registeredUsersToday || 0} Account</span>
+          </div>
+        </div>
+
         {/* Total MRR */}
-        <div className="p-6 rounded-2xl bg-[#141414] border border-[#FFD700]/30 relative overflow-hidden shadow-[0_0_30px_rgba(255,215,0,0.05)]">
+        <div className="p-5 rounded-2xl bg-[#141414] border border-[#FFD700]/30 relative overflow-hidden shadow-[0_0_30px_rgba(255,215,0,0.05)]">
           <div className="flex items-center justify-between">
             <span className="text-xs font-mono text-white/50 uppercase tracking-wider">Total MRR</span>
-            <div className="w-8 h-8 rounded-lg bg-[#FFD700]/10 flex items-center justify-center text-[#FFD700]">
+            <div className="w-7 h-7 rounded-lg bg-[#FFD700]/10 flex items-center justify-center text-[#FFD700]">
               <DollarSign className="w-4 h-4" />
             </div>
           </div>
-          <div className="text-3xl font-extrabold text-[#FFD700] mt-3 tracking-tight font-mono">
+          <div className="text-3xl font-extrabold text-[#FFD700] mt-2 tracking-tight font-mono">
             ${data?.totalMRR.toLocaleString() || '0'}
           </div>
-          <div className="flex items-center gap-1 text-[11px] text-emerald-400 font-semibold mt-2">
-            <TrendingUp className="w-3.5 h-3.5" />
-            <span>+24.5% vs last month</span>
+          <div className="flex items-center gap-1 text-[11px] text-white/50 mt-2 font-mono">
+            <span className="text-emerald-400 font-semibold">{data?.paidCompaniesCount || 0} Paid</span>
+            <span>•</span>
+            <span>{data?.activeTrialsCount || 0} Trialing</span>
           </div>
         </div>
 
         {/* Total Users */}
         <div 
           onClick={() => setAdminTab('users')}
-          className={`p-6 rounded-2xl bg-[#141414] border transition-all cursor-pointer hover:border-blue-500/50 ${
+          className={`p-5 rounded-2xl bg-[#141414] border transition-all cursor-pointer hover:border-blue-500/50 ${
             adminTab === 'users' ? 'border-blue-500 bg-blue-500/[0.04] shadow-[0_0_20px_rgba(59,130,246,0.15)]' : 'border-white/10'
           }`}
         >
           <div className="flex items-center justify-between">
             <span className="text-xs font-mono text-white/50 uppercase tracking-wider">Total Users</span>
-            <div className="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-400">
+            <div className="w-7 h-7 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-400">
               <Users className="w-4 h-4" />
             </div>
           </div>
-          <div className="text-3xl font-extrabold text-white mt-3 tracking-tight font-mono flex items-center justify-between">
+          <div className="text-3xl font-extrabold text-white mt-2 tracking-tight font-mono flex items-center justify-between">
             <span>{data?.totalUsers || '0'}</span>
             <span className="text-xs font-sans text-blue-400 font-normal hover:underline flex items-center gap-0.5">
-              <span>View List</span>
-              <ArrowUpRight className="w-3.5 h-3.5" />
+              <span>View</span>
+              <ArrowUpRight className="w-3 h-3" />
             </span>
           </div>
-          <div className="text-[11px] text-white/40 mt-2">
-            Across {data?.totalCompanies || '0'} distinct enterprise companies
+          <div className="text-[11px] text-white/40 mt-2 truncate">
+            {data?.totalCompanies || '0'} enterprise tenants
           </div>
         </div>
 
         {/* Active Companies */}
         <div 
           onClick={() => setAdminTab('tenants')}
-          className={`p-6 rounded-2xl bg-[#141414] border transition-all cursor-pointer hover:border-emerald-500/50 ${
+          className={`p-5 rounded-2xl bg-[#141414] border transition-all cursor-pointer hover:border-emerald-500/50 ${
             adminTab === 'tenants' ? 'border-emerald-500 bg-emerald-500/[0.04] shadow-[0_0_20px_rgba(16,185,129,0.15)]' : 'border-white/10'
           }`}
         >
           <div className="flex items-center justify-between">
-            <span className="text-xs font-mono text-white/50 uppercase tracking-wider">Active Companies</span>
-            <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-400">
+            <span className="text-xs font-mono text-white/50 uppercase tracking-wider">Active Tenants</span>
+            <div className="w-7 h-7 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-400">
               <Building2 className="w-4 h-4" />
             </div>
           </div>
-          <div className="text-3xl font-extrabold text-white mt-3 tracking-tight font-mono flex items-center justify-between">
+          <div className="text-3xl font-extrabold text-white mt-2 tracking-tight font-mono flex items-center justify-between">
             <span>{data?.totalCompanies || '0'}</span>
             <span className="text-xs font-sans text-emerald-400 font-normal hover:underline flex items-center gap-0.5">
-              <span>View Tenants</span>
-              <ArrowUpRight className="w-3.5 h-3.5" />
+              <span>Tenants</span>
+              <ArrowUpRight className="w-3 h-3" />
             </span>
           </div>
           <div className="text-[11px] text-emerald-400 font-semibold mt-2">
-            100% Isolated Supabase Tenants
+            100% Isolated Supabase
           </div>
         </div>
 
         {/* Total Deal Pipeline */}
-        <div className="p-6 rounded-2xl bg-[#141414] border border-white/10">
+        <div className="p-5 rounded-2xl bg-[#141414] border border-white/10">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-mono text-white/50 uppercase tracking-wider">Pipeline Managed</span>
-            <div className="w-8 h-8 rounded-lg bg-purple-500/10 flex items-center justify-center text-purple-400">
+            <span className="text-xs font-mono text-white/50 uppercase tracking-wider">Pipeline ARR</span>
+            <div className="w-7 h-7 rounded-lg bg-purple-500/10 flex items-center justify-center text-purple-400">
               <Layers className="w-4 h-4" />
             </div>
           </div>
-          <div className="text-3xl font-extrabold text-white mt-3 tracking-tight font-mono">
+          <div className="text-3xl font-extrabold text-white mt-2 tracking-tight font-mono">
             ${((data?.totalPipelineARR || data?.totalPipelineValue || 0) / 1000000).toFixed(1)}M
           </div>
-          <div className="text-[11px] text-white/40 mt-2">
-            {data?.totalDeals || 0} active enterprise deals
+          <div className="text-[11px] text-white/40 mt-2 truncate">
+            {data?.totalDeals || 0} active deals
           </div>
         </div>
       </div>
 
       {/* Admin Tab Switcher */}
       <div className="flex items-center gap-2 border-b border-white/10 pb-px overflow-x-auto">
+        <button
+          onClick={() => setAdminTab('traffic')}
+          className={`flex items-center gap-2 px-4 py-2.5 text-xs sm:text-sm font-semibold border-b-2 transition-all cursor-pointer whitespace-nowrap ${
+            adminTab === 'traffic'
+              ? 'border-amber-400 text-amber-400 bg-amber-500/5'
+              : 'border-transparent text-white/50 hover:text-white'
+          }`}
+        >
+          <Activity className="w-4 h-4 text-amber-400" />
+          <span>Live Visitor Traffic (ڈیمو بمقابلہ اکاؤنٹ)</span>
+          <span className="px-1.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 text-[10px] font-mono font-bold flex items-center gap-1">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+            LIVE
+          </span>
+        </button>
+
         <button
           onClick={() => setAdminTab('users')}
           className={`flex items-center gap-2 px-4 py-2.5 text-xs sm:text-sm font-semibold border-b-2 transition-all cursor-pointer whitespace-nowrap ${
@@ -337,7 +451,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) =>
           }`}
         >
           <MessageSquarePlus className="w-4 h-4" />
-          <span>Customer Complaints &amp; Feature Requests</span>
+          <span>Customer Feedback &amp; Bugs</span>
           {pendingTicketsCount > 0 && (
             <span className="px-1.5 py-0.2 rounded-full bg-amber-500/20 text-amber-400 text-[10px] font-mono font-bold">
               {pendingTicketsCount} New
@@ -345,6 +459,394 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) =>
           )}
         </button>
       </div>
+
+      {/* Live Visitor Traffic Tab View (NEW) */}
+      {adminTab === 'traffic' && (
+        <div className="space-y-6">
+          {/* Traffic Overview Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+            <div className="p-4 rounded-2xl bg-[#121212] border border-white/10 flex flex-col justify-between">
+              <div className="flex items-center justify-between text-white/50 text-xs font-mono">
+                <span>TODAY'S TOTAL</span>
+                <Activity className="w-4 h-4 text-amber-400" />
+              </div>
+              <div className="text-2xl sm:text-3xl font-bold font-mono text-white mt-2">
+                {data?.visitorStats?.totalVisitorsToday || 0}
+              </div>
+              <div className="text-[11px] text-white/40 mt-1">
+                Unique visitor sessions today
+              </div>
+            </div>
+
+            <div className="p-4 rounded-2xl bg-[#121212] border border-amber-500/30 bg-amber-500/[0.02] flex flex-col justify-between">
+              <div className="flex items-center justify-between text-amber-400/80 text-xs font-mono">
+                <span>DEMO VISITORS</span>
+                <Globe className="w-4 h-4 text-amber-400" />
+              </div>
+              <div className="text-2xl sm:text-3xl font-bold font-mono text-amber-300 mt-2">
+                {data?.visitorStats?.demoVisitorsToday || 0}
+              </div>
+              <div className="text-[11px] text-amber-400/60 mt-1">
+                Explored sandbox without login
+              </div>
+            </div>
+
+            <div className="p-4 rounded-2xl bg-[#121212] border border-blue-500/30 bg-blue-500/[0.02] flex flex-col justify-between">
+              <div className="flex items-center justify-between text-blue-400/80 text-xs font-mono">
+                <span>ACCOUNT LOGINS</span>
+                <UserCheck className="w-4 h-4 text-blue-400" />
+              </div>
+              <div className="text-2xl sm:text-3xl font-bold font-mono text-blue-400 mt-2">
+                {data?.visitorStats?.registeredUsersToday || 0}
+              </div>
+              <div className="text-[11px] text-blue-400/60 mt-1">
+                Logged in verified accounts
+              </div>
+            </div>
+
+            <div className="p-4 rounded-2xl bg-[#121212] border border-emerald-500/30 bg-emerald-500/[0.02] flex flex-col justify-between">
+              <div className="flex items-center justify-between text-emerald-400/80 text-xs font-mono">
+                <span>LIVE NOW</span>
+                <span className="flex h-2 w-2 relative">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                </span>
+              </div>
+              <div className="text-2xl sm:text-3xl font-bold font-mono text-emerald-400 mt-2">
+                {data?.visitorStats?.activeNowCount || 1}
+              </div>
+              <div className="text-[11px] text-emerald-400/60 mt-1">
+                Active in last 15 minutes
+              </div>
+            </div>
+
+            <div className="p-4 rounded-2xl bg-[#121212] border border-purple-500/30 bg-purple-500/[0.02] flex flex-col justify-between">
+              <div className="flex items-center justify-between text-purple-400/80 text-xs font-mono">
+                <span>CONVERSION RATE</span>
+                <Sparkles className="w-4 h-4 text-purple-400" />
+              </div>
+              <div className="text-2xl sm:text-3xl font-bold font-mono text-purple-300 mt-2">
+                {data?.visitorStats?.conversionRateTodayPct || 0}%
+              </div>
+              <div className="text-[11px] text-purple-400/60 mt-1">
+                Demo to registered signup
+              </div>
+            </div>
+          </div>
+
+          {/* 7-Day Trend Visual Breakdown */}
+          {data?.visitorStats?.dailyTrend && data.visitorStats.dailyTrend.length > 0 && (
+            <div className="rounded-2xl bg-[#121212] border border-white/10 p-5 shadow-2xl">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4 pb-3 border-b border-white/5">
+                <div>
+                  <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                    <BarChart3 className="w-4 h-4 text-[#FFD700]" />
+                    <span>7-Day Traffic Flow (Demo Guests vs Registered Accounts)</span>
+                  </h3>
+                  <p className="text-xs text-white/40 mt-0.5">
+                    Daily comparative volume showing people exploring via instant demo vs active authenticated users.
+                  </p>
+                </div>
+                <div className="flex items-center gap-4 text-xs font-mono">
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-3 h-3 rounded bg-amber-400/80 inline-block"></span>
+                    <span className="text-amber-300">Demo Guests</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-3 h-3 rounded bg-blue-500/80 inline-block"></span>
+                    <span className="text-blue-400">Account Logins</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-3 pt-2">
+                {data.visitorStats.dailyTrend.map((day) => {
+                  const maxDayTotal = Math.max(...data.visitorStats!.dailyTrend.map(d => d.totalCount), 1);
+                  const heightPct = Math.max(Math.round((day.totalCount / maxDayTotal) * 100), 12);
+                  const isToday = day.formattedDate === 'Today';
+
+                  return (
+                    <div 
+                      key={day.dateKey}
+                      className={`p-3 rounded-xl border flex flex-col justify-between transition-all ${
+                        isToday 
+                          ? 'bg-amber-400/[0.04] border-amber-400/40 shadow-[0_0_15px_rgba(251,191,36,0.1)]' 
+                          : 'bg-[#161616] border-white/5 hover:border-white/20'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between text-[11px] font-mono mb-2">
+                        <span className={`font-bold ${isToday ? 'text-amber-400' : 'text-white/60'}`}>
+                          {day.formattedDate}
+                        </span>
+                        <span className="text-white/40 text-[10px]">
+                          {day.totalCount} total
+                        </span>
+                      </div>
+
+                      {/* Mini visual bar */}
+                      <div className="h-16 w-full bg-white/5 rounded-lg flex items-end p-1.5 gap-1 my-1">
+                        <div 
+                          style={{ height: `${day.totalCount > 0 ? Math.max((day.demoCount / (day.totalCount || 1)) * 100, 15) : 10}%` }}
+                          className="flex-1 bg-amber-400/80 rounded-sm hover:bg-amber-300 transition-all"
+                          title={`${day.demoCount} Demo Guests`}
+                        />
+                        <div 
+                          style={{ height: `${day.totalCount > 0 ? Math.max((day.registeredCount / (day.totalCount || 1)) * 100, 15) : 10}%` }}
+                          className="flex-1 bg-blue-500/80 rounded-sm hover:bg-blue-400 transition-all"
+                          title={`${day.registeredCount} Registered Accounts`}
+                        />
+                      </div>
+
+                      <div className="flex items-center justify-between text-[10px] font-mono mt-1 pt-1 border-t border-white/5 text-white/50">
+                        <span className="text-amber-300/90">{day.demoCount}d</span>
+                        <span className="text-blue-400/90">{day.registeredCount}a</span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Live Visitor Session Feed */}
+          <div className="rounded-2xl bg-[#121212] border border-white/10 overflow-hidden shadow-2xl">
+            <div className="p-5 border-b border-white/10 flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-[#161616]">
+              <div>
+                <div className="flex items-center gap-2">
+                  <h2 className="text-base font-bold text-white flex items-center gap-2">
+                    <Activity className="w-4 h-4 text-amber-400" />
+                    <span>Real-Time Visitor &amp; Session Stream</span>
+                  </h2>
+                  <span className="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-400 text-[11px] font-mono font-bold">
+                    {filteredSessions.length} Filtered / {allTrafficSessions.length} Total
+                  </span>
+                </div>
+                <p className="text-xs text-white/40 mt-0.5">
+                  Live feed of individuals accessing the app, their entry point, device, and authentication mode.
+                </p>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-3">
+                {/* Search */}
+                <div className="relative">
+                  <Search className="w-3.5 h-3.5 text-white/40 absolute left-3 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="text"
+                    placeholder="Search by email, route, device..."
+                    value={trafficSearch}
+                    onChange={(e) => setTrafficSearch(e.target.value)}
+                    className="bg-[#0A0A0A] border border-white/10 rounded-xl pl-8 pr-3 py-1.5 text-xs text-white placeholder-white/30 focus:outline-none focus:border-amber-400 w-52 sm:w-60 transition-colors"
+                  />
+                </div>
+
+                {/* Filter Pills */}
+                <div className="flex items-center bg-[#0A0A0A] border border-white/10 rounded-xl p-0.5 text-xs">
+                  <button
+                    onClick={() => setTrafficFilter('all')}
+                    className={`px-2.5 py-1 rounded-lg transition-all font-mono text-[11px] cursor-pointer ${
+                      trafficFilter === 'all' ? 'bg-white/15 text-white font-bold' : 'text-white/40 hover:text-white'
+                    }`}
+                  >
+                    All ({allTrafficSessions.length})
+                  </button>
+                  <button
+                    onClick={() => setTrafficFilter('today')}
+                    className={`px-2.5 py-1 rounded-lg transition-all font-mono text-[11px] cursor-pointer ${
+                      trafficFilter === 'today' ? 'bg-amber-400/20 text-amber-300 font-bold' : 'text-white/40 hover:text-white'
+                    }`}
+                  >
+                    Today Only
+                  </button>
+                  <button
+                    onClick={() => setTrafficFilter('demo')}
+                    className={`px-2.5 py-1 rounded-lg transition-all font-mono text-[11px] cursor-pointer ${
+                      trafficFilter === 'demo' ? 'bg-amber-400/20 text-amber-400 font-bold' : 'text-white/40 hover:text-white'
+                    }`}
+                  >
+                    Demo Guests
+                  </button>
+                  <button
+                    onClick={() => setTrafficFilter('registered')}
+                    className={`px-2.5 py-1 rounded-lg transition-all font-mono text-[11px] cursor-pointer ${
+                      trafficFilter === 'registered' ? 'bg-blue-500/20 text-blue-400 font-bold' : 'text-white/40 hover:text-white'
+                    }`}
+                  >
+                    Accounts
+                  </button>
+                  <button
+                    onClick={() => setTrafficFilter('mobile')}
+                    className={`px-2.5 py-1 rounded-lg transition-all font-mono text-[11px] cursor-pointer ${
+                      trafficFilter === 'mobile' ? 'bg-purple-500/20 text-purple-400 font-bold' : 'text-white/40 hover:text-white'
+                    }`}
+                  >
+                    Mobile
+                  </button>
+                </div>
+
+                {/* Simulate / Quick Test Buttons */}
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => handleSimulateTraffic('DEMO_GUEST')}
+                    disabled={simulatingTraffic}
+                    title="Simulate a new Demo Guest visitor"
+                    className="px-2.5 py-1.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-400 text-[11px] font-semibold flex items-center gap-1.5 transition-all cursor-pointer disabled:opacity-50"
+                  >
+                    <Globe className="w-3 h-3" />
+                    <span>+ Test Demo Visit</span>
+                  </button>
+                  <button
+                    onClick={() => handleSimulateTraffic('REGISTERED_ACCOUNT')}
+                    disabled={simulatingTraffic}
+                    title="Simulate a Registered Account login"
+                    className="px-2.5 py-1.5 rounded-xl bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/30 text-blue-400 text-[11px] font-semibold flex items-center gap-1.5 transition-all cursor-pointer disabled:opacity-50"
+                  >
+                    <UserPlus className="w-3 h-3" />
+                    <span>+ Test Account Login</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Table View */}
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead className="bg-[#0D0D0D] text-white/40 uppercase tracking-wider font-mono text-[10px] border-b border-white/5">
+                  <tr>
+                    <th className="py-3 px-5">Access Type</th>
+                    <th className="py-3 px-5">Visitor Identity</th>
+                    <th className="py-3 px-5">Active Screen / Route</th>
+                    <th className="py-3 px-5">Device &amp; Browser</th>
+                    <th className="py-3 px-5">Referral Source</th>
+                    <th className="py-3 px-5">Activity Time</th>
+                    <th className="py-3 px-5 text-right">Interactions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-white/5 text-white/80">
+                  {filteredSessions.length === 0 ? (
+                    <tr>
+                      <td colSpan={7} className="py-12 text-center text-white/40 text-xs">
+                        No visitor sessions matched the current filter.
+                      </td>
+                    </tr>
+                  ) : (
+                    filteredSessions.map((s) => {
+                      const isDemo = s.visitorType === 'DEMO_GUEST' || s.visitorType === 'LANDING_VISITOR';
+                      const isToday = s.dateKey === todayKey;
+                      const timeStr = new Date(s.lastActiveAt).toLocaleTimeString('en-US', {
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      });
+
+                      return (
+                        <tr key={s.id} className="hover:bg-white/[0.02] transition-colors">
+                          {/* Access Type Badge */}
+                          <td className="py-3.5 px-5">
+                            {s.convertedToSignup ? (
+                              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-purple-500/15 border border-purple-500/30 text-purple-300 text-[10px] font-mono font-bold">
+                                <Sparkles className="w-3 h-3 text-purple-400" />
+                                <span>CONVERTED TO ACCOUNT</span>
+                              </span>
+                            ) : isDemo ? (
+                              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-300 text-[10px] font-mono font-bold">
+                                <Globe className="w-3 h-3 text-amber-400" />
+                                <span>DEMO SANDBOX GUEST</span>
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-blue-500/15 border border-blue-500/30 text-blue-300 text-[10px] font-mono font-bold">
+                                <UserCheck className="w-3 h-3 text-blue-400" />
+                                <span>REGISTERED ACCOUNT</span>
+                              </span>
+                            )}
+                          </td>
+
+                          {/* Identity */}
+                          <td className="py-3.5 px-5">
+                            {s.userEmail ? (
+                              <div>
+                                <div className="font-bold text-white flex items-center gap-1.5">
+                                  <span>{s.userName || s.userEmail.split('@')[0]}</span>
+                                  {s.companyName && (
+                                    <span className="text-[10px] text-white/40 font-normal">({s.companyName})</span>
+                                  )}
+                                </div>
+                                <div className="text-[11px] font-mono text-white/50 flex items-center gap-1.5 mt-0.5">
+                                  <span>{s.userEmail}</span>
+                                  <button
+                                    onClick={() => handleCopyEmail(s.userEmail!)}
+                                    title="Copy Email"
+                                    className="text-white/30 hover:text-white transition-colors cursor-pointer"
+                                  >
+                                    <Copy className="w-2.5 h-2.5" />
+                                  </button>
+                                  {copiedEmail === s.userEmail && (
+                                    <span className="text-[9px] text-emerald-400 font-mono">Copied!</span>
+                                  )}
+                                </div>
+                              </div>
+                            ) : (
+                              <div>
+                                <div className="font-medium text-amber-200/90 flex items-center gap-1">
+                                  <span>Anonymous Guest</span>
+                                  <span className="text-[10px] text-white/30 font-mono">#{s.id.slice(-4)}</span>
+                                </div>
+                                <div className="text-[10px] font-mono text-white/40 mt-0.5">
+                                  Instant sandbox explorer (no login)
+                                </div>
+                              </div>
+                            )}
+                          </td>
+
+                          {/* Entry Route */}
+                          <td className="py-3.5 px-5">
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-white/5 border border-white/10 font-mono text-[11px] text-white/90">
+                              <Compass className="w-3 h-3 text-amber-400" />
+                              <span>{s.entryPath || '/'}</span>
+                            </span>
+                          </td>
+
+                          {/* Device & Browser */}
+                          <td className="py-3.5 px-5">
+                            <div className="flex items-center gap-1.5 text-xs text-white/80">
+                              {s.deviceType === 'Mobile' ? (
+                                <Smartphone className="w-3.5 h-3.5 text-purple-400" />
+                              ) : (
+                                <Laptop className="w-3.5 h-3.5 text-blue-400" />
+                              )}
+                              <span>{s.deviceType} • {s.browser}</span>
+                            </div>
+                          </td>
+
+                          {/* Referral */}
+                          <td className="py-3.5 px-5">
+                            <span className="text-xs text-white/60 font-mono">
+                              {s.referrer || 'Direct Access'}
+                            </span>
+                          </td>
+
+                          {/* Activity Time */}
+                          <td className="py-3.5 px-5">
+                            <div className="flex items-center gap-1.5 text-xs font-mono text-white/80">
+                              <Clock className="w-3.5 h-3.5 text-white/40" />
+                              <span>{isToday ? `Today at ${timeStr}` : s.dateKey}</span>
+                            </div>
+                          </td>
+
+                          {/* Actions Count */}
+                          <td className="py-3.5 px-5 text-right">
+                            <span className="px-2 py-0.5 rounded-full bg-white/5 border border-white/10 text-white/70 font-mono text-[10px]">
+                              {s.actionsCount || 1} actions
+                            </span>
+                          </td>
+                        </tr>
+                      );
+                    })
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Users Tab View */}
       {adminTab === 'users' && (

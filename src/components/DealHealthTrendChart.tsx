@@ -572,8 +572,17 @@ export const DealHealthTrendChart: React.FC<DealHealthTrendChartProps> = ({
 
       {/* Main Chart Area */}
       <div className="relative z-10">
-        <div className="h-[320px] w-full">
-          <ResponsiveContainer width="100%" height="100%">
+        {filteredActiveDeals.length === 0 ? (
+          <div className="h-[280px] w-full flex flex-col items-center justify-center text-center p-6 border border-dashed border-white/10 rounded-2xl bg-black/20">
+            <Activity className="w-8 h-8 text-white/20 mb-3" />
+            <h4 className="text-sm font-semibold text-white/70">No deals in pipeline yet</h4>
+            <p className="text-xs text-white/40 max-w-sm mt-1">
+              Add your first client deal or connect Supabase to activate 30-day health diagnostic tracking.
+            </p>
+          </div>
+        ) : (
+          <div className="h-[320px] w-full">
+            <ResponsiveContainer width="100%" height="100%">
             {chartMode === 'aggregate' && !focusedDealId ? (
               <AreaChart data={timelineData} margin={{ top: 15, right: 15, left: -15, bottom: 5 }}>
                 <defs>
@@ -783,6 +792,7 @@ export const DealHealthTrendChart: React.FC<DealHealthTrendChartProps> = ({
             )}
           </ResponsiveContainer>
         </div>
+        )}
 
         {/* Legend / Range Indicator Bar */}
         <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-white/5 text-[11px] text-white/50">

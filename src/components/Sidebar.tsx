@@ -406,7 +406,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   <Settings className="w-4 h-4" />
                 </button>
                 <button 
-                  onClick={(e) => { e.stopPropagation(); signOut(); }}
+                  onClick={async (e) => {
+                    e.stopPropagation();
+                    await signOut();
+                    onNavigate('landing');
+                  }}
                   className="p-1.5 rounded-lg text-white/30 hover:text-red-400 hover:bg-white/5 transition-colors cursor-pointer"
                   title="Sign Out (Log Out)"
                 >

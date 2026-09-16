@@ -1,0 +1,49 @@
+{
+  "entities": {
+    "VisitorSession": {
+      "title": "VisitorSession",
+      "description": "Represents a visitor session in the application (Demo vs Account)",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "visitorType": { "type": "string", "enum": ["DEMO_GUEST", "REGISTERED_ACCOUNT", "LANDING_VISITOR"] },
+        "userId": { "type": "string" },
+        "userEmail": { "type": "string" },
+        "userName": { "type": "string" },
+        "companyId": { "type": "string" },
+        "companyName": { "type": "string" },
+        "entryPath": { "type": "string" },
+        "deviceType": { "type": "string", "enum": ["Desktop", "Mobile", "Tablet"] },
+        "browser": { "type": "string" },
+        "referrer": { "type": "string" },
+        "timestamp": { "type": "string" },
+        "dateKey": { "type": "string" },
+        "actionsCount": { "type": "number" },
+        "lastActiveAt": { "type": "string" },
+        "convertedToSignup": { "type": "boolean" }
+      },
+      "required": ["id", "visitorType", "entryPath", "timestamp", "dateKey", "lastActiveAt"]
+    },
+    "FeedbackTicket": {
+      "title": "FeedbackTicket",
+      "description": "User feedback, feature requests, and bug reports",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "status": { "type": "string" }
+      },
+      "required": ["id", "title"]
+    }
+  },
+  "firestore": {
+    "/visitor_sessions/{sessionId}": {
+      "schema": "VisitorSession",
+      "description": "Logs every visitor entry, tracking Demo vs Registered User sessions in real time"
+    },
+    "/feedback_tickets/{ticketId}": {
+      "schema": "FeedbackTicket",
+      "description": "Platform feedback and feature request tickets"
+    }
+  }
+}

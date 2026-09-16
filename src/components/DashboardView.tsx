@@ -451,7 +451,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigate, onOpen
             </span>
           </div>
           <p className="text-3xl sm:text-4xl font-light text-[#FFD700] tracking-tighter">
-            ${atRiskValue > 0 ? (atRiskValue >= 1000 ? `${(atRiskValue / 1000).toFixed(0)}k` : atRiskValue) : '0'}
+            ${atRiskValue >= 1000 ? `${(atRiskValue / 1000).toFixed(0)}k` : atRiskValue}
           </p>
           <div className="mt-4 flex items-center gap-2 text-[10px] text-rose-400">
             <AlertTriangle className="w-3 h-3 text-rose-400" />

@@ -18,8 +18,9 @@ const EVENTS_STORAGE_KEY_PREFIX = 'prime_events_company_';
 const RENEWAL_STORAGE_KEY_PREFIX = 'prime_renewal_company_';
 
 // Calculate Real-Time SaaS Telemetry from CRM & Subscriptions
-export function calculateSaaSTelemetry(records: CRMRecord[]): SaaSTelemetryStats {
-  const activeClients = records.filter(r => r.type === 'CLIENT' || r.stage === 'Active Client' || r.stage === 'Closed Won');
+export function calculateSaaSTelemetry(records?: CRMRecord[]): SaaSTelemetryStats {
+  const safeRecords = Array.isArray(records) ? records.filter(Boolean) : [];
+  const activeClients = safeRecords.filter(r => r && (r.type === 'CLIENT' || r.stage === 'Active Client' || r.stage === 'Closed Won'));
   
   // Total MRR calculation
   const totalMrr = activeClients.reduce((sum, r) => {
@@ -32,11 +33,12 @@ export function calculateSaaSTelemetry(records: CRMRecord[]): SaaSTelemetryStats
 
   // At-Risk ARR (Clients silent > 10 days or health score < 60 or churn probability > 40%)
   const atRiskClients = activeClients.filter(r => 
-    r.daysSinceLastContact > 10 || 
-    r.healthScore < 60 || 
+    (r.daysSinceLastContact || 0) > 10 || 
+    (r.healthScore || 100) < 60 || 
     (r.churnProbability && r.churnProbability >= 40)
   );
-  const totalAtRiskArr = atRiskClients.reduce((sum, r) => sum + (r.dealValue || (r.mrr ? r.mrr * 12 : 0)), 0);
+  const calculatedRiskArr = atRiskClients.reduce((sum, r) => sum + (r.dealValue || (r.mrr ? r.mrr * 12 : 0)), 0);
+  const totalAtRiskArr = calculatedRiskArr;
 
   // Expansion Potential ARR
   const expansionClients = activeClients.filter(r => 
@@ -47,7 +49,7 @@ export function calculateSaaSTelemetry(records: CRMRecord[]): SaaSTelemetryStats
   );
   const totalExpansionArr = expansionClients.reduce((sum, r) => {
     if (r.expansionPotentialArr && r.expansionPotentialArr > 0) return sum + r.expansionPotentialArr;
-    return sum + Math.round((r.dealValue || 30000) * 0.4); // 40% upgrade uplift
+    return sum + Math.round((r.dealValue || 0) * 0.4); // 40% upgrade uplift
   }, 0);
 
   // Failed payment ARR (dunning)
@@ -82,11 +84,13 @@ export function calculateSaaSTelemetry(records: CRMRecord[]): SaaSTelemetryStats
 }
 
 // Filter high-risk SaaS accounts requiring immediate AI rescue
-export function filterSaaSChurnRisks(records: CRMRecord[]): CRMRecord[] {
+export function filterSaaSChurnRisks(records?: CRMRecord[]): CRMRecord[] {
+  if (!Array.isArray(records)) return [];
   return records.filter(r => {
+    if (!r) return false;
     const isClient = r.type === 'CLIENT' || r.stage === 'Active Client';
-    const isSilent = r.daysSinceLastContact > 10;
-    const isUnhealthy = r.healthScore < 60;
+    const isSilent = (r.daysSinceLastContact || 0) > 10;
+    const isUnhealthy = (r.healthScore || 100) < 60;
     const highChurnProb = (r.churnProbability ?? 0) >= 40;
     const activityDrop = (r.activityDropPct ?? 0) <= -25;
     return isClient && (isSilent || isUnhealthy || highChurnProb || activityDrop);
@@ -94,12 +98,14 @@ export function filterSaaSChurnRisks(records: CRMRecord[]): CRMRecord[] {
 }
 
 // Filter expansion & upsell ready accounts
-export function filterSaaSExpansionTargets(records: CRMRecord[]): CRMRecord[] {
+export function filterSaaSExpansionTargets(records?: CRMRecord[]): CRMRecord[] {
+  if (!Array.isArray(records)) return [];
   return records.filter(r => {
+    if (!r) return false;
     const isClient = r.type === 'CLIENT' || r.stage === 'Active Client';
     const nearSeatLimit = r.seatsUsed && r.seatsTotal ? (r.seatsUsed / r.seatsTotal) >= 0.75 : false;
     const hasExpansionVal = (r.expansionPotentialArr ?? 0) > 0;
-    const isGoodHealth = r.healthScore >= 65;
+    const isGoodHealth = (r.healthScore || 100) >= 65;
     return isClient && isGoodHealth && (nearSeatLimit || hasExpansionVal || r.planTier === 'Starter' || r.planTier === 'Pro');
   }).sort((a, b) => (b.expansionPotentialArr || b.dealValue || 0) - (a.expansionPotentialArr || a.dealValue || 0));
 }
@@ -339,17 +345,17 @@ export function calculatePLGStats(signals: PQLSignal[]): PLGTelemetryStats {
   
   const avgPql = signals.length > 0
     ? Math.round(signals.reduce((sum, s) => sum + s.pqlScore, 0) / signals.length)
-    : 85;
+    : 0;
 
   const avgOnboarding = signals.length > 0
     ? Math.round(signals.reduce((sum, s) => sum + s.onboardingProgress, 0) / signals.length)
-    : 80;
+    : 0;
 
   const totalSentiment = signals.reduce((sum, s) => sum + s.sentimentScore, 0);
-  const avgNps = signals.length > 0 ? Math.round(totalSentiment / signals.length) : 72;
+  const avgNps = signals.length > 0 ? Math.round(totalSentiment / signals.length) : 0;
 
   return {
-    totalActiveUsersToday: 142 + (signals.length * 8),
+    totalActiveUsersToday: signals.length > 0 ? (signals.length * 8) : 0,
     totalPQLs: signals.length,
     totalPqlOpportunities: activePqls.length,
     potentialArr: pipelineVal,
@@ -357,10 +363,10 @@ export function calculatePLGStats(signals: PQLSignal[]): PLGTelemetryStats {
     convertedArr: convertedVal,
     avgPQLScore: avgPql,
     avgOnboardingCompletion: avgOnboarding,
-    featureAdoptionRate: 84.5,
+    featureAdoptionRate: signals.length > 0 ? 84.5 : 0,
     npsScore: avgNps,
-    topActivatedFeature: 'AI Revenue Radar & Churn Rescue',
-    topDropoffStep: 'Stripe Webhook Verification (60% drop)'
+    topActivatedFeature: signals.length > 0 ? 'AI Revenue Radar & Churn Rescue' : 'None',
+    topDropoffStep: signals.length > 0 ? 'Stripe Webhook Verification' : 'None'
   };
 }
 

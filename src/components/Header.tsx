@@ -414,19 +414,21 @@ export const Header: React.FC<HeaderProps> = ({
                 </span>
               </button>
 
-              {/* Super Admin Dashboard Button */}
-              <button
-                onClick={() => onNavigate('admin')}
-                className={`hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
-                  currentView === 'admin'
-                    ? 'bg-emerald-500 text-black border-emerald-500'
-                    : 'bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
-                }`}
-                title="Super Admin Workspace Telemetry"
-              >
-                <ShieldCheck className="w-3.5 h-3.5" />
-                <span>Admin</span>
-              </button>
+              {/* Super Admin Dashboard Button (Master Owner Only) */}
+              {isAdmin && (
+                <button
+                  onClick={() => onNavigate('admin')}
+                  className={`hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
+                    currentView === 'admin'
+                      ? 'bg-emerald-500 text-black border-emerald-500'
+                      : 'bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
+                  }`}
+                  title="Super Admin Workspace Telemetry"
+                >
+                  <ShieldCheck className="w-3.5 h-3.5" />
+                  <span>Admin</span>
+                </button>
+              )}
 
               {/* Quick Command Palette Button */}
               {onOpenCommandPalette && (
@@ -487,9 +489,12 @@ export const Header: React.FC<HeaderProps> = ({
                 </button>
 
                 <button
-                  onClick={() => signOut()}
+                  onClick={async () => {
+                    await signOut();
+                    onNavigate('landing');
+                  }}
                   className="p-2 rounded-lg text-white/40 hover:text-red-400 hover:bg-white/5 transition-colors cursor-pointer"
-                  title="Sign Out"
+                  title="Sign Out (Log Out)"
                 >
                   <LogOut className="w-4 h-4" />
                 </button>
@@ -545,11 +550,11 @@ export const Header: React.FC<HeaderProps> = ({
                 Login
               </button>
               <button
-                onClick={() => onOpenAuth('signup')}
+                onClick={() => onNavigate('dashboard')}
                 className="px-4 py-2 bg-gradient-to-r from-[#FFD700] via-amber-300 to-[#FFC700] text-black text-xs font-black rounded-xl hover:brightness-110 transition-all cursor-pointer shadow-[0_0_20px_rgba(255,215,0,0.3)] flex items-center gap-1.5 active:scale-95"
               >
                 <Crown className="w-3.5 h-3.5 text-black" />
-                <span>Start 14-Day Free Trial</span>
+                <span>Launch Live Workspace →</span>
               </button>
             </div>
           )}

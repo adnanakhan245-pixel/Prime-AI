@@ -25,6 +25,7 @@ export type AuthModalMode = 'login' | 'signup' | 'verify-email' | 'forgot-passwo
 interface AuthModalProps {
   isOpen: boolean;
   initialMode?: AuthModalMode;
+  savePromptReason?: string | null;
   onClose: () => void;
   onSuccess: () => void;
 }
@@ -32,6 +33,7 @@ interface AuthModalProps {
 export const AuthModal: React.FC<AuthModalProps> = ({
   isOpen,
   initialMode = 'login',
+  savePromptReason = null,
   onClose,
   onSuccess,
 }) => {
@@ -113,11 +115,12 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         if (!companyName.trim()) {
           throw new Error('Please provide your company or organization name');
         }
-        const generatedPin = await signUpWithEmail(email, password, companyName, fullName, industry);
-        setActiveGeneratedPin(generatedPin);
-        setMode('verify-email');
-        setSuccessMsg(`Account created! A 6-digit verification code was sent to ${email}.`);
-        setResendCooldown(60);
+        await signUpWithEmail(email, password, companyName, fullName, industry);
+        setSuccessMsg(`Welcome, ${fullName || 'Executive'}! Your 14-day Pro workspace has been created. Launching Command Center...`);
+        setTimeout(() => {
+          onSuccess();
+          onClose();
+        }, 700);
       } else if (mode === 'verify-email') {
         const isVerified = await verifyEmailWithCode(verificationCode);
         if (isVerified) {
@@ -191,7 +194,15 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       onClose();
     } catch (err: any) {
       console.warn('Google sign-in error:', err);
-      setError(err.message || 'Google sign-in failed.');
+      if (err.code === 'auth/popup-closed-by-user') {
+        setError('Google Sign-In window was closed. You can also sign up with email and password below.');
+      } else if (err.code === 'auth/unauthorized-domain') {
+        setError('Google OAuth domain restricted in preview. Please use email and password to sign up.');
+      } else if (err.code === 'auth/popup-blocked') {
+        setError('Popup blocked by browser. Please allow popups or use email and password below.');
+      } else {
+        setError(err.message || 'Google sign-in failed. Please use email and password below.');
+      }
     } finally {
       setLoading(false);
     }
@@ -230,18 +241,23 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             <Crown className="w-6 h-6" />
           </div>
           <h2 className="text-2xl font-light tracking-tight text-white font-sans">
-            PRIME <span className="font-semibold text-[#FFD700]">AI</span>
+            {savePromptReason ? (
+              <>Save Your <span className="font-semibold text-[#FFD700]">Executive Data</span></>
+            ) : (
+              <>PRIME <span className="font-semibold text-[#FFD700]">AI</span></>
+            )}
           </h2>
           <p className="text-xs text-white/60 mt-1">
-            {mode === 'login' && 'Sign in to access your 24/7 AI Chief of Operations'}
-            {mode === 'signup' && 'Start Your 14-Day Free Trial • No Credit Card Required'}
-            {mode === 'verify-email' && 'Verify your corporate email address'}
-            {mode === 'forgot-password' && 'Reset your workspace master password'}
+            {savePromptReason && savePromptReason}
+            {!savePromptReason && mode === 'login' && 'Sign in to access your 24/7 AI Chief of Operations'}
+            {!savePromptReason && mode === 'signup' && 'Start Your 14-Day Free Trial • No Credit Card Required'}
+            {!savePromptReason && mode === 'verify-email' && 'Verify your corporate email address'}
+            {!savePromptReason && mode === 'forgot-password' && 'Reset your workspace master password'}
           </p>
           {mode === 'signup' && (
             <div className="mt-2.5 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[11px] font-bold">
               <CheckCircle2 className="w-3.5 h-3.5" />
-              <span>14 Days 100% Free • Full Access • No Card Needed</span>
+              <span>{savePromptReason ? '💾 Auto-Saves Your Work • 14 Days 100% Free Access' : '14 Days 100% Free • Full Access • No Card Needed'}</span>
             </div>
           )}
         </div>
@@ -341,6 +357,19 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 >
                   <Sparkles className="w-3.5 h-3.5 text-black" />
                   <span>1-Click Verify</span>
+                </button>
+              </div>
+
+              <div className="pt-1 text-center">
+                <button
+                  type="button"
+                  onClick={() => {
+                    onSuccess();
+                    onClose();
+                  }}
+                  className="text-xs text-white/50 hover:text-[#FFD700] transition-colors cursor-pointer"
+                >
+                  Skip verification for now &amp; enter dashboard →
                 </button>
               </div>
             </form>

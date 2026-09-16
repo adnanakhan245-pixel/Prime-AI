@@ -648,6 +648,47 @@ export interface AdminDashboardData {
   paidCompaniesCount: number;
   companies: CompanySummary[];
   users: AdminUserRecord[];
+  visitorStats?: VisitorTrafficStats;
+}
+
+export type VisitorType = 'DEMO_GUEST' | 'REGISTERED_ACCOUNT' | 'LANDING_VISITOR';
+
+export interface VisitorSessionRecord {
+  id: string;
+  visitorType: VisitorType;
+  userId?: string;
+  userEmail?: string;
+  userName?: string;
+  companyId?: string;
+  companyName?: string;
+  entryPath: string;
+  deviceType: 'Desktop' | 'Mobile' | 'Tablet';
+  browser: string;
+  referrer: string;
+  timestamp: string; // ISO string
+  dateKey: string; // YYYY-MM-DD
+  actionsCount: number;
+  lastActiveAt: string;
+  convertedToSignup?: boolean;
+}
+
+export interface VisitorTrafficStats {
+  totalVisitorsToday: number;
+  demoVisitorsToday: number;
+  registeredUsersToday: number;
+  activeNowCount: number;
+  conversionRateTodayPct: number;
+  totalVisitorsAllTime: number;
+  totalDemoAllTime: number;
+  totalRegisteredAllTime: number;
+  dailyTrend: Array<{
+    dateKey: string;
+    formattedDate: string;
+    demoCount: number;
+    registeredCount: number;
+    totalCount: number;
+  }>;
+  recentSessions: VisitorSessionRecord[];
 }
 
 // =========================================================================
@@ -853,6 +894,45 @@ export interface ChangelogItem {
   tag: 'MAJOR' | 'FEATURE' | 'IMPROVEMENT' | 'BUG_FIX';
   requestedByCompany?: string;
   changes: string[];
+}
+
+export interface VisitorRecord {
+  id: string;
+  visitorId: string;
+  firstSeen: string;
+  lastSeen: string;
+  hits: number;
+  device: 'Mobile' | 'Tablet' | 'Desktop';
+  referrer: string;
+  timezone: string;
+  language: string;
+  isRegistered: boolean;
+  userEmail?: string | null;
+  userName?: string | null;
+  companyName?: string | null;
+  lastPath: string;
+}
+
+export interface LeadRecord {
+  id: string;
+  email: string;
+  fullName: string;
+  companyName: string;
+  industry?: string;
+  plan: string;
+  signedUpAt: string;
+  device: string;
+  referrer: string;
+}
+
+export interface AnalyticsStats {
+  totalHits: number;
+  uniqueVisitors: number;
+  totalSignups: number;
+  activeNow: number;
+  lastUpdated: string;
+  recentVisitors: VisitorRecord[];
+  leads: LeadRecord[];
 }
 
 
