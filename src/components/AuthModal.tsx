@@ -140,11 +140,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       console.warn('Auth error:', err);
       let msg = err.message || 'Authentication could not be completed.';
       if (err.code === 'auth/invalid-credential' || err.code === 'auth/wrong-password') {
-        msg = 'Invalid email or password. Please verify and try again.';
+        msg = 'غلط ای میل یا پاس ورڈ۔ براہ کرم دوبارہ چیک کریں / Invalid email or password. Please verify and try again.';
       } else if (err.code === 'auth/email-already-in-use') {
-        msg = 'An account with this email already exists. Please log in.';
+        msg = 'اس ای میل سے اکاؤنٹ پہلے سے موجود ہے۔ ایک ای میل پر صرف ایک اکاؤنٹ کی اجازت ہے۔ براہ کرم لاگ ان کریں / An account with this email already exists. Only 1 account per email is allowed. Please log in.';
       } else if (err.code === 'auth/weak-password') {
-        msg = 'Password should be at least 6 characters.';
+        msg = 'پاس ورڈ کم از کم 6 حروف کا ہونا چاہیے / Password should be at least 6 characters.';
       }
       setError(msg);
     } finally {

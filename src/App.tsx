@@ -22,6 +22,7 @@ import { AdSpendOptimizerView } from './components/AdSpendOptimizerView';
 import { CashFlowGuardView } from './components/CashFlowGuardView';
 import { ROICalculatorView } from './components/ROICalculatorView';
 import { FeedbackHubView } from './components/FeedbackHubView';
+import { ApprovalLogView } from './components/ApprovalLogView';
 import { AuthModal } from './components/AuthModal';
 import { SettingsModal } from './components/SettingsModal';
 import { CommandPalette } from './components/CommandPalette';
@@ -32,6 +33,8 @@ import { MobileInstallModal } from './components/MobileInstallModal';
 import { TrialBanner } from './components/TrialBanner';
 import { FeaturePaywallOverlay } from './components/FeaturePaywallOverlay';
 import { UpgradePaywallModal } from './components/UpgradePaywallModal';
+import { ClientPaymentModal } from './components/ClientPaymentModal';
+import { ClientContactModal } from './components/ClientContactModal';
 import { fetchUserEmails, logVisitorSession } from './services/db';
 import { 
   LayoutDashboard, 
@@ -66,7 +69,7 @@ function AppContent() {
     openUpgradeModal,
     loading 
   } = useAuth();
-  const [currentView, setCurrentView] = useState<'landing' | 'dashboard' | 'radar' | 'inbox' | 'plans' | 'white-label' | 'admin' | 'closer' | 'hiring' | 'meetings' | 'growth' | 'strategy' | 'board-pack' | 'docs' | 'brain' | 'twin' | 'ad-spend' | 'cashflow-guard' | 'roi-calculator' | 'feedback'>('landing');
+  const [currentView, setCurrentView] = useState<'landing' | 'dashboard' | 'radar' | 'inbox' | 'approvals' | 'plans' | 'white-label' | 'admin' | 'closer' | 'hiring' | 'meetings' | 'growth' | 'strategy' | 'board-pack' | 'docs' | 'brain' | 'twin' | 'ad-spend' | 'cashflow-guard' | 'roi-calculator' | 'feedback'>('landing');
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [authMode, setAuthMode] = useState<'login' | 'signup' | 'verify-email' | 'forgot-password'>('login');
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -77,6 +80,26 @@ function AppContent() {
   const [isDemoMode, setIsDemoMode] = useState(false);
   const [pendingEmailsCount, setPendingEmailsCount] = useState(0);
   const [savePromptReason, setSavePromptReason] = useState<string | null>(null);
+
+  // 24/7 Client Self-Service Portals (Payment & Email - No Admin Approval Gating)
+  const [clientPaymentModalOpen, setClientPaymentModalOpen] = useState(false);
+  const [clientContactModalOpen, setClientContactModalOpen] = useState(false);
+  const [targetedInvoiceId, setTargetedInvoiceId] = useState<string | null>(null);
+
+  // Check URL query parameters for direct payment links (?payInvoice=...) or contact (?contact=true)
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const invId = params.get('payInvoice');
+      if (invId) {
+        setTargetedInvoiceId(invId);
+        setClientPaymentModalOpen(true);
+      }
+      if (params.get('contact') === 'true') {
+        setClientContactModalOpen(true);
+      }
+    }
+  }, []);
 
   // Global Cmd + K / Ctrl + K shortcut
   useEffect(() => {
@@ -150,7 +173,7 @@ function AppContent() {
   };
 
   const handleNavigate = (view: string) => {
-    if (['dashboard', 'radar', 'inbox', 'plans', 'white-label', 'admin', 'closer', 'hiring', 'meetings', 'growth', 'strategy', 'board-pack', 'docs', 'brain', 'twin', 'ad-spend', 'cashflow-guard', 'roi-calculator', 'feedback'].includes(view)) {
+    if (['dashboard', 'radar', 'inbox', 'approvals', 'plans', 'white-label', 'admin', 'closer', 'hiring', 'meetings', 'growth', 'strategy', 'board-pack', 'docs', 'brain', 'twin', 'ad-spend', 'cashflow-guard', 'roi-calculator', 'feedback'].includes(view)) {
       if (!user && !isDemoMode) {
         setIsDemoMode(true);
       }
@@ -264,6 +287,11 @@ function AppContent() {
             setIsDemoMode(true);
             setCurrentView('dashboard');
           }}
+          onOpenClientPayment={() => {
+            setTargetedInvoiceId(null);
+            setClientPaymentModalOpen(true);
+          }}
+          onOpenClientContact={() => setClientContactModalOpen(true)}
         />
       ) : (
         <div className="flex-1 flex flex-col md:flex-row w-full min-h-[calc(100vh-5rem)]">
@@ -313,6 +341,7 @@ function AppContent() {
               </FeaturePaywallOverlay>
             )}
             {currentView === 'inbox' && <InboxView />}
+            {currentView === 'approvals' && <ApprovalLogView />}
             {currentView === 'plans' && <PlansView onNavigate={handleNavigate} />}
             {currentView === 'white-label' && <AgencyWhiteLabelView />}
             {currentView === 'admin' && <AdminDashboard onNavigate={handleNavigate} />}
@@ -528,6 +557,23 @@ function AppContent() {
       <MobileInstallModal
         isOpen={mobileInstallModalOpen}
         onClose={() => setMobileInstallModalOpen(false)}
+      />
+
+      {/* 24/7 Client Self-Service Payment Portal (Instant Settlement - No Admin Gating) */}
+      <ClientPaymentModal
+        isOpen={clientPaymentModalOpen}
+        onClose={() => {
+          setClientPaymentModalOpen(false);
+          setTargetedInvoiceId(null);
+        }}
+        initialInvoiceId={targetedInvoiceId}
+      />
+
+      {/* 24/7 Direct Client Inbound Email / Message Modal (No Admin Gating) */}
+      <ClientContactModal
+        isOpen={clientContactModalOpen}
+        onClose={() => setClientContactModalOpen(false)}
+        targetCompanyId={company?.id}
       />
     </div>
   );

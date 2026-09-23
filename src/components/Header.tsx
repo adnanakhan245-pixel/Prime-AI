@@ -97,6 +97,12 @@ export const Header: React.FC<HeaderProps> = ({
             PRIME <span className="text-[#FFD700] font-semibold">Executive Inbox</span>
           </h2>
         );
+      case 'approvals':
+        return (
+          <h2 className="text-sm sm:text-base md:text-xl font-light tracking-tight text-white leading-tight">
+            PRIME <span className="text-emerald-400 font-semibold">AI Approvals Log & Safety Sentry</span>
+          </h2>
+        );
       case 'plans':
         return (
           <h2 className="text-sm sm:text-base md:text-xl font-light tracking-tight text-white leading-tight">

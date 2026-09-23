@@ -27,7 +27,8 @@ import {
   Clock,
   Trash2,
   CornerDownLeft,
-  MessageSquarePlus
+  MessageSquarePlus,
+  CheckSquare
 } from 'lucide-react';
 
 interface CommandPaletteProps {
@@ -145,6 +146,18 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
         onNavigate('twin');
       },
       badge: 'CLONE 3.0'
+    },
+    {
+      id: 'cmd-approvals',
+      title: 'AI Approvals Log & Human Safety Sentry',
+      subtitle: 'Review pending AI actions, approve/reject tasks, and access 2-minute undo safety window',
+      category: 'AI_ACTION',
+      icon: <CheckSquare className="w-4 h-4 text-emerald-400" />,
+      action: () => {
+        saveRecentQuery('Review AI Approvals & Undo Window');
+        onNavigate('approvals');
+      },
+      badge: 'LOG'
     },
     {
       id: 'cmd-draft',

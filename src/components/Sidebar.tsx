@@ -22,7 +22,8 @@ import {
   LogOut,
   Sparkles,
   Calculator,
-  MessageSquarePlus
+  MessageSquarePlus,
+  CheckSquare
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
@@ -83,6 +84,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
       icon: Inbox,
       badge: pendingEmailsCount > 0 ? pendingEmailsCount : null,
       badgeClass: 'bg-[#FFD700] text-black',
+    },
+    {
+      id: 'approvals',
+      label: 'Approvals',
+      icon: CheckSquare,
+      badge: 'LOG',
+      badgeClass: 'bg-emerald-400 text-black font-extrabold',
     },
     {
       id: 'brain',

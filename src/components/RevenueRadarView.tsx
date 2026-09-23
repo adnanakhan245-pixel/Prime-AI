@@ -41,9 +41,11 @@ import {
   Shield,
   CalendarCheck,
   Award,
-  FileCheck
+  FileCheck,
+  RotateCcw
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { recordApprovedAction, undoApprovedAction } from '../services/approvals';
 import { 
   CRMRecord, 
   RevenueRadarStats,
@@ -163,6 +165,84 @@ export const RevenueRadarView: React.FC = () => {
     notes: '',
   });
 
+  // Human Authorization & 2-Minute Undo Safety Window State
+  const [activeRadarUndo, setActiveRadarUndo] = useState<{
+    id: string;
+    actionName: string;
+    target: string;
+    expiresAt: number;
+  } | null>(null);
+  const [radarUndoSecondsLeft, setRadarUndoSecondsLeft] = useState<number>(0);
+  const [radarToast, setRadarToast] = useState<string | null>(null);
+
+  const showNotification = (msg: string) => {
+    setRadarToast(msg);
+    setTimeout(() => setRadarToast(null), 4000);
+  };
+
+  // Approval Modals for Strict Human-in-the-Loop Governance
+  const [dealMoveModal, setDealMoveModal] = useState<{
+    deal: CRMRecord;
+    proposedStage: string;
+  } | null>(null);
+
+  const [pqlApproveModal, setPqlApproveModal] = useState<PQLSignal | null>(null);
+
+  const [multiYearModal, setMultiYearModal] = useState<{
+    item: RenewalDefenseItem;
+    years: number;
+  } | null>(null);
+
+  const [churnApproveModal, setChurnApproveModal] = useState<{
+    record: CRMRecord;
+    playbook: ChurnRescuePlaybook;
+  } | null>(null);
+
+  // Countdown timer for 2-minute safety window
+  useEffect(() => {
+    if (!activeRadarUndo) return;
+    const updateCountdown = () => {
+      const remaining = Math.max(0, Math.ceil((activeRadarUndo.expiresAt - Date.now()) / 1000));
+      setRadarUndoSecondsLeft(remaining);
+      if (remaining <= 0) {
+        setActiveRadarUndo(null);
+      }
+    };
+    updateCountdown();
+    const interval = setInterval(updateCountdown, 1000);
+    return () => clearInterval(interval);
+  }, [activeRadarUndo]);
+
+  // Handle Undo execution
+  const handleUndoRadarAction = async () => {
+    if (!activeRadarUndo) return;
+    try {
+      await undoApprovedAction(activeRadarUndo.id);
+      showNotification(`↩️ Action Rolled Back: ${activeRadarUndo.actionName}`);
+      setActiveRadarUndo(null);
+      await loadData();
+    } catch (err) {
+      console.error('Error undoing action:', err);
+    }
+  };
+
+  // Listen for sync events from external approvals or undos
+  useEffect(() => {
+    const handleSync = () => {
+      loadData();
+    };
+    window.addEventListener('prime_deal_updated', handleSync);
+    window.addEventListener('prime_action_undone', handleSync);
+    window.addEventListener('prime_renewal_updated', handleSync);
+    window.addEventListener('prime_pql_updated', handleSync);
+    return () => {
+      window.removeEventListener('prime_deal_updated', handleSync);
+      window.removeEventListener('prime_action_undone', handleSync);
+      window.removeEventListener('prime_renewal_updated', handleSync);
+      window.removeEventListener('prime_pql_updated', handleSync);
+    };
+  }, [activeCompanyId, userId]);
+
   // Load CRM & SaaS data
   const loadData = async () => {
     setLoading(true);
@@ -272,16 +352,94 @@ export const RevenueRadarView: React.FC = () => {
     }
   };
 
-  // Convert PQL to Paid Tier
-  const handleConvertPQL = async (signal: PQLSignal) => {
+  // Confirm Deal Stage Move (Human Authorization)
+  const handleConfirmDealMove = async () => {
+    if (!dealMoveModal) return;
+    const { deal, proposedStage } = dealMoveModal;
+    try {
+      const previousStage = deal.stage;
+      const updated = await updateCRMRecord(activeCompanyId, userId, deal.id, { stage: proposedStage as any });
+      if (updated) {
+        setRecords(prev => prev.map(r => r.id === deal.id ? updated : r));
+      }
+
+      const logged = recordApprovedAction({
+        actionName: `Deal Stage Transition: "${deal.accountName}"`,
+        category: 'crm',
+        target: `${deal.accountName} (${deal.stage} → ${proposedStage})`,
+        details: `Human executive authorized moving ${deal.accountName} from "${previousStage}" to "${proposedStage}". Deal Value: $${deal.dealValue.toLocaleString()}.`,
+        impactLevel: 'HIGH',
+        actionType: 'MOVE_DEAL_STAGE',
+        undoData: {
+          companyId: activeCompanyId,
+          userId,
+          dealId: deal.id,
+          previousStage
+        }
+      });
+
+      if (logged.undoExpiresAt) {
+        setActiveRadarUndo({
+          id: logged.id,
+          actionName: `Move Deal to ${proposedStage}`,
+          target: deal.accountName,
+          expiresAt: logged.undoExpiresAt
+        });
+      }
+
+      showNotification(`✓ Authorized: ${deal.accountName} moved to ${proposedStage}. 2-minute Undo safety window active.`);
+      setDealMoveModal(null);
+      await loadData();
+    } catch (err) {
+      console.error('Error moving deal stage:', err);
+    }
+  };
+
+  // Convert PQL to Paid Tier (Requires Approval Modal)
+  const handleConvertPQL = (signal: PQLSignal) => {
+    setPqlApproveModal(signal);
+  };
+
+  // Confirm PQL Conversion
+  const handleConfirmPqlConvert = async () => {
+    if (!pqlApproveModal) return;
+    const signal = pqlApproveModal;
     const updated = markPQLConverted(activeCompanyId, pqlSignals, signal.id);
     setPqlSignals(updated);
+
+    const logged = recordApprovedAction({
+      actionName: `PQL Conversion Authorized: ${signal.userName}`,
+      category: 'crm',
+      target: `${signal.accountName} (${signal.targetPlan})`,
+      details: `Authorized user conversion to ${signal.targetPlan} (+$${signal.estimatedArrUplift.toLocaleString()} ARR uplift).`,
+      impactLevel: 'HIGH',
+      actionType: 'CONVERT_PQL',
+      undoData: {
+        companyId: activeCompanyId,
+        userId,
+        pqlId: signal.id,
+        previousStatus: signal.status
+      }
+    });
+
+    if (logged.undoExpiresAt) {
+      setActiveRadarUndo({
+        id: logged.id,
+        actionName: `PQL Convert (${signal.targetPlan})`,
+        target: signal.accountName,
+        expiresAt: logged.undoExpiresAt
+      });
+    }
+
     addActivityLog(
       userId,
       'RADAR_ACTION_TRIGGERED',
       'PQL Converted to Paid Tier',
       `Converted in-app user ${signal.userName} (${signal.accountName}) to ${signal.targetPlan} (+$${signal.estimatedArrUplift.toLocaleString()} ARR uplift).`
     );
+
+    showNotification(`✓ Authorized: ${signal.accountName} converted to ${signal.targetPlan}. 2-minute Undo window active.`);
+    setPqlApproveModal(null);
     setPqlPitchModalOpen(false);
   };
 
@@ -338,16 +496,52 @@ export const RevenueRadarView: React.FC = () => {
     }
   };
 
-  // Lock In 2-Year or 3-Year Contract
-  const handleLockInMultiYear = async (item: RenewalDefenseItem, years: number = 2) => {
+  // Lock In 2-Year or 3-Year Contract (Requires Human Approval)
+  const handleLockInMultiYear = (item: RenewalDefenseItem, years: number = 2) => {
+    setMultiYearModal({ item, years });
+  };
+
+  // Confirm Multi-Year Lock-In
+  const handleConfirmLockInMultiYear = async () => {
+    if (!multiYearModal) return;
+    const { item, years } = multiYearModal;
     const updated = lockInMultiYearContract(activeCompanyId, renewalItems, item.id, years);
     setRenewalItems(updated);
+
+    const logged = recordApprovedAction({
+      actionName: `Multi-Year Renewal Lock-In (${years}Y): ${item.accountName}`,
+      category: 'crm',
+      target: `${item.accountName} ($${(item.contractArr * years).toLocaleString()} ARR)`,
+      details: `Secured ${years}-year contract lock-in for ${item.accountName}. Total ARR secured: $${(item.contractArr * years).toLocaleString()}.`,
+      impactLevel: 'HIGH',
+      actionType: 'LOCK_IN_CONTRACT',
+      undoData: {
+        companyId: activeCompanyId,
+        userId,
+        renewalItemId: item.id,
+        previousStatus: item.status,
+        previousArr: item.contractArr
+      }
+    });
+
+    if (logged.undoExpiresAt) {
+      setActiveRadarUndo({
+        id: logged.id,
+        actionName: `Lock-In ${years}-Year Contract`,
+        target: item.accountName,
+        expiresAt: logged.undoExpiresAt
+      });
+    }
+
     addActivityLog(
       userId,
       'RADAR_ACTION_TRIGGERED',
       `Multi-Year Renewal Lock-In (${years} Years)`,
       `Secured ${years}-year contract lock-in for ${item.accountName} ($${(item.contractArr * years).toLocaleString()} total ARR secured).`
     );
+
+    showNotification(`✓ Authorized: ${item.accountName} locked in for ${years} years. 2-minute Undo window active.`);
+    setMultiYearModal(null);
     setRenewalDefenseModalOpen(false);
   };
 
@@ -395,17 +589,53 @@ export const RevenueRadarView: React.FC = () => {
     }
   };
 
-  // Execute Churn Concession & Stabilize Account
-  const handleApplyChurnRescueAction = async () => {
+  // Open Churn Concession Approval Modal
+  const handleApplyChurnRescueAction = () => {
     if (!selectedRecordForChurn || !churnPlaybook) return;
-    const updated = await applyChurnRescue(activeCompanyId, records, selectedRecordForChurn.id, churnPlaybook);
+    setChurnApproveModal({ record: selectedRecordForChurn, playbook: churnPlaybook });
+  };
+
+  // Confirm Churn Concession (Human Authorized)
+  const handleConfirmChurnConcession = async () => {
+    if (!churnApproveModal) return;
+    const { record, playbook } = churnApproveModal;
+    const updated = await applyChurnRescue(activeCompanyId, records, record.id, playbook);
     setRecords(updated);
+
+    const logged = recordApprovedAction({
+      actionName: `Churn Concession Applied: ${record.accountName}`,
+      category: 'crm',
+      target: `${record.accountName} ($${playbook.savedArr.toLocaleString()} ARR)`,
+      details: `Authorized concession: ${playbook.proposedConcession}. Strategy: ${playbook.rescueStrategy.slice(0, 100)}...`,
+      impactLevel: 'HIGH',
+      actionType: 'APPLY_CONCESSION',
+      undoData: {
+        companyId: activeCompanyId,
+        userId,
+        dealId: record.id,
+        previousHealth: record.healthScore,
+        previousStage: record.stage
+      }
+    });
+
+    if (logged.undoExpiresAt) {
+      setActiveRadarUndo({
+        id: logged.id,
+        actionName: `Apply Churn Concession`,
+        target: record.accountName,
+        expiresAt: logged.undoExpiresAt
+      });
+    }
+
     addActivityLog(
       userId,
       'RADAR_ACTION_TRIGGERED',
       'SaaS Churn Rescued',
-      `Applied AI Concession to ${selectedRecordForChurn.accountName}: ${churnPlaybook.proposedConcession} ($${churnPlaybook.savedArr.toLocaleString()} ARR protected).`
+      `Applied AI Concession to ${record.accountName}: ${playbook.proposedConcession} ($${playbook.savedArr.toLocaleString()} ARR protected).`
     );
+
+    showNotification(`✓ Authorized: Churn concession applied to ${record.accountName}. 2-minute Undo window active.`);
+    setChurnApproveModal(null);
     setChurnModalOpen(false);
   };
 
@@ -604,6 +834,58 @@ export const RevenueRadarView: React.FC = () => {
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500 max-w-7xl mx-auto pb-12">
+      {/* Toast Notification */}
+      {radarToast && (
+        <div className="fixed bottom-6 right-6 z-50 p-4 rounded-xl bg-gradient-to-r from-amber-400 to-yellow-500 text-black font-bold text-xs shadow-2xl flex items-center gap-2 animate-bounce">
+          <CheckCircle2 className="w-4 h-4" />
+          <span>{radarToast}</span>
+        </div>
+      )}
+
+      {/* 2-Minute Undo Action Safety Window Banner */}
+      {activeRadarUndo && (
+        <div className="p-4 rounded-2xl bg-gradient-to-r from-amber-500/20 via-yellow-500/15 to-transparent border border-[#FFD700]/50 shadow-2xl flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 animate-pulse">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-[#FFD700]/20 border border-[#FFD700]/40 flex items-center justify-center text-[#FFD700]">
+              <RotateCcw className="w-5 h-5 animate-spin" style={{ animationDuration: '6s' }} />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-bold text-white uppercase tracking-wider">
+                  {activeRadarUndo.actionName} ({activeRadarUndo.target})
+                </span>
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#FFD700] text-black font-mono font-black">
+                  Undo Safety Window: {Math.floor(radarUndoSecondsLeft / 60)}:{String(radarUndoSecondsLeft % 60).padStart(2, '0')}
+                </span>
+              </div>
+              <p className="text-[11px] text-white/60 mt-0.5">
+                Audit record logged. You have a 2-minute executive safety window to recall this autonomous action and revert CRM state.
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={handleUndoRadarAction}
+            className="px-4 py-2 rounded-xl bg-rose-500 hover:bg-rose-600 text-white font-bold text-xs flex items-center gap-2 cursor-pointer shadow-lg transition-transform active:scale-95 whitespace-nowrap"
+          >
+            <RotateCcw className="w-4 h-4" />
+            <span>Undo Action (Rollback)</span>
+          </button>
+        </div>
+      )}
+
+      {/* Human-in-the-Loop Governance Guarantee Banner */}
+      <div className="p-3.5 rounded-xl bg-black/40 border border-white/10 flex items-center justify-between text-xs text-white/70">
+        <div className="flex items-center gap-2.5">
+          <ShieldCheck className="w-4 h-4 text-[#FFD700]" />
+          <span>
+            <strong className="text-white">Strict Executive Governance:</strong> Deals are never auto-moved and emails are never dispatched without explicit human approval. Every action creates an audit log with a 2-minute undo safety window.
+          </span>
+        </div>
+        <span className="text-[10px] font-mono uppercase tracking-wider text-emerald-400 font-bold bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-500/20 whitespace-nowrap">
+          Zero Auto-Move Enforced
+        </span>
+      </div>
+
       {/* Top Banner / Breadcrumb & Global Action Controls */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 pb-2 border-b border-white/5">
         <div className="space-y-2">
@@ -1699,10 +1981,30 @@ export const RevenueRadarView: React.FC = () => {
                       </span>
                     </div>
 
-                    <div className="flex items-center gap-2">
-                      <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-white/5 text-white/70">
-                        {deal.stage}
-                      </span>
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-1.5" title="Zero Auto-Move: Human Authorization Enforced">
+                        <Shield className="w-3.5 h-3.5 text-[#FFD700]" />
+                        <select
+                          value={deal.stage}
+                          onChange={(e) => {
+                            const newStage = e.target.value;
+                            if (newStage !== deal.stage) {
+                              setDealMoveModal({ deal, proposedStage: newStage });
+                            }
+                          }}
+                          className="px-2 py-1 rounded-lg bg-black/80 border border-white/20 text-[11px] font-bold text-white focus:outline-none focus:border-[#FFD700] cursor-pointer"
+                          title="Change deal stage (Requires Human Approval)"
+                        >
+                          <option value="Lead">Lead</option>
+                          <option value="Qualified">Qualified</option>
+                          <option value="Proposal">Proposal</option>
+                          <option value="Negotiation">Negotiation</option>
+                          <option value="Contract Sent">Contract Sent</option>
+                          <option value="Closed Won">Closed Won</option>
+                          <option value="Active Client">Active Client</option>
+                          <option value="Renewal At Risk">Renewal At Risk</option>
+                        </select>
+                      </div>
                       <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
                         isAtRisk ? 'bg-rose-500/20 text-rose-300' : 'bg-emerald-500/20 text-emerald-300'
                       }`}>
@@ -2329,6 +2631,214 @@ export const RevenueRadarView: React.FC = () => {
               Save SaaS Deal
             </button>
           </form>
+        </div>
+      )}
+
+      {/* APPROVAL MODAL 1: MOVE DEAL STAGE */}
+      {dealMoveModal && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="bg-[#121212] border border-[#FFD700]/50 rounded-2xl p-6 max-w-md w-full space-y-5 shadow-2xl">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-[#FFD700]/20 border border-[#FFD700]/40 flex items-center justify-center text-[#FFD700]">
+                <ShieldCheck className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-white">Human Authorization Required</h3>
+                <p className="text-xs text-white/50">Deal Stage Transition Governance</p>
+              </div>
+            </div>
+
+            <div className="p-4 rounded-xl bg-black/50 border border-white/10 space-y-2 text-xs">
+              <div className="flex justify-between">
+                <span className="text-white/60">Account:</span>
+                <span className="text-white font-bold">{dealMoveModal.deal.accountName}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-white/60">Deal Value:</span>
+                <span className="text-[#FFD700] font-mono font-bold">${dealMoveModal.deal.dealValue.toLocaleString()}</span>
+              </div>
+              <div className="flex justify-between items-center pt-2 border-t border-white/10">
+                <span className="text-white/60">Stage Movement:</span>
+                <div className="flex items-center gap-2">
+                  <span className="px-2 py-0.5 rounded bg-white/10 text-white/80 font-bold">{dealMoveModal.deal.stage}</span>
+                  <span className="text-[#FFD700]">→</span>
+                  <span className="px-2 py-0.5 rounded bg-[#FFD700]/20 text-[#FFD700] font-bold border border-[#FFD700]/30">{dealMoveModal.proposedStage}</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/20 text-[11px] text-amber-200/90 leading-relaxed">
+              <strong>Zero Auto-Move Policy:</strong> PRIME AI never autonomously transitions deals without executive consent. Authorizing this action records an immutable audit log entry and activates a 2-minute undo safety window.
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => setDealMoveModal(null)}
+                className="flex-1 py-2.5 rounded-xl border border-white/10 text-white/70 hover:bg-white/5 text-xs font-semibold cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmDealMove}
+                className="flex-1 py-2.5 rounded-xl bg-[#FFD700] hover:bg-[#FFE55C] text-black text-xs font-bold transition-all shadow-[0_0_20px_rgba(255,215,0,0.2)] cursor-pointer"
+              >
+                Authorize &amp; Move Stage
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* APPROVAL MODAL 2: CONVERT PQL */}
+      {pqlApproveModal && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="bg-[#121212] border border-[#FFD700]/50 rounded-2xl p-6 max-w-md w-full space-y-5 shadow-2xl">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-purple-500/20 border border-purple-500/40 flex items-center justify-center text-purple-300">
+                <ShieldCheck className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-white">Human Authorization Required</h3>
+                <p className="text-xs text-white/50">PQL Product-Led Conversion</p>
+              </div>
+            </div>
+
+            <div className="p-4 rounded-xl bg-black/50 border border-white/10 space-y-2 text-xs">
+              <div className="flex justify-between">
+                <span className="text-white/60">User / Account:</span>
+                <span className="text-white font-bold">{pqlApproveModal.userName} ({pqlApproveModal.accountName})</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-white/60">Target Tier:</span>
+                <span className="text-purple-300 font-bold">{pqlApproveModal.targetPlan}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-white/60">Estimated ARR Uplift:</span>
+                <span className="text-emerald-400 font-mono font-bold">+${pqlApproveModal.estimatedArrUplift.toLocaleString()}</span>
+              </div>
+            </div>
+
+            <div className="p-3 rounded-lg bg-white/5 border border-white/10 text-[11px] text-white/70 leading-relaxed">
+              Authorizing will mark this opportunity converted in the SaaS telemetry pipeline, create an audit log, and grant a 2-minute safety window for rollback.
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => setPqlApproveModal(null)}
+                className="flex-1 py-2.5 rounded-xl border border-white/10 text-white/70 hover:bg-white/5 text-xs font-semibold cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmPqlConvert}
+                className="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-purple-500 to-indigo-600 text-white text-xs font-bold transition-all shadow-lg cursor-pointer"
+              >
+                Authorize Conversion
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* APPROVAL MODAL 3: MULTI-YEAR LOCK-IN */}
+      {multiYearModal && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="bg-[#121212] border border-[#FFD700]/50 rounded-2xl p-6 max-w-md w-full space-y-5 shadow-2xl">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400">
+                <ShieldCheck className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-white">Human Authorization Required</h3>
+                <p className="text-xs text-white/50">Multi-Year Contract Lock-In</p>
+              </div>
+            </div>
+
+            <div className="p-4 rounded-xl bg-black/50 border border-white/10 space-y-2 text-xs">
+              <div className="flex justify-between">
+                <span className="text-white/60">Account:</span>
+                <span className="text-white font-bold">{multiYearModal.item.accountName}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-white/60">Term:</span>
+                <span className="text-emerald-400 font-bold">{multiYearModal.years} Years Contract</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-white/60">Total Contract ARR:</span>
+                <span className="text-[#FFD700] font-mono font-bold">${(multiYearModal.item.contractArr * multiYearModal.years).toLocaleString()}</span>
+              </div>
+            </div>
+
+            <div className="p-3 rounded-lg bg-white/5 border border-white/10 text-[11px] text-white/70 leading-relaxed">
+              Secures account renewal against competitor poaching. An audit log entry will be created and you will have a 2-minute safety window to recall this lock-in.
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => setMultiYearModal(null)}
+                className="flex-1 py-2.5 rounded-xl border border-white/10 text-white/70 hover:bg-white/5 text-xs font-semibold cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmLockInMultiYear}
+                className="flex-1 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-black text-xs font-bold transition-all shadow-lg cursor-pointer"
+              >
+                Authorize Contract Lock-In
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* APPROVAL MODAL 4: CHURN CONCESSION */}
+      {churnApproveModal && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="bg-[#121212] border border-[#FFD700]/50 rounded-2xl p-6 max-w-md w-full space-y-5 shadow-2xl">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-rose-500/20 border border-rose-500/40 flex items-center justify-center text-rose-400">
+                <ShieldCheck className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-white">Human Authorization Required</h3>
+                <p className="text-xs text-white/50">Deploy Churn Concession &amp; Rescue</p>
+              </div>
+            </div>
+
+            <div className="p-4 rounded-xl bg-black/50 border border-white/10 space-y-2 text-xs">
+              <div className="flex justify-between">
+                <span className="text-white/60">Account:</span>
+                <span className="text-white font-bold">{churnApproveModal.record.accountName}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-white/60">Proposed Concession:</span>
+                <span className="text-amber-400 font-bold text-right max-w-[220px]">{churnApproveModal.playbook.proposedConcession}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-white/60">ARR Protected:</span>
+                <span className="text-emerald-400 font-mono font-bold">${churnApproveModal.playbook.savedArr.toLocaleString()}</span>
+              </div>
+            </div>
+
+            <div className="p-3 rounded-lg bg-rose-500/10 border border-rose-500/20 text-[11px] text-rose-200/90 leading-relaxed">
+              Applying concessions affects pricing terms and customer health scores. Authorizing this action creates an audit trail entry with a 2-minute rollback safety window.
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => setChurnApproveModal(null)}
+                className="flex-1 py-2.5 rounded-xl border border-white/10 text-white/70 hover:bg-white/5 text-xs font-semibold cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmChurnConcession}
+                className="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-rose-500 to-amber-500 text-white text-xs font-bold transition-all shadow-lg cursor-pointer"
+              >
+                Authorize &amp; Apply Concession
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

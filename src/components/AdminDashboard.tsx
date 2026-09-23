@@ -41,10 +41,19 @@ import {
   BarChart3,
   Radio,
   UserPlus,
-  Compass
+  Compass,
+  Trash2
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { fetchAdminDashboardData, fetchAllFeedbacks, updateFeedbackStatus, logVisitorSession } from '../services/db';
+import { 
+  fetchAdminDashboardData, 
+  fetchAllFeedbacks, 
+  updateFeedbackStatus, 
+  logVisitorSession, 
+  purgeAllMockDataAndResetLive,
+  purgeDuplicateAdnanAccountsAndSessions,
+  deleteVisitorSession
+} from '../services/db';
 import { AdminDashboardData, AdminUserRecord, CompanySummary, FeedbackTicket, FeedbackStatus, VisitorSessionRecord } from '../types';
 import { MarketingStudio } from './MarketingStudio';
 
@@ -106,6 +115,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) =>
   const loadData = async () => {
     setLoading(true);
     try {
+      // Auto-clean any duplicate Adnan sessions/accounts ensuring only the 1 primary master admin is preserved
+      await purgeDuplicateAdnanAccountsAndSessions();
+
       const [res, fbList] = await Promise.all([
         fetchAdminDashboardData(),
         fetchAllFeedbacks()
@@ -254,6 +266,33 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) =>
         </div>
 
         <div className="flex items-center gap-3">
+          <button
+            onClick={async () => {
+              if (window.confirm('کیا آپ اضافی ڈپلیکیٹ ریکارڈز ڈیلیٹ کر کے صرف اپنا اصل ماسٹر ایڈمن اکاؤنٹ (adnanakhan245@gmail.com) باقی رکھنا چاہتے ہیں؟')) {
+                const res = await purgeDuplicateAdnanAccountsAndSessions();
+                await loadData();
+                alert(`کامیابی! اضافی ریکارڈز صاف کر دیے گئے ہیں۔ صرف اصل ماسٹر ایڈمن اکاؤنٹ باقی ہے۔ (Cleaned ${res.deletedSessions} duplicate sessions and ${res.deletedAccounts} accounts).`);
+              }
+            }}
+            title="Keep only the 1 original Master Admin account and clean any duplicate records"
+            className="px-3.5 py-2.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-xs font-semibold text-amber-300 flex items-center gap-2 transition-all cursor-pointer"
+          >
+            <Shield className="w-3.5 h-3.5" />
+            <span>فالتو اکاؤنٹس صاف کریں (Keep Master Admin Only)</span>
+          </button>
+          <button
+            onClick={async () => {
+              if (window.confirm('کیا آپ واقعی تمام جعلی/سیمپل ڈیٹا، فرضی وزٹرز اور ڈیمو ریکارڈز کو فوری طور پر صاف کرنا چاہتے ہیں؟ (Are you sure you want to clean all mock/sample data?)')) {
+                await purgeAllMockDataAndResetLive();
+                await loadData();
+              }
+            }}
+            title="Clean all sample/mock data & reset real traffic only"
+            className="px-3.5 py-2.5 rounded-xl bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 text-xs font-semibold text-red-400 flex items-center gap-2 transition-all cursor-pointer"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+            <span>جعلی ڈیٹا صاف کریں (Purge Mock Data)</span>
+          </button>
           <button
             onClick={loadData}
             disabled={loading}
@@ -831,11 +870,25 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) =>
                             </div>
                           </td>
 
-                          {/* Actions Count */}
+                          {/* Actions Count & Delete */}
                           <td className="py-3.5 px-5 text-right">
-                            <span className="px-2 py-0.5 rounded-full bg-white/5 border border-white/10 text-white/70 font-mono text-[10px]">
-                              {s.actionsCount || 1} actions
-                            </span>
+                            <div className="flex items-center justify-end gap-2">
+                              <span className="px-2 py-0.5 rounded-full bg-white/5 border border-white/10 text-white/70 font-mono text-[10px]">
+                                {s.actionsCount || 1} actions
+                              </span>
+                              <button
+                                onClick={async () => {
+                                  if (window.confirm('کیا آپ اس سیشن لاگ کو ڈیلیٹ کرنا چاہتے ہیں؟')) {
+                                    await deleteVisitorSession(s.id);
+                                    await loadData();
+                                  }
+                                }}
+                                title="Delete session log"
+                                className="p-1 rounded-lg hover:bg-red-500/20 text-white/30 hover:text-red-400 transition-colors cursor-pointer"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       );

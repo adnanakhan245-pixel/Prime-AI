@@ -20,10 +20,13 @@ import {
   Check,
   Copy,
   Database,
-  Layers
+  Layers,
+  RotateCcw,
+  ShieldCheck
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { fetchUserEmails, updateEmailStatus, saveEmail, deleteEmail, saveSentEmailToSupabase } from '../services/db';
+import { recordApprovedAction, undoApprovedAction } from '../services/approvals';
 import { EmailItem } from '../types';
 
 interface AiDraftModalState {
@@ -106,6 +109,44 @@ export const InboxView: React.FC = () => {
   // Popup Modal State for AI 3-Line Draft Reply
   const [aiModal, setAiModal] = useState<AiDraftModalState | null>(null);
 
+  // Active Undo Action State (2-minute safety window)
+  const [activeUndoAction, setActiveUndoAction] = useState<{
+    id: string;
+    emailId: string;
+    subject: string;
+    sender: string;
+    expiresAt: number;
+  } | null>(null);
+  const [undoSecondsRemaining, setUndoSecondsRemaining] = useState<number>(0);
+
+  // Live timer for undo countdown
+  useEffect(() => {
+    if (!activeUndoAction) return;
+    const updateCountdown = () => {
+      const remaining = Math.max(0, Math.ceil((activeUndoAction.expiresAt - Date.now()) / 1000));
+      setUndoSecondsRemaining(remaining);
+      if (remaining <= 0) {
+        setActiveUndoAction(null);
+      }
+    };
+    updateCountdown();
+    const timer = setInterval(updateCountdown, 1000);
+    return () => clearInterval(timer);
+  }, [activeUndoAction]);
+
+  // Handle Undo Send
+  const handleUndoSend = async () => {
+    if (!activeUndoAction) return;
+    try {
+      await undoApprovedAction(activeUndoAction.id);
+      showToast(`↩️ Email dispatch cancelled! "${activeUndoAction.subject}" returned to review.`);
+      setActiveUndoAction(null);
+      await loadEmails();
+    } catch (err) {
+      console.error('Error undoing email send:', err);
+    }
+  };
+
   const loadEmails = async () => {
     if (!user) {
       setEmails(DEMO_INBOX_EMAILS);
@@ -150,6 +191,11 @@ export const InboxView: React.FC = () => {
 
   useEffect(() => {
     loadEmails();
+    const handleStatusSync = () => {
+      loadEmails();
+    };
+    window.addEventListener('prime_email_status_updated', handleStatusSync);
+    return () => window.removeEventListener('prime_email_status_updated', handleStatusSync);
   }, [user]);
 
   const showToast = (msg: string) => {
@@ -220,7 +266,33 @@ export const InboxView: React.FC = () => {
       // 2. Update local DB & Firestore email status
       await updateEmailStatus(companyId, user.uid, aiModal.email.id, 'SENT', finalReply);
 
-      showToast(`✓ Dispatched to ${aiModal.email.sender} & saved to Supabase 'emails' table (status='sent')`);
+      // 3. Create Audit Log Entry with Undo Option
+      const loggedAction = recordApprovedAction({
+        actionName: `Executive Email Dispatched: "${aiModal.email.subject}"`,
+        category: 'email',
+        target: `${aiModal.email.sender} (${aiModal.email.senderEmail})`,
+        details: `Dispatched approved response. Snippet: "${finalReply.slice(0, 140)}..."`,
+        impactLevel: 'HIGH',
+        actionType: 'SEND_EMAIL',
+        undoData: {
+          companyId,
+          userId: user.uid,
+          emailId: aiModal.email.id,
+          previousEmailStatus: 'PENDING_REVIEW'
+        }
+      });
+
+      if (loggedAction.undoExpiresAt) {
+        setActiveUndoAction({
+          id: loggedAction.id,
+          emailId: aiModal.email.id,
+          subject: aiModal.email.subject,
+          sender: aiModal.email.sender,
+          expiresAt: loggedAction.undoExpiresAt
+        });
+      }
+
+      showToast(`✓ Dispatched to ${aiModal.email.sender}. Audit log created with 2-minute Undo safety window.`);
       
       // Close modal and reload
       setAiModal(null);
@@ -242,7 +314,34 @@ export const InboxView: React.FC = () => {
     try {
       await saveSentEmailToSupabase(user.uid, selectedEmail, draftContent);
       await updateEmailStatus(companyId, user.uid, selectedEmail.id, 'SENT', draftContent);
-      showToast(`✓ Approved & Dispatched reply to ${selectedEmail.sender} (saved to Supabase status='sent')`);
+
+      // Create Audit Log Entry with Undo Option
+      const loggedAction = recordApprovedAction({
+        actionName: `Executive Email Dispatched: "${selectedEmail.subject}"`,
+        category: 'email',
+        target: `${selectedEmail.sender} (${selectedEmail.senderEmail})`,
+        details: `Dispatched approved response. Snippet: "${draftContent.slice(0, 140)}..."`,
+        impactLevel: 'HIGH',
+        actionType: 'SEND_EMAIL',
+        undoData: {
+          companyId,
+          userId: user.uid,
+          emailId: selectedEmail.id,
+          previousEmailStatus: 'PENDING_REVIEW'
+        }
+      });
+
+      if (loggedAction.undoExpiresAt) {
+        setActiveUndoAction({
+          id: loggedAction.id,
+          emailId: selectedEmail.id,
+          subject: selectedEmail.subject,
+          sender: selectedEmail.sender,
+          expiresAt: loggedAction.undoExpiresAt
+        });
+      }
+
+      showToast(`✓ Approved & Dispatched reply to ${selectedEmail.sender}. 2-minute Undo safety window active.`);
       await loadEmails();
     } catch (err) {
       console.error('Error approving email:', err);
@@ -279,7 +378,34 @@ export const InboxView: React.FC = () => {
       const replyBody = email.aiDraftReply || `Hi ${email.sender.split(' ')[0]},\n\nThank you for reaching out regarding "${email.subject}". Our executive team has reviewed and fully approved the milestones.\n\nOur operations lead will dispatch finalized confirmation by end of day.\n\nBest regards,\nExecutive Office | ${profile?.companyName || 'Apex Enterprises'}`;
       await saveSentEmailToSupabase(user.uid, email, replyBody);
       await updateEmailStatus(companyId, user.uid, email.id, 'APPROVED', replyBody);
-      showToast(`✓ 1-Click Approved! Reply to ${email.sender} synced to Supabase.`);
+
+      // Create Audit Log Entry with Undo Option
+      const loggedAction = recordApprovedAction({
+        actionName: `1-Click Approved Reply: "${email.subject}"`,
+        category: 'email',
+        target: `${email.sender} (${email.senderEmail})`,
+        details: `Dispatched 1-click executive reply. Snippet: "${replyBody.slice(0, 140)}..."`,
+        impactLevel: 'HIGH',
+        actionType: 'SEND_EMAIL',
+        undoData: {
+          companyId,
+          userId: user.uid,
+          emailId: email.id,
+          previousEmailStatus: 'PENDING_REVIEW'
+        }
+      });
+
+      if (loggedAction.undoExpiresAt) {
+        setActiveUndoAction({
+          id: loggedAction.id,
+          emailId: email.id,
+          subject: email.subject,
+          sender: email.sender,
+          expiresAt: loggedAction.undoExpiresAt
+        });
+      }
+
+      showToast(`✓ 1-Click Approved! Reply to ${email.sender} synced. 2-minute Undo safety window active.`);
       await loadEmails();
     } catch (err) {
       console.error('Error approving email:', err);
@@ -567,6 +693,50 @@ export const InboxView: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* 2-Minute Undo Send Safety Window Banner */}
+      {activeUndoAction && (
+        <div className="p-4 rounded-xl bg-gradient-to-r from-amber-500/20 via-yellow-500/15 to-transparent border border-[#FFD700]/50 shadow-2xl flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 animate-pulse">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-lg bg-[#FFD700]/20 border border-[#FFD700]/40 flex items-center justify-center text-[#FFD700]">
+              <RotateCcw className="w-5 h-5 animate-spin" style={{ animationDuration: '6s' }} />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-bold text-white uppercase tracking-wider">
+                  Email Dispatched to {activeUndoAction.sender}
+                </span>
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#FFD700] text-black font-mono font-black">
+                  Undo Safety Window: {Math.floor(undoSecondsRemaining / 60)}:{String(undoSecondsRemaining % 60).padStart(2, '0')}
+                </span>
+              </div>
+              <p className="text-[11px] text-white/60 mt-0.5">
+                Audit record logged. You have a 2-minute safety window to recall this action and revert to inbox review.
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={handleUndoSend}
+            className="px-4 py-2 rounded-lg bg-red-500 hover:bg-red-600 text-white font-bold text-xs flex items-center gap-2 cursor-pointer shadow-lg transition-transform active:scale-95 whitespace-nowrap"
+          >
+            <RotateCcw className="w-4 h-4" />
+            <span>Undo Send (Recall)</span>
+          </button>
+        </div>
+      )}
+
+      {/* Human-in-the-Loop Governance Policy Banner */}
+      <div className="p-3.5 rounded-xl bg-black/40 border border-white/10 flex items-center justify-between text-xs text-white/70">
+        <div className="flex items-center gap-2.5">
+          <ShieldCheck className="w-4 h-4 text-[#FFD700]" />
+          <span>
+            <strong className="text-white">Zero Unapproved Execution:</strong> Autonomous AI generates drafts; every email dispatch requires explicit executive authorization and creates an audit log with an undo option.
+          </span>
+        </div>
+        <span className="text-[10px] font-mono uppercase tracking-wider text-emerald-400 font-bold bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
+          Enforced
+        </span>
+      </div>
 
       {/* Header Bar */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">

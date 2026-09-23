@@ -9,32 +9,36 @@ import {
   Sparkles, 
   ArrowUpRight, 
   Plus, 
-  RefreshCw,
-  Zap,
-  Activity,
-  Send,
-  AlertTriangle,
-  Flame,
-  Layers,
-  Check,
-  Radar,
-  Mic,
-  Users,
-  Video,
-  Target,
-  DollarSign,
-  Calculator,
-  Briefcase
+  RefreshCw, 
+  Zap, 
+  Activity, 
+  Send, 
+  AlertTriangle, 
+  Flame, 
+  Layers, 
+  Check, 
+  Radar, 
+  Mic, 
+  Users, 
+  Video, 
+  Target, 
+  DollarSign, 
+  Calculator, 
+  Briefcase,
+  BrainCircuit,
+  SlidersHorizontal,
+  ChevronRight
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { AgentSwarmGrid } from './AgentSwarmGrid';
+import { ExecutiveToolsDirectory } from './ExecutiveToolsDirectory';
 import { 
   fetchUserActivities, 
   getKPISummary, 
-  saveEmail,
-  seedInitialUserDataIfEmpty,
-  fetchUserDocuments,
-  fetchUserEmails
+  saveEmail, 
+  seedInitialUserDataIfEmpty, 
+  fetchUserDocuments, 
+  fetchUserEmails 
 } from '../services/db';
 import { ActivityItem, KPISummary, CRMRecord } from '../types';
 import { 
@@ -88,6 +92,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigate, onOpen
   const [loading, setLoading] = useState(true);
   const [simulatingEmail, setSimulatingEmail] = useState(false);
   const [brainPrompt, setBrainPrompt] = useState('');
+  const [activeTab, setActiveTab] = useState<'overview' | 'executive-suite' | 'profit-suite' | 'swarms' | 'all-tools'>('overview');
 
   const loadDashboardData = async () => {
     const effectiveUid = user?.uid || 'guest_demo_user';
@@ -326,6 +331,69 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigate, onOpen
         </div>
       </div>
 
+      {/* Sub-View Navigation Tabs - Keeps Home Page Clean & Uncluttered */}
+      <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none border-b border-white/10">
+        <button
+          onClick={() => setActiveTab('overview')}
+          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
+            activeTab === 'overview'
+              ? 'bg-[#FFD700] text-black shadow-md'
+              : 'bg-white/5 text-white/60 hover:bg-white/10 hover:text-white'
+          }`}
+        >
+          <Activity className="w-3.5 h-3.5" />
+          <span>Executive Overview</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab('executive-suite')}
+          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
+            activeTab === 'executive-suite'
+              ? 'bg-[#FFD700] text-black shadow-md'
+              : 'bg-white/5 text-white/60 hover:bg-white/10 hover:text-white'
+          }`}
+        >
+          <Users className="w-3.5 h-3.5" />
+          <span>AI Executives (6)</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab('profit-suite')}
+          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
+            activeTab === 'profit-suite'
+              ? 'bg-emerald-400 text-black shadow-md'
+              : 'bg-white/5 text-white/60 hover:bg-white/10 hover:text-white'
+          }`}
+        >
+          <DollarSign className="w-3.5 h-3.5" />
+          <span>Cost & Margins (3)</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab('swarms')}
+          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
+            activeTab === 'swarms'
+              ? 'bg-purple-400 text-black shadow-md'
+              : 'bg-white/5 text-white/60 hover:bg-white/10 hover:text-white'
+          }`}
+        >
+          <Layers className="w-3.5 h-3.5" />
+          <span>Agent Swarms</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab('all-tools')}
+          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
+            activeTab === 'all-tools'
+              ? 'bg-gradient-to-r from-[#FFD700] to-amber-500 text-black shadow-md'
+              : 'bg-[#FFD700]/10 text-[#FFD700] hover:bg-[#FFD700]/20'
+          }`}
+        >
+          <Sparkles className="w-3.5 h-3.5" />
+          <span>All Tools Directory (15+)</span>
+        </button>
+      </div>
+
       {/* AUTONOMOUS COO DAILY BRIEFING CARD IF GENERATED */}
       {briefing && (
         <section className="bg-gradient-to-br from-[#1A1810] to-[#121212] rounded-2xl border border-[#FFD700]/30 p-6 shadow-2xl relative overflow-hidden">
@@ -524,282 +592,513 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigate, onOpen
         </div>
       </section>
 
-      {/* EXECUTIVE EXPANSION SUITE (CLOSER, HIRING, MEETINGS, GROWTH LAB, STRATEGY BOARD) */}
-      <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-        {/* PRIME Closer AI Banner */}
-        <div 
-          onClick={() => onNavigate('closer')}
-          className="p-5 rounded-2xl bg-gradient-to-br from-[#16130B] to-[#0F0F0F] border border-[#FFD700]/25 hover:border-[#FFD700]/50 shadow-xl cursor-pointer transition-all group flex flex-col justify-between"
-        >
-          <div className="space-y-2">
+      {/* ============================================================ */}
+      {/* TAB 1: EXECUTIVE OVERVIEW (CLEAN, FOCUSED HOME VIEW)          */}
+      {/* ============================================================ */}
+      {activeTab === 'overview' && (
+        <>
+          {/* PRIMARY 3 CORE DAILY TOOLS (Executive Inbox, Documents Intel, PRIME Brain) */}
+          <section className="space-y-3">
             <div className="flex items-center justify-between">
-              <div className="w-8 h-8 rounded-xl bg-[#FFD700]/15 border border-[#FFD700]/30 flex items-center justify-center text-[#FFD700]">
-                <Mic className="w-4 h-4" />
-              </div>
-              <span className="px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-[#FFD700] text-black">
-                Page 6
-              </span>
+              <h3 className="text-xs sm:text-sm font-semibold uppercase tracking-widest text-white/50 flex items-center gap-2">
+                <Crown className="w-3.5 h-3.5 text-[#FFD700]" />
+                <span>Primary Executive Daily Hub</span>
+              </h3>
+              <span className="text-[11px] text-white/40">Focused Daily Workflow</span>
             </div>
-            <h3 className="text-sm font-bold text-white group-hover:text-[#FFD700] transition-colors">
-              PRIME Closer AI
-            </h3>
-            <p className="text-xs text-white/50 leading-relaxed">
-              Sales call audio coaching, 0-100 score & 1 winning replacement script.
-            </p>
-          </div>
-          <div className="mt-3 pt-3 border-t border-white/5 flex items-center justify-between text-[11px] text-[#FFD700] font-semibold">
-            <span>Analyze Calls</span>
-            <ArrowUpRight className="w-3.5 h-3.5" />
-          </div>
-        </div>
 
-        {/* PRIME Hiring AI Banner */}
-        <div 
-          onClick={() => onNavigate('hiring')}
-          className="p-5 rounded-2xl bg-gradient-to-br from-[#111418] to-[#0F0F0F] border border-blue-500/25 hover:border-blue-500/50 shadow-xl cursor-pointer transition-all group flex flex-col justify-between"
-        >
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <div className="w-8 h-8 rounded-xl bg-blue-500/15 border border-blue-500/30 flex items-center justify-center text-blue-400">
-                <Users className="w-4 h-4" />
-              </div>
-              <span className="px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-blue-400 text-black">
-                Page 7
-              </span>
-            </div>
-            <h3 className="text-sm font-bold text-white group-hover:text-blue-300 transition-colors">
-              PRIME Hiring AI
-            </h3>
-            <p className="text-xs text-white/50 leading-relaxed">
-              Multi-CV candidate ranker, match score bars & 10 interview questions.
-            </p>
-          </div>
-          <div className="mt-3 pt-3 border-t border-white/5 flex items-center justify-between text-[11px] text-blue-400 font-semibold">
-            <span>Rank Candidates</span>
-            <ArrowUpRight className="w-3.5 h-3.5" />
-          </div>
-        </div>
-
-        {/* PRIME Meeting AI Banner */}
-        <div 
-          onClick={() => onNavigate('meetings')}
-          className="p-5 rounded-2xl bg-gradient-to-br from-[#18110D] to-[#0F0F0F] border border-amber-500/25 hover:border-amber-500/50 shadow-xl cursor-pointer transition-all group flex flex-col justify-between"
-        >
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <div className="w-8 h-8 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-400">
-                <Video className="w-4 h-4" />
-              </div>
-              <span className="px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-[#FFD700] text-black">
-                Page 8
-              </span>
-            </div>
-            <h3 className="text-sm font-bold text-white group-hover:text-amber-300 transition-colors">
-              PRIME Meeting AI
-            </h3>
-            <p className="text-xs text-white/50 leading-relaxed">
-              Meeting synthesis, action items checklist & draft follow-up email dispatch.
-            </p>
-          </div>
-          <div className="mt-3 pt-3 border-t border-white/5 flex items-center justify-between text-[11px] text-amber-400 font-semibold">
-            <span>Synthesize Meetings</span>
-            <ArrowUpRight className="w-3.5 h-3.5" />
-          </div>
-        </div>
-
-        {/* PRIME Growth Lab Banner */}
-        <div 
-          onClick={() => onNavigate('growth')}
-          className="p-5 rounded-2xl bg-gradient-to-br from-[#0D1812] to-[#0F0F0F] border border-emerald-500/25 hover:border-emerald-500/50 shadow-xl cursor-pointer transition-all group flex flex-col justify-between"
-        >
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <div className="w-8 h-8 rounded-xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
-                <TrendingUp className="w-4 h-4" />
-              </div>
-              <span className="px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-emerald-400 text-black">
-                Page 9
-              </span>
-            </div>
-            <h3 className="text-sm font-bold text-white group-hover:text-emerald-300 transition-colors">
-              PRIME Growth Lab
-            </h3>
-            <p className="text-xs text-white/50 leading-relaxed">
-              Commercial website growth score, top 3 revenue levers & 30-day action plan.
-            </p>
-          </div>
-          <div className="mt-3 pt-3 border-t border-white/5 flex items-center justify-between text-[11px] text-emerald-400 font-semibold">
-            <span>Run Growth Audit</span>
-            <ArrowUpRight className="w-3.5 h-3.5" />
-          </div>
-        </div>
-
-        {/* PRIME Strategy Board Banner (PAGE 10) */}
-        <div 
-          onClick={() => onNavigate('strategy')}
-          className="p-5 rounded-2xl bg-gradient-to-br from-[#18140B] to-[#0F0F0F] border border-[#FFD700]/35 hover:border-[#FFD700]/70 shadow-xl cursor-pointer transition-all group flex flex-col justify-between"
-        >
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <div className="w-8 h-8 rounded-xl bg-[#FFD700]/20 border border-[#FFD700]/40 flex items-center justify-center text-[#FFD700]">
-                <Target className="w-4 h-4" />
-              </div>
-              <span className="px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-[#FFD700] text-black">
-                Page 10
-              </span>
-            </div>
-            <h3 className="text-sm font-bold text-white group-hover:text-[#FFD700] transition-colors">
-              PRIME Strategy Board
-            </h3>
-            <p className="text-xs text-white/50 leading-relaxed">
-              90-day strategy synthesizer, risk & opportunity matrix, and PDF export.
-            </p>
-          </div>
-          <div className="mt-3 pt-3 border-t border-white/5 flex items-center justify-between text-[11px] text-[#FFD700] font-semibold">
-            <span>Open Strategy Board</span>
-            <ArrowUpRight className="w-3.5 h-3.5" />
-          </div>
-        </div>
-
-        {/* PRIME Board Pack Generator Banner (PAGE 11) */}
-        <div 
-          onClick={() => onNavigate('board-pack')}
-          className="p-5 rounded-2xl bg-gradient-to-br from-[#18150B] to-[#0F0F0F] border border-[#FFD700]/35 hover:border-[#FFD700]/70 shadow-xl cursor-pointer transition-all group flex flex-col justify-between"
-        >
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <div className="w-8 h-8 rounded-xl bg-[#FFD700]/20 border border-[#FFD700]/40 flex items-center justify-center text-[#FFD700]">
-                <Briefcase className="w-4 h-4" />
-              </div>
-              <span className="px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-[#FFD700] text-black">
-                Page 11
-              </span>
-            </div>
-            <h3 className="text-sm font-bold text-white group-hover:text-[#FFD700] transition-colors">
-              PRIME Board Pack
-            </h3>
-            <p className="text-xs text-white/50 leading-relaxed">
-              Director deck synthesizer, ARR financial metrics & resolution approvals.
-            </p>
-          </div>
-          <div className="mt-3 pt-3 border-t border-white/5 flex items-center justify-between text-[11px] text-[#FFD700] font-semibold">
-            <span>Open Board Pack</span>
-            <ArrowUpRight className="w-3.5 h-3.5" />
-          </div>
-        </div>
-      </section>
-
-      {/* EXECUTIVE COST & PROFIT PROTECTION ENGINE (MONTHLY SAVINGS $1M+) */}
-      <section className="bg-gradient-to-br from-[#121815] to-[#0B0F0D] rounded-2xl border border-emerald-500/20 p-6 shadow-2xl relative overflow-hidden">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-5 pb-4 border-b border-emerald-500/10">
-          <div>
-            <div className="flex items-center gap-2 mb-1">
-              <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-400 text-black uppercase font-mono">
-                Active Margin Protection
-              </span>
-              <span className="text-[11px] text-emerald-400/80 font-semibold font-mono">
-                Target Monthly Savings: Up to $1M+
-              </span>
-            </div>
-            <h3 className="text-base font-bold text-white flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-[#FFD700]" />
-              Executive Cost Reduction & Cash Flow Recovery Modules
-            </h3>
-          </div>
-          <div className="text-xs text-white/40 font-mono">
-            Zero Mock Data • Direct Supabase & Firestore Sync
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {/* Module 1: Ad Spend & CAC Optimizer */}
-          <div 
-            onClick={() => onNavigate('ad-spend')}
-            className="p-5 rounded-xl bg-black/60 border border-emerald-500/30 hover:border-emerald-400 transition-all cursor-pointer group flex flex-col justify-between"
-          >
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <div className="w-9 h-9 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
-                  <Target className="w-5 h-5" />
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {/* Primary 1: Executive Inbox */}
+              <div
+                onClick={() => onNavigate('inbox')}
+                className="p-5 rounded-2xl bg-[#141414] border border-white/10 hover:border-[#FFD700]/50 transition-all cursor-pointer group flex flex-col justify-between shadow-lg"
+              >
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/25 flex items-center justify-center text-blue-400">
+                      <Inbox className="w-5 h-5" />
+                    </div>
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-blue-500/20 text-blue-300 border border-blue-500/30">
+                      {kpis.pendingEmailsCount || kpis.pendingEmails || 0} Pending
+                    </span>
+                  </div>
+                  <div>
+                    <h4 className="text-base font-bold text-white group-hover:text-[#FFD700] transition-colors">
+                      Executive Inbox Triage
+                    </h4>
+                    <p className="text-xs text-white/50 leading-relaxed mt-1">
+                      Urgent email scoring, high-confidence AI draft replies, and 1-click client communication dispatch.
+                    </p>
+                  </div>
                 </div>
-                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-                  Ad Spend
-                </span>
+                <div className="mt-4 pt-3 border-t border-white/5 flex items-center justify-between text-xs text-[#FFD700] font-semibold">
+                  <span>Open Triage Inbox</span>
+                  <ArrowUpRight className="w-3.5 h-3.5" />
+                </div>
               </div>
-              <h4 className="text-sm font-bold text-white group-hover:text-emerald-400 transition-colors">
-                Marketing Ad Spend & CAC Optimizer
-              </h4>
-              <p className="text-xs text-white/60 leading-relaxed">
-                Connect live paid ad campaigns across Google, Meta, LinkedIn & TikTok. Cut low-ROAS budget waste and protect margins.
+
+              {/* Primary 2: Document & Contract Intelligence */}
+              <div
+                onClick={() => onNavigate('docs')}
+                className="p-5 rounded-2xl bg-[#141414] border border-white/10 hover:border-[#FFD700]/50 transition-all cursor-pointer group flex flex-col justify-between shadow-lg"
+              >
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="w-10 h-10 rounded-xl bg-purple-500/10 border border-purple-500/25 flex items-center justify-center text-purple-400">
+                      <FileText className="w-5 h-5" />
+                    </div>
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-purple-500/20 text-purple-300 border border-purple-500/30">
+                      {kpis.docsAnalyzed} Analyzed
+                    </span>
+                  </div>
+                  <div>
+                    <h4 className="text-base font-bold text-white group-hover:text-[#FFD700] transition-colors">
+                      Document &amp; Contract Intelligence
+                    </h4>
+                    <p className="text-xs text-white/50 leading-relaxed mt-1">
+                      Deep PDF analysis, liability risk detection, red flag warnings, and instant executive summaries.
+                    </p>
+                  </div>
+                </div>
+                <div className="mt-4 pt-3 border-t border-white/5 flex items-center justify-between text-xs text-purple-400 font-semibold">
+                  <span>Upload &amp; Analyze</span>
+                  <ArrowUpRight className="w-3.5 h-3.5" />
+                </div>
+              </div>
+
+              {/* Primary 3: PRIME Brain (Autonomous COO) */}
+              <div
+                onClick={() => onNavigate('brain')}
+                className="p-5 rounded-2xl bg-[#141414] border border-[#FFD700]/30 hover:border-[#FFD700] transition-all cursor-pointer group flex flex-col justify-between shadow-lg relative overflow-hidden"
+              >
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="w-10 h-10 rounded-xl bg-[#FFD700]/15 border border-[#FFD700]/30 flex items-center justify-center text-[#FFD700]">
+                      <BrainCircuit className="w-5 h-5" />
+                    </div>
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-[#FFD700] text-black">
+                      AI COO 24/7
+                    </span>
+                  </div>
+                  <div>
+                    <h4 className="text-base font-bold text-white group-hover:text-[#FFD700] transition-colors">
+                      PRIME Brain (Autonomous COO)
+                    </h4>
+                    <p className="text-xs text-white/50 leading-relaxed mt-1">
+                      Direct strategic operations engine delivering 3 high-leverage execution steps on any business problem.
+                    </p>
+                  </div>
+                </div>
+                <div className="mt-4 pt-3 border-t border-white/5 flex items-center justify-between text-xs text-[#FFD700] font-semibold">
+                  <span>Consult AI COO</span>
+                  <ArrowUpRight className="w-3.5 h-3.5" />
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* CLEAN MODULAR SUITES NAVIGATION BRIDGE */}
+          <section className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-[#161616] via-[#121212] to-[#161616] border border-white/10 flex flex-col lg:flex-row items-center justify-between gap-4 shadow-lg">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl bg-[#FFD700]/10 border border-[#FFD700]/25 flex items-center justify-center text-[#FFD700] shrink-0">
+                <SlidersHorizontal className="w-4 h-4" />
+              </div>
+              <div>
+                <h4 className="text-xs sm:text-sm font-bold text-white">
+                  Looking for Specialized Engines? (12+ Available)
+                </h4>
+                <p className="text-[11px] text-white/50">
+                  Closer AI, Hiring AI, Meetings AI, Cash Flow Guard, Strategy Board and Agent Swarms are neatly separated into dedicated views.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 flex-wrap shrink-0">
+              <button
+                onClick={() => setActiveTab('executive-suite')}
+                className="px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 text-white text-xs font-semibold border border-white/10 transition-colors flex items-center gap-1.5 cursor-pointer"
+              >
+                <span>AI Executives (6)</span>
+                <ChevronRight className="w-3 h-3 text-white/40" />
+              </button>
+
+              <button
+                onClick={() => setActiveTab('profit-suite')}
+                className="px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 text-emerald-400 text-xs font-semibold border border-emerald-500/20 transition-colors flex items-center gap-1.5 cursor-pointer"
+              >
+                <span>Cost &amp; Margins (3)</span>
+                <ChevronRight className="w-3 h-3 text-emerald-400/40" />
+              </button>
+
+              <button
+                onClick={() => setActiveTab('swarms')}
+                className="px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 text-purple-400 text-xs font-semibold border border-purple-500/20 transition-colors flex items-center gap-1.5 cursor-pointer"
+              >
+                <span>Agent Swarms</span>
+                <ChevronRight className="w-3 h-3 text-purple-400/40" />
+              </button>
+
+              <button
+                onClick={() => setActiveTab('all-tools')}
+                className="px-3.5 py-1.5 rounded-xl bg-[#FFD700] text-black text-xs font-bold hover:bg-[#FFD700]/90 transition-all shadow-sm flex items-center gap-1.5 cursor-pointer"
+              >
+                <span>All Tools Directory</span>
+                <ArrowUpRight className="w-3 h-3" />
+              </button>
+            </div>
+          </section>
+        </>
+      )}
+
+      {/* ============================================================ */}
+      {/* TAB 2: AI EXECUTIVES (6 CO-FOUNDERS)                          */}
+      {/* ============================================================ */}
+      {activeTab === 'executive-suite' && (
+        <section className="space-y-4">
+          <div className="flex items-center justify-between pb-3 border-b border-white/10">
+            <div>
+              <h3 className="text-base sm:text-lg font-bold text-white flex items-center gap-2">
+                <Users className="w-4 h-4 text-[#FFD700]" />
+                <span>Executive Expansion Suite (6 Specialized AI Co-Founders)</span>
+              </h3>
+              <p className="text-xs text-white/50 mt-0.5">
+                Targeted AI leaders engineered for sales closing, talent screening, meeting synthesis, commercial growth, and board governance.
               </p>
             </div>
-            <div className="mt-4 pt-3 border-t border-white/5 flex items-center justify-between text-xs text-emerald-400 font-semibold">
-              <span>Open Ad Optimizer →</span>
-              <ArrowUpRight className="w-4 h-4" />
-            </div>
+            <button
+              onClick={() => setActiveTab('overview')}
+              className="text-xs text-[#FFD700] hover:underline font-semibold cursor-pointer"
+            >
+              ← Back to Overview
+            </button>
           </div>
 
-          {/* Module 2: Overdue Invoices & Cash Flow Guard */}
-          <div 
-            onClick={() => onNavigate('cashflow-guard')}
-            className="p-5 rounded-xl bg-black/60 border border-blue-500/30 hover:border-blue-400 transition-all cursor-pointer group flex flex-col justify-between"
-          >
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <div className="w-9 h-9 rounded-xl bg-blue-500/10 border border-blue-500/30 flex items-center justify-center text-blue-400">
-                  <DollarSign className="w-5 h-5" />
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {/* PRIME Closer AI Banner */}
+            <div 
+              onClick={() => onNavigate('closer')}
+              className="p-5 rounded-2xl bg-gradient-to-br from-[#16130B] to-[#0F0F0F] border border-[#FFD700]/25 hover:border-[#FFD700]/50 shadow-xl cursor-pointer transition-all group flex flex-col justify-between"
+            >
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="w-8 h-8 rounded-xl bg-[#FFD700]/15 border border-[#FFD700]/30 flex items-center justify-center text-[#FFD700]">
+                    <Mic className="w-4 h-4" />
+                  </div>
+                  <span className="px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-[#FFD700] text-black">
+                    Page 6
+                  </span>
                 </div>
-                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-500/20 text-blue-300 border border-blue-500/30">
-                  Cash Flow
+                <h3 className="text-sm font-bold text-white group-hover:text-[#FFD700] transition-colors">
+                  PRIME Closer AI
+                </h3>
+                <p className="text-xs text-white/50 leading-relaxed">
+                  Sales call audio coaching, 0-100 score &amp; 1 winning replacement script.
+                </p>
+              </div>
+              <div className="mt-3 pt-3 border-t border-white/5 flex items-center justify-between text-[11px] text-[#FFD700] font-semibold">
+                <span>Analyze Calls</span>
+                <ArrowUpRight className="w-3.5 h-3.5" />
+              </div>
+            </div>
+
+            {/* PRIME Hiring AI Banner */}
+            <div 
+              onClick={() => onNavigate('hiring')}
+              className="p-5 rounded-2xl bg-gradient-to-br from-[#111418] to-[#0F0F0F] border border-blue-500/25 hover:border-blue-500/50 shadow-xl cursor-pointer transition-all group flex flex-col justify-between"
+            >
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="w-8 h-8 rounded-xl bg-blue-500/15 border border-blue-500/30 flex items-center justify-center text-blue-400">
+                    <Users className="w-4 h-4" />
+                  </div>
+                  <span className="px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-blue-400 text-black">
+                    Page 7
+                  </span>
+                </div>
+                <h3 className="text-sm font-bold text-white group-hover:text-blue-300 transition-colors">
+                  PRIME Hiring AI
+                </h3>
+                <p className="text-xs text-white/50 leading-relaxed">
+                  Multi-CV candidate ranker, match score bars &amp; 10 interview questions.
+                </p>
+              </div>
+              <div className="mt-3 pt-3 border-t border-white/5 flex items-center justify-between text-[11px] text-blue-400 font-semibold">
+                <span>Rank Candidates</span>
+                <ArrowUpRight className="w-3.5 h-3.5" />
+              </div>
+            </div>
+
+            {/* PRIME Meeting AI Banner */}
+            <div 
+              onClick={() => onNavigate('meetings')}
+              className="p-5 rounded-2xl bg-gradient-to-br from-[#18110D] to-[#0F0F0F] border border-amber-500/25 hover:border-amber-500/50 shadow-xl cursor-pointer transition-all group flex flex-col justify-between"
+            >
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="w-8 h-8 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-400">
+                    <Video className="w-4 h-4" />
+                  </div>
+                  <span className="px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-[#FFD700] text-black">
+                    Page 8
+                  </span>
+                </div>
+                <h3 className="text-sm font-bold text-white group-hover:text-amber-300 transition-colors">
+                  PRIME Meeting AI
+                </h3>
+                <p className="text-xs text-white/50 leading-relaxed">
+                  Meeting synthesis, action items checklist &amp; draft follow-up email dispatch.
+                </p>
+              </div>
+              <div className="mt-3 pt-3 border-t border-white/5 flex items-center justify-between text-[11px] text-amber-400 font-semibold">
+                <span>Synthesize Meetings</span>
+                <ArrowUpRight className="w-3.5 h-3.5" />
+              </div>
+            </div>
+
+            {/* PRIME Growth Lab Banner */}
+            <div 
+              onClick={() => onNavigate('growth')}
+              className="p-5 rounded-2xl bg-gradient-to-br from-[#0D1812] to-[#0F0F0F] border border-emerald-500/25 hover:border-emerald-500/50 shadow-xl cursor-pointer transition-all group flex flex-col justify-between"
+            >
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="w-8 h-8 rounded-xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
+                    <TrendingUp className="w-4 h-4" />
+                  </div>
+                  <span className="px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-emerald-400 text-black">
+                    Page 9
+                  </span>
+                </div>
+                <h3 className="text-sm font-bold text-white group-hover:text-emerald-300 transition-colors">
+                  PRIME Growth Lab
+                </h3>
+                <p className="text-xs text-white/50 leading-relaxed">
+                  Commercial website growth score, top 3 revenue levers &amp; 30-day action plan.
+                </p>
+              </div>
+              <div className="mt-3 pt-3 border-t border-white/5 flex items-center justify-between text-[11px] text-emerald-400 font-semibold">
+                <span>Run Growth Audit</span>
+                <ArrowUpRight className="w-3.5 h-3.5" />
+              </div>
+            </div>
+
+            {/* PRIME Strategy Board Banner (PAGE 10) */}
+            <div 
+              onClick={() => onNavigate('strategy')}
+              className="p-5 rounded-2xl bg-gradient-to-br from-[#18140B] to-[#0F0F0F] border border-[#FFD700]/35 hover:border-[#FFD700]/70 shadow-xl cursor-pointer transition-all group flex flex-col justify-between"
+            >
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="w-8 h-8 rounded-xl bg-[#FFD700]/20 border border-[#FFD700]/40 flex items-center justify-center text-[#FFD700]">
+                    <Target className="w-4 h-4" />
+                  </div>
+                  <span className="px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-[#FFD700] text-black">
+                    Page 10
+                  </span>
+                </div>
+                <h3 className="text-sm font-bold text-white group-hover:text-[#FFD700] transition-colors">
+                  PRIME Strategy Board
+                </h3>
+                <p className="text-xs text-white/50 leading-relaxed">
+                  90-day strategy synthesizer, risk &amp; opportunity matrix, and PDF export.
+                </p>
+              </div>
+              <div className="mt-3 pt-3 border-t border-white/5 flex items-center justify-between text-[11px] text-[#FFD700] font-semibold">
+                <span>Open Strategy Board</span>
+                <ArrowUpRight className="w-3.5 h-3.5" />
+              </div>
+            </div>
+
+            {/* PRIME Board Pack Generator Banner (PAGE 11) */}
+            <div 
+              onClick={() => onNavigate('board-pack')}
+              className="p-5 rounded-2xl bg-gradient-to-br from-[#18150B] to-[#0F0F0F] border border-[#FFD700]/35 hover:border-[#FFD700]/70 shadow-xl cursor-pointer transition-all group flex flex-col justify-between"
+            >
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="w-8 h-8 rounded-xl bg-[#FFD700]/20 border border-[#FFD700]/40 flex items-center justify-center text-[#FFD700]">
+                    <Briefcase className="w-4 h-4" />
+                  </div>
+                  <span className="px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-[#FFD700] text-black">
+                    Page 11
+                  </span>
+                </div>
+                <h3 className="text-sm font-bold text-white group-hover:text-[#FFD700] transition-colors">
+                  PRIME Board Pack
+                </h3>
+                <p className="text-xs text-white/50 leading-relaxed">
+                  Director deck synthesizer, ARR financial metrics &amp; resolution approvals.
+                </p>
+              </div>
+              <div className="mt-3 pt-3 border-t border-white/5 flex items-center justify-between text-[11px] text-[#FFD700] font-semibold">
+                <span>Open Board Pack</span>
+                <ArrowUpRight className="w-3.5 h-3.5" />
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* ============================================================ */}
+      {/* TAB 3: COST & MARGINS (3 ENGINES)                             */}
+      {/* ============================================================ */}
+      {activeTab === 'profit-suite' && (
+        <section className="bg-gradient-to-br from-[#121815] to-[#0B0F0D] rounded-2xl border border-emerald-500/20 p-6 shadow-2xl relative overflow-hidden space-y-5">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-emerald-500/10">
+            <div>
+              <div className="flex items-center gap-2 mb-1">
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-400 text-black uppercase font-mono">
+                  Active Margin Protection
+                </span>
+                <span className="text-[11px] text-emerald-400/80 font-semibold font-mono">
+                  Target Monthly Savings: Up to $1M+
                 </span>
               </div>
-              <h4 className="text-sm font-bold text-white group-hover:text-blue-400 transition-colors">
-                Overdue Invoices & Cash Flow Guard
-              </h4>
-              <p className="text-xs text-white/60 leading-relaxed">
-                Track client aging receivables, send 1-click WhatsApp/Email escalation notices, and eliminate payment gateway fee bleed.
-              </p>
+              <h3 className="text-base font-bold text-white flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-[#FFD700]" />
+                Executive Cost Reduction &amp; Cash Flow Recovery Modules
+              </h3>
             </div>
-            <div className="mt-4 pt-3 border-t border-white/5 flex items-center justify-between text-xs text-blue-400 font-semibold">
-              <span>Open Cash Flow Guard →</span>
-              <ArrowUpRight className="w-4 h-4" />
-            </div>
+            <button
+              onClick={() => setActiveTab('overview')}
+              className="text-xs text-[#FFD700] hover:underline font-semibold cursor-pointer"
+            >
+              ← Back to Overview
+            </button>
           </div>
 
-          {/* Module 3: Executive ROI & Cost Justification Calculator */}
-          <div 
-            onClick={() => onNavigate('roi-calculator')}
-            className="p-5 rounded-xl bg-black/60 border border-[#FFD700]/30 hover:border-[#FFD700] transition-all cursor-pointer group flex flex-col justify-between"
-          >
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <div className="w-9 h-9 rounded-xl bg-[#FFD700]/10 border border-[#FFD700]/30 flex items-center justify-center text-[#FFD700]">
-                  <Calculator className="w-5 h-5" />
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* Module 1: Ad Spend & CAC Optimizer */}
+            <div 
+              onClick={() => onNavigate('ad-spend')}
+              className="p-5 rounded-xl bg-black/60 border border-emerald-500/30 hover:border-emerald-400 transition-all cursor-pointer group flex flex-col justify-between"
+            >
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="w-9 h-9 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
+                    <Target className="w-5 h-5" />
+                  </div>
+                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                    Ad Spend
+                  </span>
                 </div>
-                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-[#FFD700]/20 text-[#FFD700] border border-[#FFD700]/30">
-                  D3.js ROI
-                </span>
+                <h4 className="text-sm font-bold text-white group-hover:text-emerald-400 transition-colors">
+                  Marketing Ad Spend &amp; CAC Optimizer
+                </h4>
+                <p className="text-xs text-white/60 leading-relaxed">
+                  Connect live paid ad campaigns across Google, Meta, LinkedIn &amp; TikTok. Cut low-ROAS budget waste and protect margins.
+                </p>
               </div>
-              <h4 className="text-sm font-bold text-white group-hover:text-[#FFD700] transition-colors">
-                Executive ROI & Cost Justifier
-              </h4>
-              <p className="text-xs text-white/60 leading-relaxed">
-                Model business inputs to visualize net financial returns, breakeven payback in days, and export CFO-ready proposals.
-              </p>
+              <div className="mt-4 pt-3 border-t border-white/5 flex items-center justify-between text-xs text-emerald-400 font-semibold">
+                <span>Open Ad Optimizer →</span>
+                <ArrowUpRight className="w-4 h-4" />
+              </div>
             </div>
-            <div className="mt-4 pt-3 border-t border-white/5 flex items-center justify-between text-xs text-[#FFD700] font-semibold">
-              <span>Open ROI Calculator →</span>
-              <ArrowUpRight className="w-4 h-4" />
+
+            {/* Module 2: Overdue Invoices & Cash Flow Guard */}
+            <div 
+              onClick={() => onNavigate('cashflow-guard')}
+              className="p-5 rounded-xl bg-black/60 border border-blue-500/30 hover:border-blue-400 transition-all cursor-pointer group flex flex-col justify-between"
+            >
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="w-9 h-9 rounded-xl bg-blue-500/10 border border-blue-500/30 flex items-center justify-center text-blue-400">
+                    <DollarSign className="w-5 h-5" />
+                  </div>
+                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-500/20 text-blue-300 border border-blue-500/30">
+                    Cash Flow
+                  </span>
+                </div>
+                <h4 className="text-sm font-bold text-white group-hover:text-blue-400 transition-colors">
+                  Overdue Invoices &amp; Cash Flow Guard
+                </h4>
+                <p className="text-xs text-white/60 leading-relaxed">
+                  Track client aging receivables, send 1-click WhatsApp/Email escalation notices, and eliminate payment gateway fee bleed.
+                </p>
+              </div>
+              <div className="mt-4 pt-3 border-t border-white/5 flex items-center justify-between text-xs text-blue-400 font-semibold">
+                <span>Open Cash Flow Guard →</span>
+                <ArrowUpRight className="w-4 h-4" />
+              </div>
+            </div>
+
+            {/* Module 3: Executive ROI & Cost Justification Calculator */}
+            <div 
+              onClick={() => onNavigate('roi-calculator')}
+              className="p-5 rounded-xl bg-black/60 border border-[#FFD700]/30 hover:border-[#FFD700] transition-all cursor-pointer group flex flex-col justify-between"
+            >
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="w-9 h-9 rounded-xl bg-[#FFD700]/10 border border-[#FFD700]/30 flex items-center justify-center text-[#FFD700]">
+                    <Calculator className="w-5 h-5" />
+                  </div>
+                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-[#FFD700]/20 text-[#FFD700] border border-[#FFD700]/30">
+                    D3.js ROI
+                  </span>
+                </div>
+                <h4 className="text-sm font-bold text-white group-hover:text-[#FFD700] transition-colors">
+                  Executive ROI &amp; Cost Justifier
+                </h4>
+                <p className="text-xs text-white/60 leading-relaxed">
+                  Model business inputs to visualize net financial returns, breakeven payback in days, and export CFO-ready proposals.
+                </p>
+              </div>
+              <div className="mt-4 pt-3 border-t border-white/5 flex items-center justify-between text-xs text-[#FFD700] font-semibold">
+                <span>Open ROI Calculator →</span>
+                <ArrowUpRight className="w-4 h-4" />
+              </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
-      {/* AUTONOMOUS AGENT SWARM GRID */}
-      <AgentSwarmGrid onNavigate={onNavigate} />
+      {/* ============================================================ */}
+      {/* TAB 4: AUTONOMOUS AGENT SWARMS                                */}
+      {/* ============================================================ */}
+      {activeTab === 'swarms' && (
+        <section className="space-y-4">
+          <div className="flex items-center justify-between pb-3 border-b border-white/10">
+            <div>
+              <h3 className="text-base sm:text-lg font-bold text-white flex items-center gap-2">
+                <Layers className="w-4 h-4 text-purple-400" />
+                <span>Autonomous Agent Swarms (Background Multi-Agent Fleet)</span>
+              </h3>
+              <p className="text-xs text-white/50 mt-0.5">
+                Continuously patrolling your business telemetry: Finance, Legal, Pipeline, Talent, SecOps, and Board liaison.
+              </p>
+            </div>
+            <button
+              onClick={() => setActiveTab('overview')}
+              className="text-xs text-[#FFD700] hover:underline font-semibold cursor-pointer"
+            >
+              ← Back to Overview
+            </button>
+          </div>
+          <AgentSwarmGrid onNavigate={onNavigate} />
+        </section>
+      )}
+
+      {/* ============================================================ */}
+      {/* TAB 5: ALL TOOLS DIRECTORY                                    */}
+      {/* ============================================================ */}
+      {activeTab === 'all-tools' && (
+        <section className="space-y-4">
+          <div className="flex items-center justify-between pb-3 border-b border-white/10">
+            <button
+              onClick={() => setActiveTab('overview')}
+              className="text-xs text-[#FFD700] hover:underline font-semibold cursor-pointer"
+            >
+              ← Back to Overview
+            </button>
+          </div>
+          <ExecutiveToolsDirectory onNavigate={onNavigate} />
+        </section>
+      )}
 
       {/* RECENT INTELLIGENCE LOG TABLE */}
-      <section className="flex-1 flex flex-col min-h-0">
+      {activeTab === 'overview' && (
+        <>
+          <section className="flex-1 flex flex-col min-h-0">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-xs sm:text-sm font-semibold uppercase tracking-widest text-white/50">Recent Intelligence Log</h3>
           <span 
@@ -924,6 +1223,8 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigate, onOpen
           </div>
         </form>
       </div>
+      </>
+      )}
 
       {/* INVITE TEAM MODAL */}
       {inviteModalOpen && (

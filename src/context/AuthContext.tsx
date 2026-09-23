@@ -10,7 +10,7 @@ import {
   sendEmailVerification as fbSendEmailVerification,
   sendPasswordResetEmail as fbSendPasswordResetEmail
 } from 'firebase/auth';
-import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, updateDoc, collection, getDocs, query, where } from 'firebase/firestore';
 import { auth, googleProvider, db } from '../firebase';
 import { getSupabaseClient, importCompanyDeals } from '../services/crm';
 import { UserProfile, UserSubscription, Company, PlanTier } from '../types';
@@ -595,13 +595,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
       }
 
-      // 4. Check if demo executive email
-      if (normalizedEmail === 'ceo@apexenterprise.com' || normalizedEmail === 'demo@primeai.com') {
-        await loginAsDemoUser();
-        return;
-      }
-
-      // If no account found anywhere:
+      // 4. If no account found anywhere:
       throw new Error('اس ای میل کا کوئی اکاؤنٹ نہیں ملا۔ براہ کرم "نیا اکاؤنٹ بنائیں" پر کلک کریں / No account found with this email. Please click "Create Account" to sign up for free.');
     } catch (error: any) {
       console.warn('Email sign-in error:', error);
@@ -632,10 +626,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         throw new Error('براہ کرم اپنی کمپنی کا نام درج کریں / Please provide your company or workspace name.');
       }
 
-      // Check if email already registered in local accounts store
+      // 1. Check if email already registered in local accounts store
       const storedAccounts = getStoredAccounts();
       if (storedAccounts[normalizedEmail]) {
-        throw new Error('اس ای میل کا اکاؤنٹ پہلے سے موجود ہے۔ براہ کرم لاگ ان کریں / An account with this email already exists. Please sign in with your password.');
+        throw new Error('اس ای میل سے اکاؤنٹ پہلے سے موجود ہے۔ ایک ای میل پر صرف ایک اکاؤنٹ کی اجازت ہے۔ براہ کرم لاگ ان کریں / An account with this email already exists. Only 1 account per email is allowed. Please log in.');
+      }
+
+      // 2. Check Firestore for existing profile with this email across devices
+      try {
+        const profilesCol = collection(db, 'profiles');
+        const emailQuery = query(profilesCol, where('email', '==', normalizedEmail));
+        const emailSnap = await getDocs(emailQuery);
+        if (!emailSnap.empty) {
+          throw new Error('اس ای میل سے اکاؤنٹ پہلے سے موجود ہے۔ ایک ای میل پر صرف ایک اکاؤنٹ کی اجازت ہے۔ براہ کرم لاگ ان کریں / An account with this email already exists. Only 1 account per email is allowed. Please log in.');
+        }
+      } catch (checkErr: any) {
+        if (checkErr.message?.includes('ایک ای میل پر صرف ایک اکاؤنٹ')) {
+          throw checkErr;
+        }
       }
 
       const supabase = getSupabaseClient();
@@ -675,7 +683,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         } catch (fbErr: any) {
           console.warn('Firebase createUser notice:', fbErr?.code || fbErr?.message);
           if (fbErr?.code === 'auth/email-already-in-use') {
-            throw new Error('اس ای میل کا اکاؤنٹ پہلے سے موجود ہے۔ براہ کرم لاگ ان کریں / This email is already registered. Please sign in instead.');
+            throw new Error('اس ای میل سے اکاؤنٹ پہلے سے موجود ہے۔ ایک ای میل پر صرف ایک اکاؤنٹ کی اجازت ہے۔ براہ کرم لاگ ان کریں / This email is already registered. Only 1 account per email is allowed. Please sign in instead.');
           }
           // Deterministic user ID fallback for local resilience
           createdUserId = 'user_' + Math.abs(normalizedEmail.split('').reduce((a, b) => (((a << 5) - a) + b.charCodeAt(0)) | 0, 0)).toString(36) + '_' + Date.now().toString(36).slice(-4);

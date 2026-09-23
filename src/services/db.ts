@@ -2321,6 +2321,226 @@ export async function saveInvoice(invoice: Omit<InvoiceItem, 'id'> & { id?: stri
   return fullInvoice;
 }
 
+export async function fetchInvoiceById(
+  invoiceIdOrNumber: string, 
+  preferredCompanyId?: string
+): Promise<InvoiceItem | null> {
+  const query = invoiceIdOrNumber.trim().toLowerCase();
+  
+  // 1. Check preferred company first
+  if (preferredCompanyId) {
+    const list = getLocalStore<InvoiceItem[]>(`invoices_${preferredCompanyId}`, []);
+    const match = list.find(i => i.id.toLowerCase() === query || i.invoiceNumber.toLowerCase() === query);
+    if (match) return match;
+  }
+
+  // 2. Scan all known company caches in localStorage
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if (key && key.startsWith('prime_invoices_')) {
+      try {
+        const items = JSON.parse(localStorage.getItem(key) || '[]') as InvoiceItem[];
+        const found = items.find(inv => inv.id.toLowerCase() === query || inv.invoiceNumber.toLowerCase() === query);
+        if (found) return found;
+      } catch (e) {}
+    }
+  }
+
+  // 3. Try Supabase
+  try {
+    const supabase = getSupabaseClient();
+    if (supabase) {
+      const { data } = await supabase
+        .from('invoices')
+        .select('*')
+        .or(`id.eq.${invoiceIdOrNumber},invoice_number.ilike.${invoiceIdOrNumber}`)
+        .limit(1)
+        .maybeSingle();
+
+      if (data) {
+        return {
+          id: data.id,
+          companyId: data.company_id,
+          userId: data.user_id,
+          invoiceNumber: data.invoice_number,
+          clientName: data.client_name,
+          clientEmail: data.client_email,
+          clientPhone: data.client_phone,
+          clientCompany: data.client_company,
+          amount: data.amount,
+          currency: data.currency || 'USD',
+          issueDate: data.issue_date,
+          dueDate: data.due_date,
+          status: data.status,
+          daysOverdue: 0,
+          paidAmount: data.paid_amount,
+          paidDate: data.paid_date,
+          selectedGateway: (data.selected_gateway as PaymentGatewayType) || 'Stripe (2.9% + $0.30)',
+          currentGatewayFee: 0,
+          recommendedGateway: 'Wise / ACH Bank Transfer (0.4% Cap $5)',
+          optimizedGatewayFee: 0,
+          feeSavingsAmount: 0,
+          reminderCount: data.reminder_count || 0,
+          lastReminderSentAt: data.last_reminder_sent_at,
+          notes: data.notes,
+          createdAt: data.created_at,
+          updatedAt: data.updated_at,
+        };
+      }
+    }
+  } catch (e) {}
+
+  return null;
+}
+
+export async function recordClientSelfServicePayment(
+  invoiceId: string,
+  companyId: string,
+  paymentDetails: {
+    method: 'STRIPE_CARD' | 'BANK_TRANSFER' | 'WISE' | 'PAYPAL' | 'APPLE_PAY';
+    payerName: string;
+    payerEmail: string;
+    transactionReference?: string;
+    amount?: number;
+  }
+): Promise<InvoiceItem | null> {
+  const compId = companyId || 'default_comp';
+  const existing = getLocalStore<InvoiceItem[]>(`invoices_${compId}`, []);
+  const target = existing.find(i => i.id === invoiceId);
+  
+  if (!target) {
+    // If not found in primary company, search all local stores
+    const foundAnywhere = await fetchInvoiceById(invoiceId);
+    if (!foundAnywhere) return null;
+    return recordClientSelfServicePayment(foundAnywhere.id, foundAnywhere.companyId, paymentDetails);
+  }
+
+  const now = new Date().toISOString();
+  const txRef = paymentDetails.transactionReference || `TXN-CLIENT-${Date.now().toString(36).toUpperCase()}`;
+  const amountPaid = paymentDetails.amount !== undefined ? paymentDetails.amount : target.amount;
+
+  const updatedInvoice: InvoiceItem = {
+    ...target,
+    status: 'PAID',
+    daysOverdue: 0,
+    paidAmount: amountPaid,
+    paidDate: now,
+    notes: (target.notes ? target.notes + '\n\n' : '') + 
+      `[Self-Service Payment]: Paid ${target.currency} ${amountPaid.toLocaleString()} via ${paymentDetails.method}. Ref: ${txRef}. Payer: ${paymentDetails.payerName} (${paymentDetails.payerEmail}) at ${now}`,
+    updatedAt: now,
+  };
+
+  const updatedList = existing.map(i => i.id === invoiceId ? updatedInvoice : i);
+  setLocalStore(`invoices_${compId}`, updatedList);
+
+  // Sync to Supabase
+  try {
+    const supabase = getSupabaseClient();
+    if (supabase) {
+      await supabase.from('invoices').update({
+        status: 'PAID',
+        paid_amount: updatedInvoice.paidAmount,
+        paid_date: now,
+        notes: updatedInvoice.notes,
+        updated_at: now,
+      }).eq('id', invoiceId).eq('company_id', compId);
+    }
+  } catch (e) {}
+
+  // Log Activity for Business Dashboard
+  logActivity({
+    companyId: compId,
+    userId: target.userId || 'client_self_service',
+    type: 'DEAL_WON',
+    title: `Instant Client Payment: #${target.invoiceNumber}`,
+    description: `Client ${paymentDetails.payerName} completed self-service settlement of ${target.currency} ${amountPaid.toLocaleString()} via ${paymentDetails.method} (Ref: ${txRef}). Zero admin approval needed.`,
+    timestamp: now,
+  }).catch(() => {});
+
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('prime_invoice_paid', { 
+      detail: { invoiceId, companyId: compId, invoice: updatedInvoice, txRef } 
+    }));
+  }
+
+  return updatedInvoice;
+}
+
+export async function submitClientInboundEmail(payload: {
+  senderName: string;
+  senderEmail: string;
+  subject: string;
+  message: string;
+  companyId?: string;
+  category?: 'CLIENT' | 'VENDOR' | 'INVESTOR' | 'TEAM' | 'LEGAL';
+}): Promise<{ success: boolean; emailId: string; message: string }> {
+  const compId = payload.companyId || localStorage.getItem('prime_ai_active_company_id') || 'comp_apex_01';
+  const now = new Date().toISOString();
+
+  // Instant autonomous AI preview / analysis
+  const snippet = payload.message.slice(0, 140) + (payload.message.length > 140 ? '...' : '');
+  const aiKeyTakeaway = `Direct client outreach from ${payload.senderName} (${payload.senderEmail}) regarding "${payload.subject}". Instant receipt acknowledged to client.`;
+  const aiDraftReply = `Dear ${payload.senderName},\n\nThank you for contacting us regarding "${payload.subject}". We have received your inquiry and our executive team is reviewing your message.\n\nWe will get back to you shortly.\n\nBest regards,\nExecutive Support Team`;
+
+  const newEmail: EmailItem = {
+    id: `email_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`,
+    companyId: compId,
+    userId: 'client_inbound',
+    sender: payload.senderName.trim(),
+    senderEmail: payload.senderEmail.trim(),
+    subject: payload.subject.trim(),
+    snippet,
+    fullBody: payload.message.trim(),
+    urgency: 'HIGH',
+    category: payload.category || 'CLIENT',
+    status: 'PENDING_REVIEW',
+    receivedAt: now,
+    aiDraftReply,
+    aiKeyTakeaway,
+    aiSuggestedAction: 'Immediate client outreach / inquiry. Auto-received without admin gating.'
+  };
+
+  const list = getLocalStore<EmailItem[]>(`emails_${compId}`, []);
+  list.unshift(newEmail);
+  setLocalStore(`emails_${compId}`, list);
+
+  // Sync to Supabase
+  try {
+    const supabase = getSupabaseClient();
+    if (supabase) {
+      await supabase.from('inbox').upsert({
+        id: newEmail.id,
+        company_id: compId,
+        user_id: newEmail.userId,
+        sender: newEmail.sender,
+        sender_email: newEmail.senderEmail,
+        subject: newEmail.subject,
+        snippet: newEmail.snippet,
+        full_body: newEmail.fullBody,
+        urgency: newEmail.urgency,
+        category: newEmail.category,
+        status: newEmail.status,
+        received_at: newEmail.receivedAt,
+        ai_draft_reply: newEmail.aiDraftReply,
+        ai_key_takeaway: newEmail.aiKeyTakeaway,
+        ai_suggested_action: newEmail.aiSuggestedAction,
+      });
+    }
+  } catch (e) {}
+
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('prime_email_status_updated', { 
+      detail: { emailId: newEmail.id, status: 'RECEIVED', email: newEmail } 
+    }));
+  }
+
+  return {
+    success: true,
+    emailId: newEmail.id,
+    message: 'Your message has been delivered directly to the executive inbox!'
+  };
+}
+
 export async function markInvoiceAsPaid(
   invoiceId: string, 
   companyId: string, 
@@ -2712,6 +2932,136 @@ export async function logVisitorSession(options: LogVisitorOptions): Promise<Vis
   }
 
   return record;
+}
+
+export async function purgeAllMockDataAndResetLive(): Promise<void> {
+  // Purge all synthetic visitor telemetry
+  setLocalStore('all_visitor_sessions', []);
+  // Clean all fake companies except real user's workspace
+  setLocalStore('all_companies', []);
+  // Clean feedback tickets
+  setLocalStore('all_feedback_tickets', []);
+  // Clean synthetic deals
+  const keys = Object.keys(localStorage);
+  for (const k of keys) {
+    if (k.startsWith('prime_crm_records_company_comp_demo_') || k.startsWith('prime_crm_records_company_comp_apex_01')) {
+      // clean mock deals
+      localStorage.setItem(k, '[]');
+    }
+  }
+}
+
+export async function deleteVisitorSession(sessionId: string): Promise<void> {
+  const existing = getLocalStore<VisitorSessionRecord[]>('all_visitor_sessions', []);
+  const updated = existing.filter(s => s.id !== sessionId);
+  setLocalStore('all_visitor_sessions', updated);
+
+  try {
+    await deleteDoc(doc(db, 'visitor_sessions', sessionId));
+  } catch (e) {
+    console.warn('Firestore session delete notice:', e);
+  }
+}
+
+export async function purgeDuplicateAdnanAccountsAndSessions(): Promise<{ deletedSessions: number; deletedAccounts: number }> {
+  let deletedSessions = 0;
+  let deletedAccounts = 0;
+
+  // 1. Clean localStorage visitor sessions for duplicate Adnan Khan records
+  const existingSessions = getLocalStore<VisitorSessionRecord[]>('all_visitor_sessions', []);
+  let keptOneAdnanSession = false;
+  const filteredSessions: VisitorSessionRecord[] = [];
+
+  for (const s of existingSessions) {
+    const isAdnan = (s.userEmail && s.userEmail.toLowerCase().includes('adnan')) ||
+                    (s.userName && s.userName.toLowerCase().includes('adnan'));
+    if (isAdnan) {
+      if (!keptOneAdnanSession) {
+        // Keep strictly this one latest master admin session
+        filteredSessions.push({
+          ...s,
+          userName: 'Adnan Khan',
+          userEmail: 'adnanakhan245@gmail.com',
+          visitorType: 'REGISTERED_ACCOUNT',
+          companyName: 'Apex Enterprises (HQ)'
+        });
+        keptOneAdnanSession = true;
+      } else {
+        deletedSessions++;
+        // Delete duplicate session from Firestore
+        deleteDoc(doc(db, 'visitor_sessions', s.id)).catch(() => {});
+      }
+    } else {
+      filteredSessions.push(s);
+    }
+  }
+  setLocalStore('all_visitor_sessions', filteredSessions);
+
+  // 2. Clean Firestore visitor_sessions duplicates
+  try {
+    const colRef = collection(db, 'visitor_sessions');
+    const snap = await getDocs(query(colRef, limit(100)));
+    let keptFirestoreAdnan = false;
+    for (const d of snap.docs) {
+      const data = d.data() as VisitorSessionRecord;
+      const isAdnan = (data.userEmail && data.userEmail.toLowerCase().includes('adnan')) ||
+                      (data.userName && data.userName.toLowerCase().includes('adnan'));
+      if (isAdnan) {
+        if (!keptFirestoreAdnan) {
+          keptFirestoreAdnan = true;
+        } else {
+          deletedSessions++;
+          await deleteDoc(doc(db, 'visitor_sessions', d.id));
+        }
+      }
+    }
+  } catch (e) {}
+
+  // 3. Clean registered accounts stored in localStorage
+  try {
+    const raw = localStorage.getItem('prime_ai_registered_accounts');
+    if (raw) {
+      const accounts = JSON.parse(raw);
+      const cleaned: Record<string, any> = {};
+      let keptMain = false;
+      for (const [key, acc] of Object.entries<any>(accounts)) {
+        const isAdnan = key.toLowerCase().includes('adnan') || (acc.email && acc.email.toLowerCase().includes('adnan'));
+        if (isAdnan) {
+          if (!keptMain) {
+            cleaned['adnanakhan245@gmail.com'] = {
+              ...acc,
+              email: 'adnanakhan245@gmail.com',
+              fullName: 'Adnan Khan',
+              role: 'Master Admin / Platform Owner'
+            };
+            keptMain = true;
+          } else {
+            deletedAccounts++;
+          }
+        } else {
+          cleaned[key] = acc;
+        }
+      }
+      localStorage.setItem('prime_ai_registered_accounts', JSON.stringify(cleaned));
+    }
+  } catch (e) {}
+
+  // 4. Ensure master profile in localStorage is intact
+  try {
+    const profile = {
+      uid: 'usr_adnan_master',
+      email: 'adnanakhan245@gmail.com',
+      displayName: 'Adnan Khan',
+      role: 'Master Admin / Platform Owner',
+      companyId: 'comp_apex_01',
+      companyName: 'Apex Enterprises (HQ)',
+      plan: 'Enterprise',
+      createdAt: new Date().toISOString()
+    };
+    localStorage.setItem('prime_user_profile', JSON.stringify(profile));
+  } catch (e) {}
+
+  return { deletedSessions, deletedAccounts };
 }
 
 export async function fetchVisitorAnalytics(): Promise<VisitorTrafficStats> {

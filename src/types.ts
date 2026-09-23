@@ -341,6 +341,7 @@ export interface KPISummary {
   docsAnalyzed: number;
   hoursSaved: number;
   pendingEmailsCount: number;
+  pendingEmails?: number;
   totalDocsCount: number;
 }
 
