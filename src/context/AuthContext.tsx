@@ -622,9 +622,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (!pass || pass.length < 6) {
         throw new Error('پاس ورڈ کم از کم 6 حروف کا ہونا چاہیے / Password must be at least 6 characters.');
       }
-      if (!compName || !compName.trim()) {
-        throw new Error('براہ کرم اپنی کمپنی کا نام درج کریں / Please provide your company or workspace name.');
-      }
+      const safeCompName = compName?.trim() || (fullName?.trim() ? `${fullName.trim()}'s Workspace` : `${normalizedEmail.split('@')[0]} Workspace`);
 
       // 1. Check if email already registered in local accounts store
       const storedAccounts = getStoredAccounts();
@@ -696,7 +694,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       localStorage.setItem('prime_ai_latest_pin', pin);
 
       // 4. MULTI-TENANT ONBOARDING STEP: Create Company Workspace
-      const newCompany = await createNewCompanyWorkspace(createdUserId, normalizedEmail, compName, industry);
+      const newCompany = await createNewCompanyWorkspace(createdUserId, normalizedEmail, safeCompName, industry);
       setCompany(newCompany);
       setCompanyId(newCompany.id);
       setCompanyName(newCompany.name);
@@ -724,7 +722,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         email: normalizedEmail,
         displayName: fullName || 'Executive Leader',
         companyId: newCompany.id,
-        companyName: compName,
+        companyName: safeCompName,
         role: 'Chief Executive Officer',
         plan: 'Pro',
         emailVerified: true,
@@ -742,7 +740,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         email: normalizedEmail,
         password: pass,
         fullName: fullName || 'Executive Leader',
-        companyName: compName,
+        companyName: safeCompName,
         companyId: newCompany.id,
         industry: industry || 'Enterprise SaaS',
         role: 'Chief Executive Officer',

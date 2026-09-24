@@ -112,10 +112,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         onSuccess();
         onClose();
       } else if (mode === 'signup') {
-        if (!companyName.trim()) {
-          throw new Error('Please provide your company or organization name');
-        }
-        await signUpWithEmail(email, password, companyName, fullName, industry);
+        const effectiveCompanyName = companyName.trim() || (fullName.trim() ? `${fullName.trim()}'s Workspace` : `${email.split('@')[0] || 'Enterprise'} Workspace`);
+        await signUpWithEmail(email, password, effectiveCompanyName, fullName, industry);
         setSuccessMsg(`Welcome, ${fullName || 'Executive'}! Your 14-day Pro workspace has been created. Launching Command Center...`);
         setTimeout(() => {
           onSuccess();
@@ -264,9 +262,23 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
         {/* Status / Error notifications */}
         {error && (
-          <div className="mb-4 p-3.5 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-xs flex items-center gap-2.5">
-            <AlertCircle className="w-4 h-4 shrink-0" />
-            <span className="leading-snug">{error}</span>
+          <div className="mb-4 p-3.5 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-xs flex flex-col gap-2">
+            <div className="flex items-center gap-2.5">
+              <AlertCircle className="w-4 h-4 shrink-0" />
+              <span className="leading-snug">{error}</span>
+            </div>
+            {mode === 'login' && (error.includes('اکاؤنٹ نہیں ملا') || error.includes('No account found')) && (
+              <button
+                type="button"
+                onClick={() => {
+                  setMode('signup');
+                  setError(null);
+                }}
+                className="mt-1 px-3 py-1.5 rounded-lg bg-[#FFD700] text-black font-extrabold text-[11px] self-start hover:brightness-110 transition-all cursor-pointer shadow-sm"
+              >
+                Create Account Now (14 Days Free) →
+              </button>
+            )}
           </div>
         )}
 
@@ -507,15 +519,14 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-xs font-semibold text-white/70 mb-1">Company Name</label>
+                      <label className="block text-xs font-semibold text-white/70 mb-1">Company Name <span className="text-[10px] text-white/40 font-normal">(Optional)</span></label>
                       <div className="relative">
                         <Building2 className="w-4 h-4 text-white/30 absolute left-3 top-1/2 -translate-y-1/2" />
                         <input
                           type="text"
-                          required
                           value={companyName}
                           onChange={(e) => setCompanyName(e.target.value)}
-                          placeholder="e.g. Prime Enterprise"
+                          placeholder="e.g. Prime Enterprise (or leave blank)"
                           className="w-full bg-[#101010] border border-white/10 focus:border-[#FFD700] rounded-xl pl-9 pr-3 py-2.5 text-xs text-white placeholder-white/20 focus:outline-none transition-colors"
                         />
                       </div>

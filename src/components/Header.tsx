@@ -548,19 +548,26 @@ export const Header: React.FC<HeaderProps> = ({
               )}
             </div>
           ) : (
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 sm:gap-3">
               <button
                 onClick={() => onOpenAuth('login')}
-                className="text-xs uppercase tracking-widest font-semibold text-white/60 hover:text-white transition-colors cursor-pointer"
+                className="text-xs uppercase tracking-widest font-semibold text-white/70 hover:text-white transition-colors cursor-pointer px-2 py-1"
               >
-                Login
+                Sign In
+              </button>
+              <button
+                onClick={() => onOpenAuth('signup')}
+                className="px-3.5 py-2 bg-gradient-to-r from-[#FFD700] via-amber-300 to-[#FFC700] text-black text-xs font-black rounded-xl hover:brightness-110 transition-all cursor-pointer shadow-[0_0_20px_rgba(255,215,0,0.3)] flex items-center gap-1.5 active:scale-95"
+              >
+                <Crown className="w-3.5 h-3.5 text-black" />
+                <span>Start Free Trial</span>
               </button>
               <button
                 onClick={() => onNavigate('dashboard')}
-                className="px-4 py-2 bg-gradient-to-r from-[#FFD700] via-amber-300 to-[#FFC700] text-black text-xs font-black rounded-xl hover:brightness-110 transition-all cursor-pointer shadow-[0_0_20px_rgba(255,215,0,0.3)] flex items-center gap-1.5 active:scale-95"
+                className="hidden sm:flex px-3 py-2 bg-white/10 hover:bg-white/20 text-white text-xs font-semibold rounded-xl transition-all cursor-pointer items-center gap-1"
+                title="Explore live demo without signing up"
               >
-                <Crown className="w-3.5 h-3.5 text-black" />
-                <span>Launch Live Workspace →</span>
+                <span>Live Demo</span>
               </button>
             </div>
           )}

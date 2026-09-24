@@ -75,17 +75,27 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           {/* CTAs */}
           <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
             <button
-              onClick={onEnterDemo || (() => onOpenAuth('signup'))}
-              className="w-full sm:w-auto px-7 py-3.5 rounded-xl text-sm font-extrabold text-black bg-gradient-to-r from-[#FFD700] to-amber-400 hover:brightness-110 shadow-[0_0_25px_rgba(255,215,0,0.35)] transition-all flex items-center justify-center gap-2 cursor-pointer group"
+              onClick={() => onOpenAuth('signup')}
+              className="w-full sm:w-auto px-8 py-4 rounded-xl text-sm font-extrabold text-black bg-gradient-to-r from-[#FFD700] via-amber-300 to-[#FFC700] hover:brightness-110 shadow-[0_0_30px_rgba(255,215,0,0.4)] transition-all flex items-center justify-center gap-2 cursor-pointer group active:scale-95"
             >
               <Crown className="w-4 h-4 text-black" />
-              <span>Launch Live Workspace</span>
+              <span>Start 14-Day Free Trial</span>
               <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
             </button>
 
+            {onEnterDemo && (
+              <button
+                onClick={onEnterDemo}
+                className="w-full sm:w-auto px-6 py-4 rounded-xl text-sm font-bold text-white bg-zinc-900/90 hover:bg-zinc-800 border border-[#FFD700]/30 hover:border-[#FFD700]/60 transition-all flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <Sparkles className="w-4 h-4 text-[#FFD700]" />
+                <span>Explore Live Demo Sandbox</span>
+              </button>
+            )}
+
             <button
               onClick={() => onOpenAuth('login')}
-              className="w-full sm:w-auto px-6 py-3.5 rounded-xl text-sm font-semibold text-zinc-300 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 hover:text-white transition-all flex items-center justify-center gap-2 cursor-pointer"
+              className="w-full sm:w-auto px-5 py-4 rounded-xl text-sm font-semibold text-zinc-300 hover:text-white hover:bg-white/5 border border-zinc-800 transition-all flex items-center justify-center gap-1.5 cursor-pointer"
             >
               <span>Sign In</span>
             </button>
