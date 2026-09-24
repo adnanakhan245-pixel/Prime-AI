@@ -116,7 +116,7 @@ const DEFAULT_SAMPLE_BOARD_PACK: BoardPackData = {
 export const BoardPackView: React.FC = () => {
   const { user, profile } = useAuth();
   const [selectedQuarter, setSelectedQuarter] = useState(QUARTER_OPTIONS[0]);
-  const [boardPack, setBoardPack] = useState<BoardPackData>(DEFAULT_SAMPLE_BOARD_PACK);
+  const [boardPack, setBoardPack] = useState<BoardPackData | null>(null);
   const [history, setHistory] = useState<BoardPackRecord[]>([]);
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<'financials' | 'highlights' | 'governance' | 'resolutions'>('financials');
@@ -261,7 +261,8 @@ export const BoardPackView: React.FC = () => {
           {/* Action: PDF Export */}
           <button
             onClick={handleOpenPdfModal}
-            className="px-4 py-2.5 rounded-xl bg-[#161616] hover:bg-white/5 border border-white/10 text-white text-xs font-semibold flex items-center gap-2 transition-all cursor-pointer"
+            disabled={!boardPack}
+            className="px-4 py-2.5 rounded-xl bg-[#161616] hover:bg-white/5 border border-white/10 text-white text-xs font-semibold flex items-center gap-2 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
           >
             <Printer className="w-4 h-4 text-[#FFD700]" />
             <span>Export Board PDF</span>
@@ -270,15 +271,18 @@ export const BoardPackView: React.FC = () => {
           {/* Action: Presentation Slides */}
           <button
             onClick={handleOpenDeckModal}
-            className="px-4 py-2.5 rounded-xl bg-[#161616] hover:bg-white/5 border border-white/10 text-white text-xs font-semibold flex items-center gap-2 transition-all cursor-pointer"
+            disabled={!boardPack}
+            className="px-4 py-2.5 rounded-xl bg-[#161616] hover:bg-white/5 border border-white/10 text-white text-xs font-semibold flex items-center gap-2 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
           >
             <Presentation className="w-4 h-4 text-[#FFD700]" />
-            <span>Slide Deck ({boardPack.boardDeckSlidesCount || 14} Slides)</span>
+            <span>Slide Deck ({boardPack?.boardDeckSlidesCount || 14} Slides)</span>
           </button>
         </div>
       </div>
 
-      {/* EXECUTIVE SUMMARY & CEO MESSAGE */}
+      {boardPack ? (
+        <>
+          {/* EXECUTIVE SUMMARY & CEO MESSAGE */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 p-6 rounded-2xl bg-[#121212] border border-white/5 space-y-4">
           <div className="flex items-center justify-between">
@@ -482,9 +486,29 @@ export const BoardPackView: React.FC = () => {
           ))}
         </div>
       )}
+        </>
+      ) : (
+        <div className="p-16 rounded-2xl bg-[#121212] border border-white/5 text-center space-y-4">
+          <div className="w-14 h-14 rounded-2xl bg-[#FFD700]/10 border border-[#FFD700]/20 mx-auto flex items-center justify-center text-[#FFD700]">
+            <Briefcase className="w-7 h-7" />
+          </div>
+          <h2 className="text-lg font-bold text-white">No Board Pack Generated Yet</h2>
+          <p className="text-xs text-white/50 max-w-md mx-auto">
+            Select a quarter and click &quot;Generate Board Pack&quot; to synthesize governance metrics, executive summary, financial KPIs, and resolutions.
+          </p>
+          <button
+            onClick={handleGenerateBoardPack}
+            disabled={loading}
+            className="px-6 py-3 rounded-xl bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 text-black font-extrabold text-xs inline-flex items-center gap-2 shadow-[0_0_20px_rgba(255,215,0,0.3)] hover:brightness-110 transition-all cursor-pointer disabled:opacity-50"
+          >
+            <Sparkles className="w-4 h-4 text-black" />
+            <span>{loading ? 'Synthesizing...' : `Generate ${selectedQuarter} Board Pack`}</span>
+          </button>
+        </div>
+      )}
 
       {/* DEMO PREVIEW MODAL */}
-      {showDemoModal && (
+      {showDemoModal && boardPack && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md">
           <div className="relative w-full max-w-3xl max-h-[85vh] overflow-y-auto rounded-3xl bg-[#0E0E0E] border border-[#FFD700]/30 p-6 sm:p-8 shadow-2xl text-white space-y-6">
             <button

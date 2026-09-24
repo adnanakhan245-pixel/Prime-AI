@@ -35,6 +35,7 @@ import { FeaturePaywallOverlay } from './components/FeaturePaywallOverlay';
 import { UpgradePaywallModal } from './components/UpgradePaywallModal';
 import { ClientPaymentModal } from './components/ClientPaymentModal';
 import { ClientContactModal } from './components/ClientContactModal';
+import { DemoLeadModal } from './components/DemoLeadModal';
 import { fetchUserEmails, logVisitorSession } from './services/db';
 import { 
   LayoutDashboard, 
@@ -80,6 +81,7 @@ function AppContent() {
   const [isDemoMode, setIsDemoMode] = useState(false);
   const [pendingEmailsCount, setPendingEmailsCount] = useState(0);
   const [savePromptReason, setSavePromptReason] = useState<string | null>(null);
+  const [demoLeadModalOpen, setDemoLeadModalOpen] = useState(false);
 
   // 24/7 Client Self-Service Portals (Payment & Email - No Admin Approval Gating)
   const [clientPaymentModalOpen, setClientPaymentModalOpen] = useState(false);
@@ -140,6 +142,23 @@ function AppContent() {
       }
     }
   }, [user, loading, isDemoMode]);
+
+  // One-time cleanup of legacy sample entries from client localStorage
+  useEffect(() => {
+    try {
+      const cleaned = localStorage.getItem('prime_sample_data_cleared_v2');
+      if (!cleaned) {
+        localStorage.removeItem('strat_demo_init');
+        const keys = Object.keys(localStorage);
+        for (const k of keys) {
+          if (k.includes('comp_apex_01') || k.includes('comp_demo_') || k.startsWith('prime_crm_records_company_comp_')) {
+            localStorage.removeItem(k);
+          }
+        }
+        localStorage.setItem('prime_sample_data_cleared_v2', 'true');
+      }
+    } catch {}
+  }, []);
 
   // Load pending email counts for badges
   useEffect(() => {
@@ -284,8 +303,13 @@ function AppContent() {
         <LandingPage
           onOpenAuth={handleOpenAuth}
           onEnterDemo={() => {
-            setIsDemoMode(true);
-            setCurrentView('dashboard');
+            const alreadyUnlocked = typeof window !== 'undefined' && localStorage.getItem('prime_demo_unlocked_email');
+            if (alreadyUnlocked) {
+              setIsDemoMode(true);
+              setCurrentView('dashboard');
+            } else {
+              setDemoLeadModalOpen(true);
+            }
           }}
           onOpenClientPayment={() => {
             setTargetedInvoiceId(null);
@@ -574,6 +598,17 @@ function AppContent() {
         isOpen={clientContactModalOpen}
         onClose={() => setClientContactModalOpen(false)}
         targetCompanyId={company?.id}
+      />
+
+      {/* 1-Click Interactive Demo Lead Capture Modal */}
+      <DemoLeadModal
+        isOpen={demoLeadModalOpen}
+        onClose={() => setDemoLeadModalOpen(false)}
+        onSuccess={() => {
+          setDemoLeadModalOpen(false);
+          setIsDemoMode(true);
+          setCurrentView('dashboard');
+        }}
       />
     </div>
   );

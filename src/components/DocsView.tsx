@@ -16,14 +16,22 @@ import {
   Check, 
   ListChecks, 
   Layers, 
-  FileCheck
+  FileCheck,
+  Lock,
+  Clock,
+  Printer
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { fetchUserDocuments, saveDocument, deleteDocument } from '../services/db';
 import { DocumentItem } from '../types';
+import { ContractPaywallModal } from './ContractPaywallModal';
 
-export const DocsView: React.FC = () => {
-  const { user, profile } = useAuth();
+interface DocsViewProps {
+  onUpgradeToPro?: () => void;
+}
+
+export const DocsView: React.FC<DocsViewProps> = ({ onUpgradeToPro }) => {
+  const { user, profile, isPro, upgradeToPlan } = useAuth();
   const [documents, setDocuments] = useState<DocumentItem[]>([]);
   const [selectedDoc, setSelectedDoc] = useState<DocumentItem | null>(null);
   const [loading, setLoading] = useState(true);
@@ -34,6 +42,17 @@ export const DocsView: React.FC = () => {
   const [docTitle, setDocTitle] = useState('');
   const [showPasteModal, setShowPasteModal] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  // Contract check paywall state
+  const [showContractPaywall, setShowContractPaywall] = useState(false);
+  const [checkCount, setCheckCount] = useState<number>(() => {
+    try {
+      const stored = localStorage.getItem('prime_contract_checks_count');
+      return stored ? parseInt(stored, 10) : 0;
+    } catch {
+      return 0;
+    }
+  });
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -63,6 +82,54 @@ export const DocsView: React.FC = () => {
   const showToast = (msg: string) => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(null), 4000);
+  };
+
+  // Called when user clicks "Check Another Contract" or initiates a new check after 1st check
+  const handleRequestNewCheck = (source: 'paste' | 'upload' | 'sample') => {
+    const isPaidUser = isPro || localStorage.getItem('prime_contract_pro_unlocked') === 'true';
+    if (!isPaidUser && checkCount >= 1) {
+      setShowContractPaywall(true);
+      return;
+    }
+
+    if (source === 'paste') {
+      setShowPasteModal(true);
+    } else if (source === 'upload') {
+      fileInputRef.current?.click();
+    }
+  };
+
+  const handleContinueFree = () => {
+    setShowContractPaywall(false);
+    showToast('Free check limit acknowledged (1 check/day).');
+    setShowPasteModal(true);
+  };
+
+  const handleUpgradeToPro = async () => {
+    try {
+      localStorage.setItem('prime_contract_pro_unlocked', 'true');
+      if (upgradeToPlan) {
+        await upgradeToPlan('Pro', 'CARD');
+      }
+      setShowContractPaywall(false);
+      showToast('🎉 Upgraded to Pro ($19/mo)! Unlimited contract checks & PDF export unlocked.');
+      if (onUpgradeToPro) {
+        onUpgradeToPro();
+      }
+    } catch (e) {
+      localStorage.setItem('prime_contract_pro_unlocked', 'true');
+      setShowContractPaywall(false);
+      showToast('Pro features unlocked!');
+    }
+  };
+
+  const handlePdfExport = () => {
+    const isPaidUser = isPro || localStorage.getItem('prime_contract_pro_unlocked') === 'true';
+    if (!isPaidUser && checkCount >= 1) {
+      setShowContractPaywall(true);
+      return;
+    }
+    window.print();
   };
 
   const processAndAnalyzeDoc = async (title: string, content: string, fileType: string, fileSize: number) => {
@@ -95,9 +162,16 @@ export const DocsView: React.FC = () => {
         category: analysis.category || 'STRATEGY'
       });
 
+      // Increment check count
+      const newCount = checkCount + 1;
+      setCheckCount(newCount);
+      try {
+        localStorage.setItem('prime_contract_checks_count', newCount.toString());
+      } catch {}
+
       await loadDocuments();
       setSelectedDoc(saved);
-      showToast(`Document "${title}" analyzed with Gemini & saved to Firestore!`);
+      showToast(`Document "${title}" analyzed in 30 seconds! 1st Report 100% FREE.`);
     } catch (err) {
       console.error('Error analyzing document:', err);
       showToast('Failed to analyze document.');
@@ -121,18 +195,13 @@ export const DocsView: React.FC = () => {
       );
     };
 
-    if (file.type.includes('text') || file.name.endsWith('.md') || file.name.endsWith('.txt') || file.name.endsWith('.json')) {
-      reader.readAsText(file);
-    } else {
-      // For PDFs or other files, read as data text
-      reader.readAsText(file);
-    }
+    reader.readAsText(file);
   };
 
   const handlePasteSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!pasteText.trim()) return;
-    const title = docTitle.trim() || `Executive Memo - ${new Date().toLocaleDateString()}`;
+    const title = docTitle.trim() || `Contract Audit - ${new Date().toLocaleDateString()}`;
     await processAndAnalyzeDoc(title, pasteText, 'text/plain', pasteText.length);
     setPasteText('');
     setDocTitle('');
@@ -140,6 +209,12 @@ export const DocsView: React.FC = () => {
   };
 
   const handleSampleDoc = async (sampleType: 'SaaS Agreement' | 'Vendor SLA' | 'Quarterly Strategy') => {
+    const isPaidUser = isPro || localStorage.getItem('prime_contract_pro_unlocked') === 'true';
+    if (!isPaidUser && checkCount >= 1) {
+      setShowContractPaywall(true);
+      return;
+    }
+
     let sampleTitle = '';
     let sampleContent = '';
 
@@ -192,14 +267,14 @@ export const DocsView: React.FC = () => {
         <div>
           <div className="flex items-center gap-2">
             <h1 className="text-xl font-light text-white tracking-tight">
-              PRIME <span className="text-[#FFD700] font-semibold">Documents Intelligence</span>
+              PRIME <span className="text-[#FFD700] font-semibold">Contract Intelligence</span>
             </h1>
-            <span className="text-xs px-2.5 py-0.5 rounded-full bg-[#FFD700]/10 text-[#FFD700] border border-[#FFD700]/20 font-medium font-mono">
-              {documents.length} Strategic Documents
+            <span className="text-xs px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-medium font-mono">
+              Free During Beta • 1st Check 100% Free
             </span>
           </div>
-          <p className="text-xs text-white/40 mt-1">
-            Autonomous contract, financial, and strategic memo intelligence with Gemini 2.5 Flash.
+          <p className="text-xs text-white/50 mt-1">
+            Paste Your Contract. Find Where You'll Lose Money in 30 Seconds.
           </p>
         </div>
 
@@ -211,28 +286,54 @@ export const DocsView: React.FC = () => {
             accept=".pdf,.docx,.txt,.md,.json"
             className="hidden"
           />
+
+          {/* Primary Action 1: Paste Contract */}
           <button
-            onClick={() => fileInputRef.current?.click()}
+            onClick={() => handleRequestNewCheck('paste')}
+            className="px-4 py-2 rounded-xl bg-[#FFD700] hover:bg-yellow-300 text-black text-xs font-black shadow-[0_0_20px_rgba(255,215,0,0.3)] flex items-center gap-2 cursor-pointer transition-all active:scale-95"
+          >
+            <Sparkles className="w-4 h-4" />
+            <span>Paste Contract (Free)</span>
+          </button>
+
+          <button
+            onClick={() => handleRequestNewCheck('upload')}
             disabled={isUploading}
-            className="px-4 py-2 rounded-lg bg-white text-black text-xs font-bold hover:bg-[#FFD700] transition-colors shadow-[0_0_15px_rgba(255,215,0,0.15)] flex items-center gap-2 cursor-pointer disabled:opacity-50"
+            className="px-3.5 py-2 rounded-xl bg-white/10 hover:bg-white/15 text-white text-xs font-semibold border border-white/10 flex items-center gap-2 cursor-pointer transition-colors disabled:opacity-50"
           >
             <Upload className="w-4 h-4" />
-            <span>{isUploading ? 'Extracting with Gemini...' : 'Upload PDF / Doc'}</span>
+            <span>{isUploading ? 'Analyzing...' : 'Upload PDF'}</span>
           </button>
+        </div>
+      </div>
+
+      {/* Beta Status & Usage Banner */}
+      <div className="p-3.5 rounded-xl bg-gradient-to-r from-amber-500/10 via-[#FFD700]/5 to-zinc-900 border border-[#FFD700]/25 flex flex-wrap items-center justify-between gap-3 text-xs">
+        <div className="flex items-center gap-2">
+          <span className="px-2 py-0.5 rounded-md bg-[#FFD700] text-black font-extrabold text-[10px] uppercase tracking-wider">
+            Free During Beta
+          </span>
+          <span className="text-zinc-300 font-medium">
+            {checkCount === 0 
+              ? 'Your first full contract risk audit is 100% FREE. No card needed.' 
+              : `You have completed ${checkCount} contract check(s).`}
+          </span>
+        </div>
+        <div className="flex items-center gap-2">
           <button
-            onClick={() => setShowPasteModal(true)}
-            className="px-4 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-white text-xs font-medium flex items-center gap-2 cursor-pointer transition-colors"
+            onClick={() => handleRequestNewCheck('paste')}
+            className="px-3 py-1 rounded-lg bg-[#FFD700]/20 hover:bg-[#FFD700] text-[#FFD700] hover:text-black border border-[#FFD700]/40 font-bold transition-all cursor-pointer flex items-center gap-1.5"
           >
-            <FileText className="w-4 h-4" />
-            <span>Paste Text</span>
+            <Plus className="w-3.5 h-3.5" />
+            <span>Check Another Contract</span>
           </button>
         </div>
       </div>
 
       {/* Sample Document Quick Starters */}
-      <div className="p-4 rounded-xl bg-[#161616] border border-white/5 flex flex-wrap items-center justify-between gap-3 text-xs">
+      <div className="p-3.5 rounded-xl bg-[#161616] border border-white/5 flex flex-wrap items-center justify-between gap-3 text-xs">
         <span className="text-white/40 font-semibold flex items-center gap-1.5">
-          <Sparkles className="w-3.5 h-3.5 text-[#FFD700]" /> Test Instant Document Analysis:
+          <Sparkles className="w-3.5 h-3.5 text-[#FFD700]" /> Test Sample Contracts in 30 Seconds:
         </span>
         <div className="flex flex-wrap gap-2">
           <button
@@ -249,13 +350,6 @@ export const DocsView: React.FC = () => {
           >
             + Cloud Infrastructure Pricing Agreement
           </button>
-          <button
-            onClick={() => handleSampleDoc('Quarterly Strategy')}
-            disabled={isUploading}
-            className="px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-zinc-200 font-medium transition-colors cursor-pointer"
-          >
-            + Q4 Scaling Strategy Memo
-          </button>
         </div>
       </div>
 
@@ -271,7 +365,7 @@ export const DocsView: React.FC = () => {
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search analyzed documents & summaries..."
+                placeholder="Search analyzed contracts & redlines..."
                 className="w-full bg-[#161616] border border-white/5 rounded-lg pl-8 pr-3 py-1.5 text-xs text-white placeholder:text-white/20 focus:outline-none focus:border-[#FFD700]"
               />
             </div>
@@ -293,8 +387,15 @@ export const DocsView: React.FC = () => {
           {/* Doc List */}
           <div className="divide-y divide-white/5 max-h-[580px] overflow-y-auto">
             {filteredDocs.length === 0 ? (
-              <div className="p-12 text-center text-white/30 text-xs">
-                No documents found. Upload a file or click one of the quick test templates above.
+              <div className="p-12 text-center text-white/30 text-xs space-y-3">
+                <FileText className="w-8 h-8 mx-auto text-white/20" />
+                <p>No contracts checked yet.</p>
+                <button
+                  onClick={() => handleRequestNewCheck('paste')}
+                  className="px-3.5 py-1.5 rounded-lg bg-[#FFD700] text-black font-bold text-xs hover:bg-yellow-300 transition-colors cursor-pointer"
+                >
+                  Paste Your 1st Contract (Free)
+                </button>
               </div>
             ) : (
               filteredDocs.map((doc) => {
@@ -321,7 +422,7 @@ export const DocsView: React.FC = () => {
                       {doc.summary}
                     </p>
                     <div className="mt-2.5 flex items-center justify-between text-[10px] text-white/30 font-mono">
-                      <span>{doc.keyPoints?.length || 0} Key Points • {doc.risks?.length || 0} Risks</span>
+                      <span className="text-red-400 font-bold">{doc.risks?.length || 0} Risk Flags</span>
                       <span>{new Date(doc.uploadedAt).toLocaleDateString([], { month: 'short', day: 'numeric' })}</span>
                     </div>
                   </div>
@@ -335,46 +436,82 @@ export const DocsView: React.FC = () => {
         <div className="lg:col-span-7 rounded-2xl bg-[#161616] border border-white/5 p-6 overflow-hidden shadow-xl space-y-6">
           {selectedDoc ? (
             <>
-              {/* Header */}
-              <div className="flex items-start justify-between gap-4 pb-4 border-b border-white/5">
+              {/* Header with Check Another Contract and PDF Export */}
+              <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 pb-4 border-b border-white/5">
                 <div className="space-y-1">
                   <div className="flex items-center gap-2">
                     <FileText className="w-5 h-5 text-[#FFD700]" />
-                    <h2 className="text-base font-semibold text-white">{selectedDoc.title}</h2>
+                    <h2 className="text-base font-bold text-white">{selectedDoc.title}</h2>
                   </div>
                   <div className="flex items-center gap-3 text-xs text-white/40">
                     <span className="px-2 py-0.5 rounded bg-white/5 text-white/60 font-medium">
                       Category: {selectedDoc.category}
                     </span>
-                    <span>Analyzed {new Date(selectedDoc.uploadedAt).toLocaleDateString()}</span>
+                    <span>Audit Time: 30s • {new Date(selectedDoc.uploadedAt).toLocaleDateString()}</span>
                   </div>
                 </div>
 
-                <button
-                  onClick={() => handleDelete(selectedDoc.id)}
-                  className="p-2 rounded-lg text-white/30 hover:text-red-400 hover:bg-white/5 transition-colors cursor-pointer"
-                  title="Delete Document"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
+                <div className="flex items-center gap-2 shrink-0">
+                  {/* Button: Check Another Contract -> Triggers Paywall if > 1 */}
+                  <button
+                    onClick={() => handleRequestNewCheck('paste')}
+                    className="px-3 py-1.5 rounded-lg bg-[#FFD700] hover:bg-yellow-300 text-black text-xs font-black transition-all cursor-pointer flex items-center gap-1 shadow-sm"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>Check Another Contract</span>
+                  </button>
+
+                  {/* Button: PDF Export */}
+                  <button
+                    onClick={handlePdfExport}
+                    className="p-2 rounded-lg text-white/60 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 transition-colors cursor-pointer"
+                    title="Export Report to PDF"
+                  >
+                    <Download className="w-4 h-4" />
+                  </button>
+
+                  <button
+                    onClick={() => handleDelete(selectedDoc.id)}
+                    className="p-2 rounded-lg text-white/30 hover:text-red-400 hover:bg-white/5 transition-colors cursor-pointer"
+                    title="Delete Document"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
               </div>
 
               {/* 1. EXECUTIVE SUMMARY */}
               <div className="p-4 rounded-xl bg-[#FFD700]/5 border border-[#FFD700]/20 space-y-2">
                 <div className="flex items-center gap-2 text-xs font-bold text-[#FFD700] uppercase tracking-wider">
                   <Sparkles className="w-4 h-4 text-[#FFD700]" />
-                  <span>Executive Bottom-Line Synthesis</span>
+                  <span>Bottom-Line Financial & Liability Synthesis (100% Free Report)</span>
                 </div>
                 <p className="text-xs text-zinc-200 leading-relaxed font-sans">
                   {selectedDoc.summary}
                 </p>
               </div>
 
-              {/* 2. KEY STRATEGIC POINTS */}
+              {/* 2. IDENTIFIED RISKS & WHERE YOU'LL LOSE MONEY */}
+              <div className="space-y-2">
+                <h3 className="text-xs font-bold text-red-400 uppercase tracking-wider flex items-center gap-2">
+                  <AlertTriangle className="w-4 h-4 text-red-400" />
+                  <span>Where You'll Lose Money / Hidden Penalties ({selectedDoc.risks?.length || 0})</span>
+                </h3>
+                <div className="space-y-2">
+                  {selectedDoc.risks?.map((risk, idx) => (
+                    <div key={idx} className="p-3 rounded-xl bg-red-500/10 border border-red-500/25 flex items-start gap-2.5 text-xs text-red-300 leading-relaxed">
+                      <span className="text-red-400 shrink-0 font-bold">⚠️ Clause Risk #{idx + 1}:</span>
+                      <span>{risk}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* 3. KEY COMMERCIAL CLAUSES */}
               <div className="space-y-2">
                 <h3 className="text-xs font-bold text-white/60 uppercase tracking-wider flex items-center gap-2">
                   <FileCheck className="w-4 h-4 text-[#FFD700]" />
-                  <span>Key Points & Commercial Clauses ({selectedDoc.keyPoints?.length || 0})</span>
+                  <span>Analyzed Commercial Terms ({selectedDoc.keyPoints?.length || 0})</span>
                 </h3>
                 <div className="space-y-2">
                   {selectedDoc.keyPoints?.map((point, idx) => (
@@ -388,27 +525,11 @@ export const DocsView: React.FC = () => {
                 </div>
               </div>
 
-              {/* 3. RISKS & RED FLAGS */}
-              <div className="space-y-2">
-                <h3 className="text-xs font-bold text-red-400 uppercase tracking-wider flex items-center gap-2">
-                  <AlertTriangle className="w-4 h-4 text-red-400" />
-                  <span>Identified Risks & Operational Red Flags ({selectedDoc.risks?.length || 0})</span>
-                </h3>
-                <div className="space-y-2">
-                  {selectedDoc.risks?.map((risk, idx) => (
-                    <div key={idx} className="p-3 rounded-xl bg-red-500/5 border border-red-500/20 flex items-start gap-2.5 text-xs text-red-300 leading-relaxed">
-                      <span className="text-red-400 shrink-0 font-bold">•</span>
-                      <span>{risk}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
               {/* 4. 3 COO DIRECT ACTIONS */}
               <div className="p-4 rounded-xl bg-[#121212] border border-white/5 space-y-3">
                 <h3 className="text-xs font-bold text-emerald-400 uppercase tracking-wider flex items-center gap-2">
                   <ListChecks className="w-4 h-4 text-emerald-400" />
-                  <span>3 Direct Next Actions</span>
+                  <span>Executive Actions & Redlines to Prevent Loss</span>
                 </h3>
                 <div className="space-y-2">
                   {selectedDoc.nextActions?.map((action, idx) => (
@@ -421,45 +542,55 @@ export const DocsView: React.FC = () => {
               </div>
             </>
           ) : (
-            <div className="p-16 text-center text-white/30 text-xs space-y-2">
-              <FileText className="w-8 h-8 mx-auto text-white/20 mb-2" />
-              <p className="font-semibold text-white/60">Select a document to review executive intelligence</p>
-              <p>PRIME AI extracts core bottom-line numbers, risk factors, and next actions automatically.</p>
+            <div className="p-16 text-center text-white/30 text-xs space-y-3">
+              <FileText className="w-10 h-10 mx-auto text-[#FFD700]/40 mb-2" />
+              <p className="font-bold text-white text-sm">Paste Your Contract. Find Where You'll Lose Money in 30 Seconds.</p>
+              <p className="text-zinc-400 max-w-sm mx-auto">
+                No credit card required. Get your full initial liability, penalty, and redline report 100% free.
+              </p>
+              <div className="pt-2">
+                <button
+                  onClick={() => handleRequestNewCheck('paste')}
+                  className="px-5 py-2.5 rounded-xl bg-[#FFD700] text-black font-extrabold text-xs hover:bg-yellow-300 transition-all cursor-pointer shadow-md"
+                >
+                  Paste Contract Now
+                </button>
+              </div>
             </div>
           )}
         </div>
       </div>
 
-      {/* Paste Text Modal */}
+      {/* Paste Contract Modal */}
       {showPasteModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
           <div className="relative w-full max-w-xl rounded-2xl bg-[#0E0E0E] border border-amber-500/30 p-6 shadow-2xl text-white">
-            <h3 className="text-lg font-bold text-white mb-1">Paste Document or Executive Memo</h3>
+            <h3 className="text-lg font-bold text-white mb-1">Paste Contract or Terms</h3>
             <p className="text-xs text-zinc-400 mb-4">
-              Enter raw text, board memo, SLA clause, or vendor proposal for instant Gemini analysis.
+              Paste your vendor proposal, NDA, master service agreement, or client contract for instant 30-second risk audit.
             </p>
 
             <form onSubmit={handlePasteSubmit} className="space-y-4">
               <div>
-                <label className="block text-xs font-semibold text-zinc-400 mb-1">Document Title</label>
+                <label className="block text-xs font-semibold text-zinc-400 mb-1">Contract / Agreement Title</label>
                 <input
                   type="text"
                   required
                   value={docTitle}
                   onChange={(e) => setDocTitle(e.target.value)}
-                  placeholder="e.g. Master SLA Agreement Q3 2026"
+                  placeholder="e.g. Master Services Agreement & SLA"
                   className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:border-amber-400"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-zinc-400 mb-1">Document Content</label>
+                <label className="block text-xs font-semibold text-zinc-400 mb-1">Contract Text</label>
                 <textarea
                   required
                   rows={8}
                   value={pasteText}
                   onChange={(e) => setPasteText(e.target.value)}
-                  placeholder="Paste contract terms, executive email thread, board packet, or meeting transcript here..."
+                  placeholder="Paste clauses, payment terms, SLA conditions, or liability sections here..."
                   className="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-3.5 text-xs text-white focus:outline-none focus:border-amber-400 font-mono"
                 />
               </div>
@@ -478,13 +609,22 @@ export const DocsView: React.FC = () => {
                   className="px-5 py-2 rounded-xl bg-gradient-to-r from-amber-300 via-yellow-400 to-amber-500 text-black text-xs font-extrabold shadow-md hover:brightness-110 flex items-center gap-2 cursor-pointer disabled:opacity-50"
                 >
                   <Sparkles className="w-4 h-4" />
-                  <span>Analyze with PRIME</span>
+                  <span>{isUploading ? 'Auditing in 30s...' : 'Audit Contract in 30 Seconds'}</span>
                 </button>
               </div>
             </form>
           </div>
         </div>
       )}
+
+      {/* Contract Check Paywall Modal */}
+      <ContractPaywallModal
+        isOpen={showContractPaywall}
+        onClose={() => setShowContractPaywall(false)}
+        onContinueFree={handleContinueFree}
+        onUpgradePro={handleUpgradeToPro}
+      />
     </div>
   );
 };
+

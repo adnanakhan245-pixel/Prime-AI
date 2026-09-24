@@ -115,16 +115,16 @@ export const Sidebar: React.FC<SidebarProps> = ({
     },
     {
       id: 'plans',
-      label: 'Plans & Pricing',
+      label: 'Pro Upgrade',
       icon: CreditCard,
-      badge: 'SAAS',
+      badge: 'UPGRADE',
       badgeClass: 'bg-[#FFD700]/20 text-[#FFD700] border border-[#FFD700]/30',
     },
     {
       id: 'white-label',
       label: 'Agency White-Label',
       icon: Building2,
-      badge: '$40K/MO',
+      badge: 'PARTNER',
       badgeClass: 'bg-gradient-to-r from-[#FFD700] to-amber-400 text-black font-extrabold shadow-sm',
     },
     {

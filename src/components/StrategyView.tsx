@@ -57,185 +57,16 @@ const DATE_RANGE_OPTIONS = [
 ];
 
 const DEFAULT_SAMPLE_STRATEGY: StrategyPlan = {
-  executive_summary: "Apex Enterprises is poised to accelerate ARR growth from $1.45M to $2.10M across Q4 by resolving silent at-risk accounts, executing CRO teardown recommendations, and expanding high-ticket enterprise contracts. With $1.8M in qualified pipeline velocity, our primary execution priority is reducing customer communication gaps and shipping low-latency infrastructure updates to compress sales cycles.",
-  strategic_health_score: 88,
-  pipeline_health_rating: "Strong Velocity ($1.82M Qualified Pipeline)",
-  projected_arr_impact: "+$620,000 ARR",
-  execution_readiness_score: 92,
-  top_3_risks: [
-    {
-      title: "Executive Silence on 3 Core Enterprise Accounts ($140k ARR at risk)",
-      category: "CHURN",
-      severity: "CRITICAL",
-      description: "Stellar Dynamics and Apex Partners show >10 days without executive touchpoints ahead of upcoming contract renewals.",
-      mitigationPlan: "Dispatch CEO-level re-engagement letters within 24 hours, lock in multi-year SLA guarantees, and schedule on-site quarterly business reviews.",
-      impactScore: 92
-    },
-    {
-      title: "Sub-optimal Self-Serve Conversion on Tier-2 Pricing Flow",
-      category: "REVENUE",
-      severity: "HIGH",
-      description: "Growth audit identified a 22% drop-off between trial onboarding and paid tier checkout due to hidden annual discount cues.",
-      mitigationPlan: "Deploy 1-click annual billing discount toggle and SOC2 trust center badges across high-traffic checkout funnels.",
-      impactScore: 84
-    },
-    {
-      title: "Engineering Delivery Bottleneck for Sub-200ms Latency SLA",
-      category: "EXECUTION",
-      severity: "MEDIUM",
-      description: "FinTech prospects require verified sub-200ms SLA benchmarks prior to signing $300k+ master service agreements.",
-      mitigationPlan: "Allocate $4.5M approved infrastructure budget to provision GPU cluster redundancy and deliver load-test benchmarks by Friday.",
-      impactScore: 78
-    }
-  ],
-  top_3_opportunities: [
-    {
-      title: "High-Ticket Enterprise Contract Expansion ($420k ARR Upsell)",
-      category: "UPSELL",
-      potentialARR: "+$420,000 ARR",
-      description: "Horizon Aerospace and Vanguard Capital are in late-stage discovery with high willingness to adopt multi-agent workflow modules.",
-      actionRequired: "Deliver custom executive business cases and schedule live architect demonstrations with the VP of Engineering.",
-      confidenceScore: 94
-    },
-    {
-      title: "Interactive ROI Calculator & Trust Badge CRO Rollout",
-      category: "CONVERSION",
-      potentialARR: "+$180,000 ARR",
-      description: "Implementing Growth Lab teardown recommendations is projected to lift website visitor-to-demo conversion by +18%.",
-      actionRequired: "Roll out lightweight interactive calculator on the primary landing page and feature enterprise case studies above the fold.",
-      confidenceScore: 89
-    },
-    {
-      title: "Automated Executive Inbox & Sales Call AI Multi-threading",
-      category: "PRODUCT_EXPANSION",
-      potentialARR: "+$120,000 ARR",
-      description: "Empowering revenue reps with PRIME Closer AI and Meeting AI to auto-dispatch objection scripts and immediate follow-ups.",
-      actionRequired: "Mandate Closer AI call reviews across all SDR/AE opportunities valued at >$25,000.",
-      confidenceScore: 91
-    }
-  ],
-  q4_goals: [
-    {
-      targetMetric: "$2.10M ARR Run-Rate",
-      currentBaseline: "$1.45M ARR",
-      deadline: "Dec 31 (Q4 Day 90)",
-      description: "Achieve record annual recurring revenue run-rate driven by enterprise renewals and expanded pipeline closing velocity.",
-      status: "ON_TRACK",
-      keyResults: [
-        "Close $620k in new and expanded annual enterprise contracts",
-        "Maintain 100% gross retention on accounts valued over $50k",
-        "Compress median sales cycle from 44 days to 26 days"
-      ]
-    },
-    {
-      targetMetric: "99.99% Enterprise SLA & Sub-200ms API Latency",
-      currentBaseline: "420ms Latency / 99.9% Uptime",
-      deadline: "Nov 15 (Q4 Day 45)",
-      description: "Establish world-class infrastructure reliability to win strict institutional and FinTech compliance audits.",
-      status: "ON_TRACK",
-      keyResults: [
-        "Deploy multi-region cloud cluster redundancy with auto-failover",
-        "Publish real-time public telemetry status page with live SLA badges",
-        "Deliver verified load-test benchmarks to Vanguard Capital CTO"
-      ]
-    },
-    {
-      targetMetric: "100% Executive Follow-Up & Zero Account Silence",
-      currentBaseline: "14-day silence threshold exceeded",
-      deadline: "Oct 31 (Q4 Day 30)",
-      description: "Eliminate silent churn vectors through autonomous CRM radar monitoring and chief-of-staff meeting dispatch.",
-      status: "ON_TRACK",
-      keyResults: [
-        "Zero active accounts with >7 days without touchpoint",
-        "Auto-generate meeting briefs and follow-up emails within 10 minutes",
-        "Recover 100% of the $140k at-risk client pipeline"
-      ]
-    }
-  ],
-  team_assignments: [
-    {
-      roleOrLeader: "VP of Sales & Revenue Operations",
-      focusArea: "Enterprise Pipeline Acceleration & Closing Sprint",
-      keyDeliverables: [
-        "Lock Horizon Aerospace ($310k) and Vanguard Capital ($420k) contracts",
-        "Conduct weekly Closer AI call reviews on all Tier-1 deals",
-        "Enforce 24-hour SLA on inbound enterprise qualification"
-      ],
-      allocatedBudgetOrFTE: "$120,000 / 3 Senior Account Executives",
-      priority: "P0"
-    },
-    {
-      roleOrLeader: "VP of Engineering & Infrastructure",
-      focusArea: "Sub-200ms Performance SLA & Cloud Cluster Scaling",
-      keyDeliverables: [
-        "Execute $4.5M infrastructure budget allocation",
-        "Finalize multi-region failover and verify sub-200ms latency",
-        "Publish post-mortem report and updated trust center documentation"
-      ],
-      allocatedBudgetOrFTE: "$4.5M Capital Budget / 4 Lead Engineers",
-      priority: "P0"
-    },
-    {
-      roleOrLeader: "Head of Growth & Product Marketing",
-      focusArea: "Website CRO Teardown & High-Intent Conversion",
-      keyDeliverables: [
-        "Deploy interactive ROI calculator on primary domain",
-        "Redesign pricing tier page with clear annual savings toggle",
-        "Feature verified customer ROI quotes and security badges above the fold"
-      ],
-      allocatedBudgetOrFTE: "$45,000 / Growth Engineer & Designer",
-      priority: "P1"
-    },
-    {
-      roleOrLeader: "Director of Customer Success & Retention",
-      focusArea: "Proactive Churn Neutralization & Executive QBRs",
-      keyDeliverables: [
-        "Conduct executive outreach on all accounts with health score <60",
-        "Deliver revised SLA agreements to Stellar Dynamics and Apex Partners",
-        "Establish automated weekly telemetry check-ins with client sponsors"
-      ],
-      allocatedBudgetOrFTE: "$60,000 / 2 Enterprise CSMs",
-      priority: "P0"
-    }
-  ],
-  plan_90_day: [
-    {
-      timeframe: "Days 1 - 30 (Stabilization & Churn Neutralization)",
-      milestoneTitle: "Re-engage Silent Accounts & Deploy First CRO Levers",
-      actions: [
-        "Initiate executive touchpoints for Stellar Dynamics and at-risk CRM accounts",
-        "Deploy SOC2 trust center badges and interactive ROI calculator to landing page",
-        "Finalize vendor contracts for GPU cluster cloud expansion"
-      ],
-      expectedKpiImpact: "Protect $140k at-risk ARR and lift baseline demo conversion by +10%",
-      owner: "CEO & VP Sales",
-      completed: false
-    },
-    {
-      timeframe: "Days 31 - 60 (Pipeline Acceleration & Infrastructure Milestone)",
-      milestoneTitle: "Verify Sub-200ms SLA & Scale Enterprise Deal Reviews",
-      actions: [
-        "Ship engineering latency optimization and deliver benchmarks to enterprise prospects",
-        "Mandate Closer AI call coaching on all opportunities >$25k",
-        "Launch targeted nurture campaign for high-value calculation drop-offs"
-      ],
-      expectedKpiImpact: "Shorten deal closing cycle by 18 days and expand pipeline to $2.2M",
-      owner: "VP Engineering & VP Sales",
-      completed: false
-    },
-    {
-      timeframe: "Days 61 - 90 (Q4 Closing Sprint & 2027 Scale Foundation)",
-      milestoneTitle: "Finalize Enterprise MSAs & Convene Strategy Board",
-      actions: [
-        "Execute final MSA renewals with Horizon Aerospace and Vanguard Capital",
-        "Audit 90-day KPI outcomes against initial strategic targets",
-        "Draft Q1 FY2027 board resource allocation deck"
-      ],
-      expectedKpiImpact: "Hit $2.10M ARR milestone and lock 100% net revenue retention",
-      owner: "Executive Board",
-      completed: false
-    }
-  ]
+  executive_summary: "No strategy report generated yet. Click 'Generate Q4 Strategy' to analyze your company's data, revenue pipelines, and operational telemetry into a bespoke execution roadmap.",
+  strategic_health_score: 100,
+  pipeline_health_rating: "Awaiting Live Telemetry",
+  projected_arr_impact: "Ready to Analyze",
+  execution_readiness_score: 100,
+  top_3_risks: [],
+  top_3_opportunities: [],
+  q4_goals: [],
+  team_assignments: [],
+  plan_90_day: []
 };
 
 export const StrategyView: React.FC = () => {
@@ -265,19 +96,8 @@ export const StrategyView: React.FC = () => {
       setStrategies(data);
       if (data.length > 0 && !selectedStrategy) {
         setSelectedStrategy(data[0]);
-      } else if (data.length === 0 && !selectedStrategy) {
-        // Provide sample baseline record
-        const sampleRecord: StrategyRecord = {
-          id: 'strat_demo_init',
-          userId: user.uid,
-          companyName: activeCompanyName,
-          dateRange: 'Last 90 Days',
-          strategy: DEFAULT_SAMPLE_STRATEGY,
-          createdAt: new Date().toISOString(),
-          syncedToSupabase: true
-        };
-        setSelectedStrategy(sampleRecord);
-        setStrategies([sampleRecord]);
+      } else if (data.length === 0) {
+        setSelectedStrategy(null);
       }
     } catch (err) {
       console.error('Error fetching strategies:', err);
@@ -633,6 +453,11 @@ export const StrategyView: React.FC = () => {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {(!currentStrategy.q4_goals || currentStrategy.q4_goals.length === 0) && (
+                <div className="col-span-3 p-8 rounded-2xl bg-[#141414] border border-white/5 text-center text-xs text-white/40">
+                  No strategic goals synthesized yet. Click &quot;Generate Q4 Strategy&quot; to formulate AI milestones.
+                </div>
+              )}
               {currentStrategy.q4_goals && currentStrategy.q4_goals.map((goal, gIdx) => (
                 <div 
                   key={gIdx}
@@ -693,6 +518,9 @@ export const StrategyView: React.FC = () => {
               </div>
 
               <div className="space-y-2">
+                {(!currentStrategy.top_3_risks || currentStrategy.top_3_risks.length === 0) && (
+                  <p className="text-xs text-white/40 p-3 italic">Zero at-risk vectors flagged. Click &quot;Generate Q4 Strategy&quot; to scan live data.</p>
+                )}
                 {currentStrategy.top_3_risks && currentStrategy.top_3_risks.map((r, idx) => (
                   <div key={idx} className="p-3 rounded-xl bg-black/40 border border-white/5 space-y-1">
                     <div className="flex items-center justify-between">
@@ -722,6 +550,9 @@ export const StrategyView: React.FC = () => {
               </div>
 
               <div className="space-y-2">
+                {(!currentStrategy.top_3_opportunities || currentStrategy.top_3_opportunities.length === 0) && (
+                  <p className="text-xs text-white/40 p-3 italic">Ready to compute upside levers from live pipeline.</p>
+                )}
                 {currentStrategy.top_3_opportunities && currentStrategy.top_3_opportunities.map((o, idx) => (
                   <div key={idx} className="p-3 rounded-xl bg-black/40 border border-white/5 space-y-1">
                     <div className="flex items-center justify-between">
@@ -762,6 +593,11 @@ export const StrategyView: React.FC = () => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+            {(!currentStrategy.top_3_risks || currentStrategy.top_3_risks.length === 0) && (
+              <div className="col-span-3 p-12 rounded-2xl bg-[#141414] border border-white/5 text-center text-xs text-white/40">
+                No active risks detected. Run the strategy synthesizer above to evaluate churn and SLA risks.
+              </div>
+            )}
             {currentStrategy.top_3_risks && currentStrategy.top_3_risks.map((risk, rIdx) => (
               <div 
                 key={rIdx}
@@ -822,6 +658,11 @@ export const StrategyView: React.FC = () => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+            {(!currentStrategy.top_3_opportunities || currentStrategy.top_3_opportunities.length === 0) && (
+              <div className="col-span-3 p-12 rounded-2xl bg-[#141414] border border-white/5 text-center text-xs text-white/40">
+                No opportunities analyzed yet. Click &quot;Generate Q4 Strategy&quot; to identify revenue expansion vectors.
+              </div>
+            )}
             {currentStrategy.top_3_opportunities && currentStrategy.top_3_opportunities.map((opp, oIdx) => (
               <div 
                 key={oIdx}
@@ -894,6 +735,11 @@ export const StrategyView: React.FC = () => {
             </div>
 
             <div className="space-y-4">
+              {(!currentStrategy.plan_90_day || currentStrategy.plan_90_day.length === 0) && (
+                <div className="p-12 rounded-2xl bg-[#141414] border border-white/5 text-center text-xs text-white/40">
+                  No 90-day action plan generated yet. Synthesize strategy above to build a sequential rollout.
+                </div>
+              )}
               {currentStrategy.plan_90_day && currentStrategy.plan_90_day.map((phase, pIdx) => (
                 <div
                   key={pIdx}

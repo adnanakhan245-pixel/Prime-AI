@@ -35,82 +35,23 @@ export interface AIActionItem {
 
 export const APPROVALS_STORAGE_KEY = 'prime_ai_approvals_v1';
 
-export const INITIAL_SAMPLE_ACTIONS: AIActionItem[] = [
-  {
-    id: 'act-101',
-    actionName: 'Dispatch $18,500 Overdue Invoice Notice',
-    category: 'finance',
-    target: 'Vance Capital Partners (ceo@vanceholdings.com)',
-    details: 'Send automated executive payment reminder with updated wire details for Invoice #INV-9042.',
-    impactLevel: 'HIGH',
-    createdAt: new Date(Date.now() - 1000 * 60 * 12).toISOString(),
-    status: 'PENDING',
-    actionType: 'DISPATCH_INVOICE_NOTICE'
-  },
-  {
-    id: 'act-102',
-    actionName: 'Reallocate $2,500 Budget to High-ROAS Google Campaign',
-    category: 'ad_spend',
-    target: 'Google Search Campaign #4 (US Enterprise)',
-    details: 'Pause non-performing Meta Ads ad set ($85/CPA) and reallocate $2,500/mo to Google Search ($22/CPA).',
-    impactLevel: 'MEDIUM',
-    createdAt: new Date(Date.now() - 1000 * 60 * 35).toISOString(),
-    status: 'PENDING',
-    actionType: 'REALLOCATE_AD_SPEND'
-  },
-  {
-    id: 'act-103',
-    actionName: 'Promote Lead "Elena Rostova" to Contract Stage',
-    category: 'crm',
-    target: 'HubSpot CRM — Rostova Logistics',
-    details: 'Update deal stage to "Contract Sent" and draft $40k/yr Enterprise Service Agreement.',
-    impactLevel: 'CRITICAL',
-    createdAt: new Date(Date.now() - 1000 * 60 * 70).toISOString(),
-    status: 'PENDING',
-    actionType: 'MOVE_DEAL',
-    undoData: {
-      dealId: 'crm_sample_rostova',
-      previousStage: 'Negotiation',
-      newStage: 'Contract Sent'
-    }
-  },
-  {
-    id: 'act-104',
-    actionName: 'Send Weekly Board Pack Briefing',
-    category: 'board',
-    target: 'Board Members (4 Enterprise Executives)',
-    details: 'Email AI-generated Q3 ARR growth breakdown ($83.9k ARR, 100% margin) and runway forecast.',
-    impactLevel: 'HIGH',
-    createdAt: new Date(Date.now() - 1000 * 60 * 120).toISOString(),
-    status: 'PENDING',
-    actionType: 'SEND_EMAIL'
-  },
-  {
-    id: 'act-105',
-    actionName: 'Auto-Draft Response to Investor Runway Inquiry',
-    category: 'email',
-    target: 'Marcus Sterling (marcus@sterlingmedia.co)',
-    details: 'Draft reply highlighting 18-month cash runway extension and zero customer churn metrics.',
-    impactLevel: 'MEDIUM',
-    createdAt: new Date(Date.now() - 1000 * 60 * 180).toISOString(),
-    status: 'PENDING',
-    actionType: 'SEND_EMAIL'
-  }
-];
+export const INITIAL_SAMPLE_ACTIONS: AIActionItem[] = [];
 
 export function getApprovalActions(): AIActionItem[] {
   try {
     const raw = localStorage.getItem(APPROVALS_STORAGE_KEY);
     if (raw) {
       const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed) && parsed.length > 0) {
-        return parsed;
+      if (Array.isArray(parsed)) {
+        // Strip out any legacy sample actions
+        const filtered = parsed.filter(a => !['act-101', 'act-102', 'act-103', 'act-104', 'act-105'].includes(a.id));
+        return filtered;
       }
     }
   } catch (e) {
     console.error('Failed to load approval actions:', e);
   }
-  return INITIAL_SAMPLE_ACTIONS;
+  return [];
 }
 
 export function saveApprovalActions(actions: AIActionItem[]): void {

@@ -118,7 +118,7 @@ export const CloserView: React.FC = () => {
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [analyzing, setAnalyzing] = useState(false);
-  const [currentFeedback, setCurrentFeedback] = useState<CallFeedback | null>(SAMPLE_CALLS[0].mockFeedback);
+  const [currentFeedback, setCurrentFeedback] = useState<CallFeedback | null>(null);
   const [currentRecord, setCurrentRecord] = useState<CallRecord | null>(null);
   const [savedCalls, setSavedCalls] = useState<CallRecord[]>([]);
   const [copiedScript, setCopiedScript] = useState(false);

@@ -63,33 +63,34 @@ export const LandingPage: React.FC<LandingPageProps> = ({
 
           {/* Hero Headline */}
           <h1 className="text-3xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight max-w-4xl mx-auto leading-[1.15]">
-            Reclaim 223 Hours/Month. <br />
-            <span className="gold-gradient-text font-serif">Your Autonomous AI Executive Fleet.</span>
+            Paste Your Contract. <br />
+            <span className="gold-gradient-text font-serif">Find Where You'll Lose Money in 30 Seconds.</span>
           </h1>
 
           {/* Subtitle */}
           <p className="mt-5 text-base sm:text-lg text-zinc-300 max-w-2xl mx-auto font-normal leading-relaxed">
-            PRIME AI handles executive busywork in real time: inbox triage, contract risk audits, sales pipeline coaching, and automated board packs.
+            AI-powered contract risk, penalty, and redline analysis. Uncover unfavorable terms, SLA traps, and hidden liabilities before you sign.
           </p>
 
           {/* CTAs */}
           <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
-            <button
-              onClick={() => onOpenAuth('signup')}
-              className="w-full sm:w-auto px-8 py-4 rounded-xl text-sm font-extrabold text-black bg-gradient-to-r from-[#FFD700] via-amber-300 to-[#FFC700] hover:brightness-110 shadow-[0_0_30px_rgba(255,215,0,0.4)] transition-all flex items-center justify-center gap-2 cursor-pointer group active:scale-95"
-            >
-              <Crown className="w-4 h-4 text-black" />
-              <span>Start 14-Day Free Trial</span>
-              <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
-            </button>
-
-            {onEnterDemo && (
+            {onEnterDemo ? (
               <button
                 onClick={onEnterDemo}
-                className="w-full sm:w-auto px-6 py-4 rounded-xl text-sm font-bold text-white bg-zinc-900/90 hover:bg-zinc-800 border border-[#FFD700]/30 hover:border-[#FFD700]/60 transition-all flex items-center justify-center gap-2 cursor-pointer"
+                className="w-full sm:w-auto px-8 py-4 rounded-xl text-sm font-extrabold text-black bg-gradient-to-r from-[#FFD700] via-amber-300 to-[#FFC700] hover:brightness-110 shadow-[0_0_30px_rgba(255,215,0,0.4)] transition-all flex items-center justify-center gap-2 cursor-pointer group active:scale-95"
               >
-                <Sparkles className="w-4 h-4 text-[#FFD700]" />
-                <span>Explore Live Demo Sandbox</span>
+                <Sparkles className="w-4 h-4 text-black" />
+                <span>Paste Contract Now — Free During Beta</span>
+                <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+              </button>
+            ) : (
+              <button
+                onClick={() => onOpenAuth('signup')}
+                className="w-full sm:w-auto px-8 py-4 rounded-xl text-sm font-extrabold text-black bg-gradient-to-r from-[#FFD700] via-amber-300 to-[#FFC700] hover:brightness-110 shadow-[0_0_30px_rgba(255,215,0,0.4)] transition-all flex items-center justify-center gap-2 cursor-pointer group active:scale-95"
+              >
+                <Sparkles className="w-4 h-4 text-black" />
+                <span>Paste Contract Now — Free During Beta</span>
+                <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
               </button>
             )}
 
@@ -137,13 +138,13 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           {/* Guarantees */}
           <div className="mt-4 flex flex-wrap items-center justify-center gap-4 text-xs text-zinc-400">
             <span className="flex items-center gap-1.5">
-              <Check className="w-3.5 h-3.5 text-[#FFD700]" /> Instant Access (No signup needed)
+              <Check className="w-3.5 h-3.5 text-[#FFD700]" /> Instant Sandbox Access (No Credit Card Required)
             </span>
             <span className="flex items-center gap-1.5">
               <Check className="w-3.5 h-3.5 text-[#FFD700]" /> 14-Day Free Access
             </span>
             <span className="flex items-center gap-1.5">
-              <Check className="w-3.5 h-3.5 text-[#FFD700]" /> Real Supabase &amp; Firestore
+              <Check className="w-3.5 h-3.5 text-[#FFD700]" /> Enterprise AI Fleet
             </span>
           </div>
 
@@ -302,137 +303,61 @@ export const LandingPage: React.FC<LandingPageProps> = ({
         </div>
       </section>
 
-      {/* PRICING SECTION (CLEAN & BALANCED) */}
+      {/* FREE DURING BETA SECTION (REPLACED ALL $499, $1999, $3999 PRICING) */}
       <section id="pricing" className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-14 border-t border-zinc-900">
-        <div className="text-center max-w-2xl mx-auto mb-10">
-          <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
-            Transparent, <span className="gold-gradient-text">Predictable Pricing</span>
+        <div className="rounded-3xl p-8 sm:p-12 bg-gradient-to-br from-zinc-900/90 via-zinc-950 to-zinc-900/90 border border-[#FFD700]/30 shadow-[0_0_50px_rgba(255,215,0,0.08)] text-center max-w-3xl mx-auto">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-[#FFD700]/10 border border-[#FFD700]/30 text-[#FFD700] text-xs font-bold uppercase tracking-widest mb-4">
+            <Sparkles className="w-3.5 h-3.5" />
+            <span>Public Beta Launch</span>
+          </div>
+
+          <h2 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
+            100% Free During Beta
           </h2>
-          <p className="mt-2 text-zinc-400 text-sm">
-            Scalable plans for solo executives, high-growth startups, and advisory agencies.
+          <p className="mt-3 text-zinc-300 text-sm sm:text-base max-w-xl mx-auto leading-relaxed">
+            No subscription fees, no credit card required to start. Paste any contract and receive an executive-grade risk, liability, and redline audit in 30 seconds.
           </p>
-        </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {/* Plan 1: Starter */}
-          <div className="rounded-2xl p-6 bg-zinc-900/50 border border-zinc-800 flex flex-col justify-between">
-            <div className="space-y-4">
-              <div>
-                <h3 className="text-base font-bold text-white">Starter</h3>
-                <p className="text-xs text-zinc-400 mt-0.5">For single founders &amp; early executives.</p>
+          <div className="mt-8 grid grid-cols-1 sm:grid-cols-3 gap-4 text-left">
+            <div className="p-4 rounded-xl bg-zinc-900/60 border border-white/5 space-y-1">
+              <div className="text-xs font-bold text-[#FFD700] flex items-center gap-1.5">
+                <Check className="w-4 h-4 text-[#FFD700]" />
+                <span>Instant Risk Audit</span>
               </div>
-              <div className="flex items-baseline gap-1">
-                <span className="text-3xl font-extrabold text-white">$499</span>
-                <span className="text-xs text-zinc-400">/ month</span>
-              </div>
-              <ul className="space-y-2 text-xs text-zinc-300">
-                <li className="flex items-center gap-2">
-                  <Check className="w-3.5 h-3.5 text-[#FFD700] shrink-0" />
-                  <span>500 emails triaged / mo</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <Check className="w-3.5 h-3.5 text-[#FFD700] shrink-0" />
-                  <span>Standard Document Intelligence</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <Check className="w-3.5 h-3.5 text-[#FFD700] shrink-0" />
-                  <span>PRIME Brain COO</span>
-                </li>
-              </ul>
+              <p className="text-[11px] text-zinc-400">
+                Identify toxic clauses, unilateral penalties, and hidden liability.
+              </p>
             </div>
-            <div className="mt-6">
-              <button
-                onClick={onEnterDemo || (() => onOpenAuth('signup'))}
-                className="w-full py-2.5 rounded-xl text-xs font-bold text-white bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 transition-all cursor-pointer"
-              >
-                Launch Sandbox
-              </button>
+
+            <div className="p-4 rounded-xl bg-zinc-900/60 border border-white/5 space-y-1">
+              <div className="text-xs font-bold text-[#FFD700] flex items-center gap-1.5">
+                <Check className="w-4 h-4 text-[#FFD700]" />
+                <span>Executive Redlines</span>
+              </div>
+              <p className="text-[11px] text-zinc-400">
+                Clear counter-proposals to prevent commercial loss before signing.
+              </p>
+            </div>
+
+            <div className="p-4 rounded-xl bg-zinc-900/60 border border-white/5 space-y-1">
+              <div className="text-xs font-bold text-[#FFD700] flex items-center gap-1.5">
+                <Check className="w-4 h-4 text-[#FFD700]" />
+                <span>Full Beta Access</span>
+              </div>
+              <p className="text-[11px] text-zinc-400">
+                Test and analyze contracts with zero upfront cost or commitment.
+              </p>
             </div>
           </div>
 
-          {/* Plan 2: Growth (Highlighted) */}
-          <div className="rounded-2xl p-6 bg-zinc-900/90 border-2 border-[#FFD700] relative flex flex-col justify-between shadow-[0_0_30px_rgba(255,215,0,0.15)]">
-            <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-[#FFD700] text-black text-[9px] font-extrabold uppercase tracking-widest">
-              Most Popular
-            </div>
-            <div className="space-y-4">
-              <div>
-                <h3 className="text-base font-bold text-white flex items-center gap-1.5">
-                  <span>Growth Fleet</span>
-                  <Crown className="w-4 h-4 text-[#FFD700]" />
-                </h3>
-                <p className="text-xs text-zinc-400 mt-0.5">For scaling startups &amp; growth teams.</p>
-              </div>
-              <div className="flex items-baseline gap-1">
-                <span className="text-3xl font-extrabold gold-gradient-text font-serif">$1,999</span>
-                <span className="text-xs text-zinc-400">/ month</span>
-              </div>
-              <ul className="space-y-2 text-xs text-zinc-200">
-                <li className="flex items-center gap-2">
-                  <Check className="w-3.5 h-3.5 text-[#FFD700] shrink-0" />
-                  <span className="font-semibold text-white">Unlimited</span> emails &amp; docs triaged
-                </li>
-                <li className="flex items-center gap-2">
-                  <Check className="w-3.5 h-3.5 text-[#FFD700] shrink-0" />
-                  <span>Closer AI &amp; Sales Call Analysis</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <Check className="w-3.5 h-3.5 text-[#FFD700] shrink-0" />
-                  <span>Cash Flow Guard &amp; Ad Optimizer</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <Check className="w-3.5 h-3.5 text-[#FFD700] shrink-0" />
-                  <span>Full Autonomous Swarms</span>
-                </li>
-              </ul>
-            </div>
-            <div className="mt-6">
-              <button
-                onClick={onEnterDemo || (() => onOpenAuth('signup'))}
-                className="w-full py-2.5 rounded-xl text-xs font-extrabold text-black bg-gradient-to-r from-[#FFD700] to-amber-400 hover:brightness-110 transition-all cursor-pointer shadow-sm"
-              >
-                Test Drive Growth
-              </button>
-            </div>
-          </div>
-
-          {/* Plan 3: Agency & Reseller */}
-          <div className="rounded-2xl p-6 bg-zinc-900/50 border border-zinc-800 flex flex-col justify-between">
-            <div className="space-y-4">
-              <div>
-                <h3 className="text-base font-bold text-white flex items-center gap-1.5">
-                  <span>Agency Reseller</span>
-                  <Building2 className="w-4 h-4 text-indigo-400" />
-                </h3>
-                <p className="text-xs text-zinc-400 mt-0.5">For B2B agencies &amp; consultancies.</p>
-              </div>
-              <div className="flex items-baseline gap-1">
-                <span className="text-3xl font-extrabold text-white">$3,999</span>
-                <span className="text-xs text-zinc-400">/ month</span>
-              </div>
-              <ul className="space-y-2 text-xs text-zinc-300">
-                <li className="flex items-center gap-2">
-                  <Check className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
-                  <span>White-label with custom domain</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <Check className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
-                  <span>Up to 25 isolated client tenants</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <Check className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
-                  <span>Client provisioning &amp; billing</span>
-                </li>
-              </ul>
-            </div>
-            <div className="mt-6">
-              <button
-                onClick={onEnterDemo || (() => onOpenAuth('signup'))}
-                className="w-full py-2.5 rounded-xl text-xs font-bold text-white bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 transition-all cursor-pointer"
-              >
-                Launch Agency Suite
-              </button>
-            </div>
+          <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
+            <button
+              onClick={onEnterDemo || (() => onOpenAuth('signup'))}
+              className="w-full sm:w-auto px-8 py-3.5 rounded-xl text-sm font-black text-black bg-[#FFD700] hover:bg-yellow-300 transition-all shadow-[0_0_30px_rgba(255,215,0,0.3)] flex items-center justify-center gap-2 cursor-pointer active:scale-95"
+            >
+              <span>Paste Your Contract Now (Free)</span>
+              <ArrowRight className="w-4 h-4" />
+            </button>
           </div>
         </div>
       </section>

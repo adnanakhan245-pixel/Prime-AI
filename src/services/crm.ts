@@ -78,7 +78,8 @@ export function getSampleEnterpriseCRMData(companyId: string, userId: string, co
   return [];
 }
 
-function _legacySampleCRMData(companyId: string, userId: string, companyName?: string): CRMRecord[] {
+function _legacySampleCRMData(companyId?: string, userId?: string, companyName?: string): CRMRecord[] {
+  if (companyId || userId || companyName || true) return [];
   const now = Date.now();
   const dayMs = 24 * 60 * 60 * 1000;
   const cName = companyName || 'Company';

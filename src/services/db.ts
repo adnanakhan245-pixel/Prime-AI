@@ -335,6 +335,59 @@ export async function fetchAdminDashboardData(): Promise<AdminDashboardData> {
     } catch (e) {}
   }
 
+  // 3. Add real registered accounts from Firestore 'profiles' across all devices
+  try {
+    const profilesSnap = await getDocs(query(collection(db, 'profiles'), limit(150)));
+    profilesSnap.forEach((docSnap) => {
+      const p = docSnap.data() as any;
+      if (p && p.email && !seenEmails.has(p.email.toLowerCase())) {
+        const isSuper = p.email.toLowerCase() === masterAdminEmail || p.role?.includes('Admin');
+        usersList.push({
+          uid: p.uid || docSnap.id,
+          email: p.email,
+          displayName: p.displayName || p.fullName || p.email.split('@')[0],
+          role: p.role || (isSuper ? 'Super Admin' : 'Executive Member'),
+          companyId: p.companyId || 'comp_' + docSnap.id.slice(0, 6),
+          companyName: p.companyName || `${p.displayName || p.email.split('@')[0]}'s Workspace`,
+          plan: (p.plan || 'Pro') as any,
+          createdAt: p.createdAt || new Date().toISOString(),
+          lastActive: 'Active User',
+          status: 'active',
+          isSuperAdmin: isSuper
+        });
+        seenEmails.add(p.email.toLowerCase());
+      }
+    });
+  } catch (err) {
+    console.warn('Firestore profiles fetch notice:', err);
+  }
+
+  // 4. Add registered leads from Firestore 'admin_leads'
+  try {
+    const leadsSnap = await getDocs(query(collection(db, 'admin_leads'), limit(150)));
+    leadsSnap.forEach((docSnap) => {
+      const lead = docSnap.data() as any;
+      if (lead && lead.email && !seenEmails.has(lead.email.toLowerCase())) {
+        usersList.push({
+          uid: lead.id || docSnap.id,
+          email: lead.email,
+          displayName: lead.fullName || lead.email.split('@')[0],
+          role: 'Registered Executive / Lead',
+          companyId: 'comp_' + docSnap.id.slice(0, 6),
+          companyName: lead.companyName || `${lead.fullName || lead.email.split('@')[0]}'s Workspace`,
+          plan: (lead.plan || '14-Day Pro Trial') as any,
+          createdAt: lead.signedUpAt || new Date().toISOString(),
+          lastActive: 'Recent Trial',
+          status: 'active',
+          isSuperAdmin: false
+        });
+        seenEmails.add(lead.email.toLowerCase());
+      }
+    });
+  } catch (err) {
+    console.warn('Firestore admin_leads fetch notice:', err);
+  }
+
   const totalMRR = companiesList.reduce((acc, c) => acc + (c.mrr || 0), 0);
   const totalUsers = usersList.length;
   const totalPipelineARR = companiesList.reduce((acc, c) => acc + (c.pipelineValue || 0), 0);
