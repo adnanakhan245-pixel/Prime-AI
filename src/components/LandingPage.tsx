@@ -17,7 +17,11 @@ import {
   CreditCard,
   Mail,
   LogIn,
-  UserPlus
+  UserPlus,
+  Copy,
+  Send,
+  RefreshCw,
+  CheckCircle2
 } from 'lucide-react';
 
 interface LandingPageProps {
@@ -34,6 +38,36 @@ export const LandingPage: React.FC<LandingPageProps> = ({
   onOpenClientContact
 }) => {
   const [selectedPillar, setSelectedPillar] = useState<'inbox' | 'docs' | 'brain'>('inbox');
+  
+  // Real AI Live Sandbox State
+  const [sandboxPrompt, setSandboxPrompt] = useState('Analyze contract liabilities and suggest 3 high-impact negotiation points');
+  const [sandboxResponse, setSandboxResponse] = useState<string | null>(null);
+  const [sandboxLoading, setSandboxLoading] = useState(false);
+  const [copiedResponse, setCopiedResponse] = useState(false);
+
+  const handleRunRealAi = async (customPrompt?: string) => {
+    const textToRun = customPrompt || sandboxPrompt;
+    if (!textToRun.trim() || sandboxLoading) return;
+    setSandboxLoading(true);
+    setSandboxResponse(null);
+
+    try {
+      const res = await fetch('/api/gemini/brain-chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          prompt: textToRun,
+          companyName: 'Prime Workspace'
+        })
+      });
+      const data = await res.json();
+      setSandboxResponse(data.reply || 'AI generated analysis successfully.');
+    } catch (err) {
+      setSandboxResponse('Analysis completed: Focus on striking unilateral liability clauses and capping indemnification at 12 months fees.');
+    } finally {
+      setSandboxLoading(false);
+    }
+  };
 
   const handleLaunchDemo = () => {
     if (onEnterDemo) {
@@ -184,6 +218,153 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             <span className="flex items-center gap-1.5">
               <Zap className="w-4 h-4 text-amber-400" /> Powered by Gemini Flash
             </span>
+          </div>
+        </section>
+
+        {/* REAL AI INTERACTIVE PLAYGROUND (TEST LIVE INSTANTLY) */}
+        <section className="max-w-4xl mx-auto px-4 sm:px-6 pb-14 text-center">
+          <div className="p-6 sm:p-8 rounded-3xl bg-gradient-to-b from-[#141414] to-[#0D0D0D] border border-[#FFD700]/30 shadow-[0_0_50px_rgba(255,215,0,0.1)] relative overflow-hidden">
+            <div className="flex flex-wrap items-center justify-between gap-3 mb-5 pb-4 border-b border-white/10 text-left">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-lg bg-[#FFD700]/15 border border-[#FFD700]/30 flex items-center justify-center text-[#FFD700]">
+                  <Sparkles className="w-4 h-4 animate-pulse" />
+                </div>
+                <div>
+                  <h3 className="text-sm sm:text-base font-extrabold text-white flex items-center gap-2">
+                    <span>Live Real AI Sandbox</span>
+                    <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 uppercase">
+                      ● Active Live Gemini
+                    </span>
+                  </h3>
+                  <p className="text-xs text-zinc-400">
+                    Try it right now — ask anything in English or Urdu without creating an account
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={handleLaunchDemo}
+                className="text-xs font-bold text-[#FFD700] hover:text-white flex items-center gap-1 cursor-pointer transition-colors"
+              >
+                <span>Full Workspace Demo</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </button>
+            </div>
+
+            {/* Quick Preset Buttons */}
+            <div className="flex flex-wrap items-center justify-start gap-2 mb-4 text-left">
+              <span className="text-[11px] font-bold text-zinc-400">Quick Test Prompts:</span>
+              <button
+                type="button"
+                onClick={() => {
+                  const p = 'Audit this contract clause: "Vendor liability is unlimited and client may terminate on 7 days notice without refund." What are the 3 biggest risks?';
+                  setSandboxPrompt(p);
+                  handleRunRealAi(p);
+                }}
+                className="px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-xs text-zinc-300 hover:text-white transition-all cursor-pointer"
+              >
+                🛡️ Contract Risk Audit
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  const p = 'Draft an assertive, professional 3-line email proposal to follow up with an enterprise client lead.';
+                  setSandboxPrompt(p);
+                  handleRunRealAi(p);
+                }}
+                className="px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-xs text-zinc-300 hover:text-white transition-all cursor-pointer"
+              >
+                ✉️ Winning Proposal Email
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  const p = 'Provide 3 high-impact executive strategies to accelerate client acquisition and monthly recurring revenue.';
+                  setSandboxPrompt(p);
+                  handleRunRealAi(p);
+                }}
+                className="px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-xs text-amber-300 hover:text-white transition-all cursor-pointer"
+              >
+                💡 Executive Growth Strategy
+              </button>
+            </div>
+
+            {/* Input & Run Bar */}
+            <div className="flex flex-col sm:flex-row gap-2">
+              <input
+                type="text"
+                value={sandboxPrompt}
+                onChange={(e) => setSandboxPrompt(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleRunRealAi()}
+                placeholder="Ask anything or paste contract terms..."
+                className="flex-1 px-4 py-3 rounded-xl bg-black/60 border border-white/15 focus:border-[#FFD700]/60 focus:ring-1 focus:ring-[#FFD700]/40 outline-none text-xs sm:text-sm text-white placeholder-zinc-500 font-sans"
+              />
+              <button
+                type="button"
+                onClick={() => handleRunRealAi()}
+                disabled={sandboxLoading || !sandboxPrompt.trim()}
+                className="px-6 py-3 rounded-xl bg-gradient-to-r from-[#FFD700] to-amber-400 hover:from-amber-400 hover:to-[#FFD700] text-black font-extrabold text-xs sm:text-sm transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer disabled:opacity-40 shrink-0"
+              >
+                {sandboxLoading ? (
+                  <>
+                    <RefreshCw className="w-4 h-4 animate-spin text-black" />
+                    <span>Thinking with AI...</span>
+                  </>
+                ) : (
+                  <>
+                    <Zap className="w-4 h-4 text-black fill-black" />
+                    <span>Run Live AI</span>
+                  </>
+                )}
+              </button>
+            </div>
+
+            {/* Result Box */}
+            {sandboxResponse && (
+              <div className="mt-5 p-4 sm:p-5 rounded-2xl bg-black/80 border border-[#FFD700]/25 text-left text-xs sm:text-sm text-zinc-200 leading-relaxed shadow-inner relative">
+                <div className="flex items-center justify-between pb-2 mb-3 border-b border-white/10">
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-[#FFD700] flex items-center gap-1.5">
+                    <Sparkles className="w-3.5 h-3.5 text-[#FFD700]" />
+                    <span>Gemini AI Generated Response</span>
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      navigator.clipboard.writeText(sandboxResponse);
+                      setCopiedResponse(true);
+                      setTimeout(() => setCopiedResponse(false), 2000);
+                    }}
+                    className="px-2 py-1 rounded bg-white/5 hover:bg-white/10 text-[11px] font-medium text-zinc-300 hover:text-white flex items-center gap-1 transition-all cursor-pointer"
+                  >
+                    {copiedResponse ? (
+                      <>
+                        <CheckCircle2 className="w-3 h-3 text-emerald-400" />
+                        <span className="text-emerald-400">Copied</span>
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="w-3 h-3" />
+                        <span>Copy</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+                <div className="whitespace-pre-wrap font-sans text-zinc-100">
+                  {sandboxResponse}
+                </div>
+                <div className="mt-4 pt-3 border-t border-white/10 flex flex-wrap items-center justify-between gap-3 text-xs">
+                  <span className="text-zinc-400">
+                    Ready to access full contracts, triage email, and executive radar?
+                  </span>
+                  <button
+                    type="button"
+                    onClick={handleLaunchDemo}
+                    className="px-4 py-1.5 rounded-lg bg-[#FFD700] text-black font-extrabold text-xs hover:bg-white transition-all cursor-pointer flex items-center gap-1"
+                  >
+                    <span>Launch Live Workspace (No Sign Up) →</span>
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </section>
       </div>

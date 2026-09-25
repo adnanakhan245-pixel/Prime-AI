@@ -28,7 +28,6 @@ import { SettingsModal } from './components/SettingsModal';
 import { CommandPalette } from './components/CommandPalette';
 import { VoiceExecutiveModal } from './components/VoiceExecutiveModal';
 import { DailyBriefingModal } from './components/DailyBriefingModal';
-import { MobileInstallBanner } from './components/MobileInstallBanner';
 import { MobileInstallModal } from './components/MobileInstallModal';
 import { TrialBanner } from './components/TrialBanner';
 import { FeaturePaywallOverlay } from './components/FeaturePaywallOverlay';
@@ -220,9 +219,6 @@ function AppContent() {
 
   return (
     <div className="min-h-screen bg-[#0A0A0A] text-white flex flex-col font-sans">
-      {/* Smart Mobile App Installation Banner (iOS & Android) */}
-      <MobileInstallBanner onOpenModal={() => setMobileInstallModalOpen(true)} />
-
       {/* Header */}
       <Header
         currentView={currentView}

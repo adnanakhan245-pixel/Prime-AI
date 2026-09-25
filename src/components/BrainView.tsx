@@ -17,7 +17,8 @@ import {
   CheckCheck,
   TrendingUp,
   Scissors,
-  CreditCard
+  CreditCard,
+  Sparkles
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { 
@@ -201,23 +202,23 @@ export const BrainView: React.FC = () => {
   useEffect(() => {
     fetchLiveSupabaseData();
 
-    // Initial BRAIN 3.0 Welcome Message - $100k+ High Impact
+    // Initial Real AI Welcome Message
     const initMsg: ChatMessage = {
-      id: 'brain_3_init',
+      id: 'brain_real_ai_init',
       companyId: activeCompanyId,
       userId,
       role: 'assistant',
-      content: `Threat: $100,000 ARR contract renewal at risk across high-tier enterprise accounts silent >7 days\nOpportunity: $100,000 locked Q4 ARR + $50,000 immediate platform upsell expansion\nPlay: Deploy 1-Click Executive Re-Engagement and SLA Price Protection Directive`,
-      timestamp: new Date().toISOString(),
-      playAction: {
-        id: 'play_init_3',
-        type: 'CUSTOM_EXECUTE',
-        label: '⚡ 1-Click Execute: Secure $100k Deal & Lock $50k Upsell',
-        threat: '$100,000 ARR contract renewal at risk across high-tier enterprise accounts silent >7 days',
-        opportunity: '$100,000 locked Q4 ARR + $50,000 immediate platform upsell expansion',
-        play: 'Deploy 1-Click Executive Re-Engagement and SLA Price Protection Directive',
-        executed: false
-      }
+      content: `👋 Welcome to PRIME AI Intelligence Workbench!
+
+I am your autonomous corporate, legal, and operational AI Copilot. You can consult me in English or Urdu on any business, legal, or strategic challenge:
+
+• 🛡️ Contract Risk & Redline Analysis — Detect hidden liability traps, SLA penalties, and indemnity exposure.
+• ✉️ High-Converting Client Proposals — Draft assertive, winning proposals and client follow-up sequences.
+• 📈 Revenue Growth & Pipeline Expansion — Uncover upsell opportunities and re-engage silent enterprise clients.
+• 💰 Cost Reduction & Cash Flow Defense — Identify operational expense leaks and protect monthly gross margins.
+
+Click any quick tool below or type your question directly in the console.`,
+      timestamp: new Date().toISOString()
     };
     setMessages([initMsg]);
   }, [activeCompanyId, userId]);
@@ -502,18 +503,17 @@ export const BrainView: React.FC = () => {
         return;
       }
 
-      // SCENARIO 5: Custom query via Gemini API enforcing strict $90k-$100k minimums & exact 3-line format
-      const atRiskDeals = deals.filter(d => d.daysSinceLastContact > 7);
+      // Real AI Query via Gemini API
+      const atRiskDeals = deals.filter(d => (d.daysSinceLastContact || 0) > 7);
       const topDeal = deals[0];
       const urgentEmails = emails.filter(e => e.urgency === 'HIGH');
 
       const liveContextSummary = {
         company: activeCompanyName,
         dealsCount: deals.length,
-        topDealValue: topDeal ? Math.max(topDeal.dealValue, 100000) : 100000,
+        topDealValue: topDeal ? topDeal.dealValue : 25000,
         topDealAccount: topDeal ? topDeal.accountName : 'Acme Cloud Platform',
         atRiskDealsCount: atRiskDeals.length,
-        atRiskARR: Math.max(atRiskDeals.reduce((sum, d) => sum + d.dealValue, 0), 100000),
         urgentInboxCount: urgentEmails.length,
         recentBriefings: briefings.slice(0, 2).map(b => b.headline)
       };
@@ -525,80 +525,63 @@ export const BrainView: React.FC = () => {
           messages: [
             {
               role: 'user',
-              content: `[BRAIN 3.0 COO SYSTEM DIRECTIVE]: You are BRAIN 3.0, the Autonomous AI Chief of Operations.
-Live Supabase Context: ${JSON.stringify(liveContextSummary)}
-USER QUERY: "${queryText}"
-
-CRITICAL MANDATORY RULES:
-1. Every response MUST save or make $90,000 to $100,000 per month minimum. NEVER give answers under $90,000.
-2. ANSWER FORMAT ONLY (Strictly 3 lines, zero fluff, no intro/outro):
-Threat: $XXX risk [specific $90k-$100k+ risk with account/domain]
-Opportunity: $XXX gain [specific $90k-$100k+ gain]
-Play: [1-sentence action to execute immediately]`
+              content: queryText
             }
           ],
           companyName: activeCompanyName,
           contextData: liveContextSummary,
-          mode: 'COO_BRAIN_3'
+          mode: 'GENERAL'
         })
       });
 
       if (!res.ok) throw new Error('API returned status ' + res.status);
       const data = await res.json();
-      let reply = data.reply || '';
+      const reply = data.reply || 'Analysis completed.';
 
-      // Validate & clean format
-      if (!reply.includes('Threat:') || !reply.includes('Opportunity:') || !reply.includes('Play:')) {
-        reply = `Threat: $100,000 ARR renewal exposure across pending enterprise contracts silent >7 days\nOpportunity: $100,000 locked ARR + $50,000 platform throughput expansion\nPlay: Authorize 1-Click Executive Alignment and SLA Guarantee Addendum`;
-      }
-
-      // Extract parts
+      // Check if response contains Threat / Opportunity / Play format
       const threatMatch = reply.match(/Threat:\s*([^\n]+)/i);
       const oppMatch = reply.match(/Opportunity:\s*([^\n]+)/i);
       const playMatch = reply.match(/Play:\s*([^\n]+)/i);
 
-      const parsedThreat = threatMatch ? threatMatch[1].trim() : '$100,000 ARR contract exposure';
-      const parsedOpp = oppMatch ? oppMatch[1].trim() : '$100,000 revenue protection and expansion';
-      const parsedPlay = playMatch ? playMatch[1].trim() : 'Deploy 1-Click Executive Directive now';
+      let playActionObj = undefined;
+      if (playMatch && (threatMatch || oppMatch)) {
+        playActionObj = {
+          id: 'play_' + Date.now(),
+          type: 'CUSTOM_EXECUTE' as const,
+          label: `⚡ 1-Click Action: ${playMatch[1].slice(0, 48)}...`,
+          threat: threatMatch ? threatMatch[1].trim() : 'Operational optimization identified',
+          opportunity: oppMatch ? oppMatch[1].trim() : 'Revenue & efficiency enhancement',
+          play: playMatch[1].trim(),
+          executed: false
+        };
+      }
 
       const assistantMsg: ChatMessage = {
         id: 'asst_' + Date.now(),
         companyId: activeCompanyId,
         userId,
         role: 'assistant',
-        content: `Threat: ${parsedThreat}\nOpportunity: ${parsedOpp}\nPlay: ${parsedPlay}`,
+        content: reply,
         timestamp: new Date().toISOString(),
-        playAction: {
-          id: 'play_' + Date.now(),
-          type: 'CUSTOM_EXECUTE',
-          label: `⚡ 1-Click Execute: ${parsedPlay.slice(0, 48)}...`,
-          threat: parsedThreat,
-          opportunity: parsedOpp,
-          play: parsedPlay,
-          executed: false
-        }
+        playAction: playActionObj
       };
 
       setMessages(prev => [...prev, assistantMsg]);
     } catch (err) {
-      console.error('Error in BRAIN 3.0:', err);
-      // High-impact fallback ($100k)
+      console.error('Error in Real AI execution:', err);
+      // Helpful, contextual fallback based on language and query
+      const isUrdu = /[\u0600-\u06FF]/.test(queryText);
+      const fallbackText = isUrdu 
+        ? `آپ کے سوال "${queryText}" کا تجزیہ:\n\n1. کاروباری ترجیح: اپنے اہم کلائنٹس اور پینڈنگ معاملات کو ترجیحی بنیادوں پر حل کریں۔\n2. فوری اقدام: گاہکوں سے واٹس ایپ یا ای میل پر رابطہ قائم کریں اور پرکشش آفر پیش کریں۔\n3. نفع میں اضافہ: غیر ضروری اخراجات میں کمی کریں اور سروسز کی بروقت ڈیلیوری یقینی بنائیں۔`
+        : `Analysis for "${queryText}":\n\n1. Core Priority: Address high-urgency client requests and active pipeline bottlenecks.\n2. Recommended Play: Align executive outreach with tailored incentives or clear milestone terms.\n3. Next Step: Review your active inbox and contract safeguards.`;
+
       const fallbackMsg: ChatMessage = {
         id: 'asst_fb_' + Date.now(),
         companyId: activeCompanyId,
         userId,
         role: 'assistant',
-        content: `Threat: $100,000 ARR contract renewal at risk — Acme Cloud Platform silent for 14 days\nOpportunity: $100,000 secured Q4 ARR + $50,000 multi-year platform upsell\nPlay: Deploy 1-Click Executive Re-Engagement and Price Protection Addendum`,
-        timestamp: new Date().toISOString(),
-        playAction: {
-          id: 'play_fb_' + Date.now(),
-          type: 'DISPATCH_EMAIL',
-          label: '⚡ Dispatch 1-Click Re-Engagement to Acme Cloud ($100k)',
-          threat: '$100,000 ARR contract renewal at risk — Acme Cloud Platform silent for 14 days',
-          opportunity: '$100,000 secured Q4 ARR + $50,000 multi-year platform upsell',
-          play: 'Deploy 1-Click Executive Re-Engagement and Price Protection Addendum',
-          executed: false
-        }
+        content: fallbackText,
+        timestamp: new Date().toISOString()
       };
       setMessages(prev => [...prev, fallbackMsg]);
     } finally {
@@ -638,14 +621,14 @@ Play: [1-sentence action to execute immediately]`
           <div>
             <div className="flex items-center gap-2">
               <h2 className="text-base font-bold text-white tracking-tight flex items-center gap-1.5">
-                Brain <span className="text-[#FFD700]">3.0</span>
+                Brain <span className="text-[#FFD700]">AI Copilot</span>
               </h2>
-              <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-[#FFD700]/20 text-[#FFD700] border border-[#FFD700]/40 font-mono uppercase tracking-wider">
-                $90K–$100K/MO IMPACT
+              <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 font-mono uppercase tracking-wider">
+                ● LIVE GEMINI 3.7
               </span>
             </div>
             <p className="text-[11px] text-white/40">
-              Live Supabase Scan • $100k+ Risks & $50k+ Upsells • Threat / Opportunity / Play
+              Autonomous Intelligence • Real AI Generation • اردو اور انگریزی مکمل سپورٹ
             </p>
           </div>
         </div>
@@ -654,12 +637,10 @@ Play: [1-sentence action to execute immediately]`
         <div className="flex items-center gap-2 text-xs">
           <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white/70 font-mono text-[11px]">
             <Database className="w-3.5 h-3.5 text-emerald-400" />
-            <span className="text-white/40">Supabase:</span>
+            <span className="text-white/40">Workspace:</span>
             <span className="text-emerald-400 font-bold">{liveDeals.length} Deals</span>
             <span className="text-white/20">•</span>
             <span className="text-[#FFD700] font-bold">{liveEmails.length} Inbox</span>
-            <span className="text-white/20">•</span>
-            <span className="text-purple-400 font-bold">{liveBriefingsCount} Saved</span>
           </div>
 
           <button
@@ -685,51 +666,61 @@ Play: [1-sentence action to execute immediately]`
         </div>
       </div>
 
-      {/* 2. UI: Financial Directive Buttons */}
+      {/* 2. UI: Real AI Intelligence Quick Tools */}
       <div className="px-4 py-3 bg-[#0E0E0E] border-b border-white/10 flex items-center justify-between gap-2 overflow-x-auto">
         <div className="flex items-center gap-2 w-full">
           <span className="text-[11px] font-extrabold text-white/40 uppercase tracking-wider shrink-0 mr-1 hidden lg:inline">
             Directives:
           </span>
 
-          {/* Button 1: Save $100k Deal */}
+          {/* Tool 1: Contract Risk & Traps */}
           <button
-            onClick={() => processBrainQuery('Save $100k Deal')}
+            onClick={() => processBrainQuery('Analyze the biggest contractual and legal risks in client agreements and give actionable redlines')}
             disabled={loading}
             className="flex-1 py-2.5 px-2.5 rounded-xl bg-gradient-to-r from-rose-500/15 to-rose-600/10 hover:from-rose-500/25 hover:to-rose-600/20 text-rose-300 hover:text-rose-200 border border-rose-500/30 font-bold text-xs flex items-center justify-center gap-1.5 transition-all shadow-sm hover:shadow-rose-500/10 cursor-pointer disabled:opacity-40 shrink-0"
           >
             <ShieldAlert className="w-4 h-4 text-rose-400 shrink-0" />
-            <span className="whitespace-nowrap font-sans">🛡️ Save $100k Deal</span>
+            <span className="whitespace-nowrap font-sans">🛡️ Contract Risk Audit</span>
           </button>
 
-          {/* Button 2: Find $50k Upsell */}
+          {/* Tool 2: Winning Client Proposal & Email */}
           <button
-            onClick={() => processBrainQuery('Find $50k Upsell')}
+            onClick={() => processBrainQuery('Write a winning, high-converting professional proposal and email to close a new client')}
             disabled={loading}
             className="flex-1 py-2.5 px-2.5 rounded-xl bg-gradient-to-r from-[#FFD700]/15 to-amber-500/10 hover:from-[#FFD700]/25 hover:to-amber-500/20 text-[#FFD700] hover:text-[#FFE55C] border border-[#FFD700]/30 font-bold text-xs flex items-center justify-center gap-1.5 transition-all shadow-sm hover:shadow-[#FFD700]/10 cursor-pointer disabled:opacity-40 shrink-0"
           >
             <TrendingUp className="w-4 h-4 text-[#FFD700] shrink-0" />
-            <span className="whitespace-nowrap font-sans">📈 Find $50k Upsell</span>
+            <span className="whitespace-nowrap font-sans">✉️ Winning Proposal</span>
           </button>
 
-          {/* Button 3: Cut $30k Waste */}
+          {/* Tool 3: Cut Waste & Cost Leaks */}
           <button
-            onClick={() => processBrainQuery('Cut $30k Waste')}
+            onClick={() => processBrainQuery('Identify operational expense leaks and actionable cost-cutting strategies')}
             disabled={loading}
             className="flex-1 py-2.5 px-2.5 rounded-xl bg-gradient-to-r from-emerald-500/15 to-emerald-600/10 hover:from-emerald-500/25 hover:to-emerald-600/20 text-emerald-300 hover:text-emerald-200 border border-emerald-500/30 font-bold text-xs flex items-center justify-center gap-1.5 transition-all shadow-sm hover:shadow-emerald-500/10 cursor-pointer disabled:opacity-40 shrink-0"
           >
             <Scissors className="w-4 h-4 text-emerald-400 shrink-0" />
-            <span className="whitespace-nowrap font-sans">✂️ Cut $30k Waste</span>
+            <span className="whitespace-nowrap font-sans">✂️ Cut Expense Waste</span>
           </button>
 
-          {/* Button 4: Recover Failed Subscriptions */}
+          {/* Tool 4: Executive Growth Strategy */}
           <button
-            onClick={() => processBrainQuery('Recover Failed Stripe Subscriptions & Dunning')}
+            onClick={() => processBrainQuery('Provide 3 high-impact executive strategies to accelerate client acquisition and monthly recurring revenue')}
+            disabled={loading}
+            className="flex-1 py-2.5 px-2.5 rounded-xl bg-gradient-to-r from-blue-500/15 to-indigo-600/10 hover:from-blue-500/25 hover:to-indigo-600/20 text-blue-300 hover:text-blue-200 border border-blue-500/30 font-bold text-xs flex items-center justify-center gap-1.5 transition-all shadow-sm hover:shadow-blue-500/10 cursor-pointer disabled:opacity-40 shrink-0"
+          >
+            <Sparkles className="w-4 h-4 text-blue-400 shrink-0" />
+            <span className="whitespace-nowrap font-sans">💡 Growth Strategy</span>
+          </button>
+
+          {/* Tool 5: Recover Billing & Invoices */}
+          <button
+            onClick={() => processBrainQuery('Draft a polite yet firm reminder for an overdue client invoice payment')}
             disabled={loading}
             className="flex-1 py-2.5 px-2.5 rounded-xl bg-gradient-to-r from-purple-500/15 to-purple-600/10 hover:from-purple-500/25 hover:to-purple-600/20 text-purple-300 hover:text-purple-200 border border-purple-500/30 font-bold text-xs flex items-center justify-center gap-1.5 transition-all shadow-sm hover:shadow-purple-500/10 cursor-pointer disabled:opacity-40 shrink-0"
           >
             <CreditCard className="w-4 h-4 text-purple-400 shrink-0" />
-            <span className="whitespace-nowrap font-sans">💳 Recover Failed Billing</span>
+            <span className="whitespace-nowrap font-sans">💳 Invoice Recovery</span>
           </button>
         </div>
       </div>

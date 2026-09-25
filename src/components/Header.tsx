@@ -240,29 +240,23 @@ export const Header: React.FC<HeaderProps> = ({
 
   return (
     <header className="sticky top-0 z-40 w-full border-b border-white/5 bg-[#0A0A0A]/95 backdrop-blur-xl">
-      <div className="w-full px-4 sm:px-8 h-20 flex items-center justify-between gap-2 sm:gap-4">
-        {/* Left Side: Permanent Brand Logo */}
-        <div className="flex items-center gap-3 sm:gap-4 min-w-0">
-          {/* Permanent Brand Logo: PRIME AI with Command Center written directly below */}
+      <div className="w-full px-4 sm:px-8 h-20 flex items-center justify-between gap-3">
+        {/* Left Side: Permanent Standalone Brand Logo: Prime Command Center */}
+        <div className="flex items-center gap-3 min-w-0 shrink-0">
           <div 
             onClick={() => onNavigate(user ? 'dashboard' : 'landing')} 
             className="flex items-center gap-2.5 cursor-pointer select-none shrink-0 group"
-            title="PRIME AI — Command Center"
+            title="Prime Command Center"
           >
             <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#FFD700] to-[#B8860B] shadow-[0_0_20px_rgba(255,215,0,0.25)] flex items-center justify-center text-black group-hover:scale-105 transition-transform shrink-0">
               <Crown className="w-5 h-5" />
             </div>
-            <div className="flex flex-col">
-              <div className="flex items-center gap-1.5">
-                <span className="text-lg font-black tracking-tight text-white group-hover:text-[#FFD700] transition-colors leading-none">
-                  PRIME <span className="text-[#FFD700]">AI</span>
-                </span>
-                <span className="hidden sm:inline-block px-1.5 py-0.2 text-[9px] font-mono font-bold bg-[#FFD700]/15 text-[#FFD700] rounded border border-[#FFD700]/30">
-                  COO
-                </span>
-              </div>
-              <span className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#FFD700] group-hover:text-amber-300 transition-colors mt-0.5">
-                Command Center
+            <div className="flex flex-col justify-center">
+              <span className="text-base sm:text-lg font-black tracking-tight text-white group-hover:text-[#FFD700] transition-colors leading-none whitespace-nowrap">
+                Prime <span className="text-[#FFD700]">Command Center</span>
+              </span>
+              <span className="text-[10px] text-zinc-400 font-medium tracking-wide mt-1 hidden sm:inline">
+                Autonomous Executive AI
               </span>
             </div>
           </div>
@@ -400,10 +394,10 @@ export const Header: React.FC<HeaderProps> = ({
                 <span className="text-[9px] px-1 py-0.2 rounded bg-emerald-500/20 text-emerald-400 font-mono font-bold">iOS/APK</span>
               </button>
 
-              {/* Plans Navigation Button */}
+              {/* Plans Navigation Button (Hidden on small mobile to give Prime Command Center full breathing room) */}
               <button
                 onClick={() => onNavigate('plans')}
-                className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
+                className={`hidden sm:flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
                   currentView === 'plans'
                     ? 'bg-[#FFD700] text-black border-[#FFD700]'
                     : 'bg-[#FFD700]/10 hover:bg-[#FFD700]/20 text-[#FFD700] border-[#FFD700]/30'
@@ -411,7 +405,7 @@ export const Header: React.FC<HeaderProps> = ({
                 title={isPro ? `Active ${subscription?.planTier || company?.plan || 'Pro'} Plan (${daysRemaining} days remaining)` : `Free Trial (${trialDaysRemaining} days remaining)`}
               >
                 <CreditCard className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">Plans</span>
+                <span>Plans</span>
                 <span className="hidden md:inline text-[10px] px-1.5 py-0.2 rounded-full bg-white/20 font-mono font-bold">
                   {subscription?.planTier || company?.plan || 'Pro'} ({daysRemaining > 0 ? `${daysRemaining}d` : 'Expired'})
                 </span>
@@ -473,10 +467,10 @@ export const Header: React.FC<HeaderProps> = ({
                 </button>
               )}
 
-              <div className="flex items-center gap-1.5">
+              <div className="flex items-center gap-1.5 shrink-0">
                 <button
                   onClick={() => onNavigate('feedback')}
-                  className={`p-2 rounded-lg transition-colors cursor-pointer ${
+                  className={`hidden sm:inline-flex p-2 rounded-lg transition-colors cursor-pointer ${
                     currentView === 'feedback'
                       ? 'bg-[#FFD700] text-black shadow-sm'
                       : 'text-white/40 hover:text-[#FFD700] hover:bg-white/5'

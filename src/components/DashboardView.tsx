@@ -268,36 +268,61 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigate, onOpen
   };
 
   return (
-    <div className="flex-1 flex flex-col space-y-8 min-h-0">
-      {/* Top Action Bar & Quick Status */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <div className="flex-1 flex flex-col space-y-6 sm:space-y-8 min-h-0">
+      {/* Top Action Bar & Quick Status (Previous order, 100% English, neatly spaced with zero overlapping) */}
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 pb-4 border-b border-white/5">
         <div>
-          <h2 className="text-xl font-light tracking-tight text-white">
-            Operational Overview & <span className="text-[#FFD700] font-semibold">Autonomous Velocity</span>
+          <h2 className="text-lg sm:text-xl font-light tracking-tight text-white leading-tight">
+            Operational Overview &amp; <span className="text-[#FFD700] font-semibold">Autonomous Velocity</span>
           </h2>
           <p className="text-xs text-white/40 mt-1">
             Real-time telemetry streaming from your partitioned tenant workspace.
           </p>
         </div>
 
-        <div className="flex items-center gap-3 flex-wrap">
+        {/* Feature Action Buttons: Previous Order, 100% English, Zero Overlapping */}
+        <div className="flex items-center gap-2 sm:gap-2.5 flex-wrap">
+          {/* 1. Real AI Copilot */}
+          <button
+            onClick={() => onNavigate('brain')}
+            className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-[#FFD700] via-amber-300 to-[#FFD700] text-black text-xs font-black hover:brightness-110 transition-all flex items-center gap-1.5 shadow-[0_0_15px_rgba(255,215,0,0.25)] cursor-pointer active:scale-95 whitespace-nowrap shrink-0"
+            title="Open Live Real AI Intelligence Workbench"
+          >
+            <Sparkles className="w-3.5 h-3.5 text-black animate-pulse" />
+            <span>Real AI Copilot</span>
+          </button>
+
+          {/* 2. Contract Risk Audit */}
+          <button
+            onClick={() => onNavigate('docs')}
+            className="px-3 py-2 rounded-xl bg-gradient-to-r from-rose-500/20 to-amber-500/15 hover:from-rose-500/30 hover:to-amber-500/25 text-amber-200 border border-[#FFD700]/30 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap shrink-0"
+            title="Analyze Contracts & Legal Risks in 30 Seconds"
+          >
+            <FileText className="w-3.5 h-3.5 text-[#FFD700]" />
+            <span>Contract Risk Audit</span>
+          </button>
+
+          {/* 3. CEO Digital Twin */}
           <button
             onClick={() => onNavigate('twin')}
-            className="px-4 py-2 bg-gradient-to-r from-[#FFD700] via-amber-400 to-[#FFD700] text-black text-xs font-black rounded-lg transition-all shadow-[0_0_25px_rgba(255,215,0,0.35)] cursor-pointer flex items-center gap-2 hover:scale-[1.02]"
+            className="px-3 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold border border-white/10 transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap shrink-0"
+            title="Autonomous Executive Decision Twin"
           >
-            <Crown className="w-3.5 h-3.5" />
+            <Crown className="w-3.5 h-3.5 text-[#FFD700]" />
             <span>CEO Digital Twin</span>
-            <span className="px-1.5 py-0.2 bg-black text-[#FFD700] text-[9px] font-mono rounded font-extrabold">3.0</span>
           </button>
 
+          {/* 4. Revenue Radar */}
           <button
             onClick={() => onNavigate('radar')}
-            className="px-4 py-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black text-xs font-black rounded-lg transition-all shadow-[0_0_20px_rgba(255,215,0,0.25)] cursor-pointer flex items-center gap-2"
+            className="px-3 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold border border-white/10 transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap shrink-0"
+            title="View At-Risk Clients & Deal Flow"
           >
-            <Radar className="w-3.5 h-3.5" />
-            <span>PRIME Revenue Radar</span>
+            <Radar className="w-3.5 h-3.5 text-amber-400" />
+            <span>Revenue Radar</span>
           </button>
 
+          {/* 5. Daily Briefing */}
           <button
             onClick={() => {
               if (onOpenDailyBriefing) {
@@ -307,26 +332,31 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigate, onOpen
               }
             }}
             disabled={briefingLoading}
-            className="px-4 py-2 bg-gradient-to-r from-[#FFD700]/15 to-amber-500/20 border border-[#FFD700]/40 text-[#FFD700] text-xs font-extrabold rounded-lg hover:bg-[#FFD700]/30 transition-all cursor-pointer disabled:opacity-50 flex items-center gap-2 shadow-[0_0_15px_rgba(255,215,0,0.15)]"
+            className="px-3 py-2 rounded-xl bg-[#FFD700]/10 hover:bg-[#FFD700]/20 text-[#FFD700] border border-[#FFD700]/30 text-xs font-extrabold transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50 whitespace-nowrap shrink-0"
+            title="Open Daily 9:00 AM Executive Briefing"
           >
             <Crown className="w-3.5 h-3.5 text-[#FFD700]" />
-            <span>9:00 AM Daily Briefing</span>
+            <span>Daily Briefing</span>
           </button>
 
+          {/* 6. + Sample Email */}
           <button
             onClick={handleSimulateIncomingEmail}
             disabled={simulatingEmail}
-            className="px-4 py-2 bg-white text-black text-xs font-bold rounded-lg hover:bg-[#FFD700] transition-colors cursor-pointer disabled:opacity-50 flex items-center gap-2"
+            className="px-3 py-2 rounded-xl bg-white hover:bg-[#FFD700] text-black text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50 whitespace-nowrap shrink-0"
+            title="Simulate incoming client communication"
           >
             <Sparkles className="w-3.5 h-3.5" />
-            <span>{simulatingEmail ? 'Synthesizing...' : '+ Simulate Incoming Email'}</span>
+            <span>{simulatingEmail ? 'Synthesizing...' : '+ Sample Email'}</span>
           </button>
+
+          {/* 7. Refresh */}
           <button
             onClick={loadDashboardData}
-            className="p-2 rounded-lg bg-white/5 hover:bg-white/10 text-white/60 hover:text-white transition-colors cursor-pointer"
+            className="p-2 rounded-xl bg-white/5 hover:bg-white/10 text-white/60 hover:text-white transition-colors cursor-pointer border border-white/10 shrink-0"
             title="Refresh Command Center"
           >
-            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin text-[#FFD700]' : ''}`} />
           </button>
         </div>
       </div>

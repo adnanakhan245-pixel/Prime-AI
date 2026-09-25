@@ -70,6 +70,13 @@ function getServerSubscription(userId: string): ServerSubscription {
 // Subscription Gatekeeper Middleware (Rule 2: Block API routes if trial expired or 1-month paid subscription expired)
 function requireActiveSubscription(req: express.Request, res: express.Response, next: express.NextFunction) {
   const userId = (req.headers['x-user-id'] as string) || req.body?.userId || (req.query?.userId as string) || 'guest';
+  
+  // Rule: Allow guest and demo sandbox users frictionless, unblocked access for real AI evaluation
+  const isGuest = userId === 'guest' || userId.startsWith('guest_') || userId.startsWith('demo_') || userId.includes('demo');
+  if (isGuest) {
+    return next();
+  }
+
   const sub = getServerSubscription(userId);
 
   if (sub.status === 'active') {
@@ -653,9 +660,14 @@ Write the 3-line email reply now. Keep it exactly 3 concise, impactful lines. Be
 
 // PRIME Brain Chat & Strategy Engine Endpoint (Full App Knowledge Base)
 app.post('/api/gemini/brain-chat', async (req, res) => {
-  const { messages, companyName, contextData, mode, enableSearchGrounding } = req.body;
+  let { messages, prompt: rawPrompt, companyName, contextData, mode, enableSearchGrounding } = req.body;
+  
+  if (!messages && rawPrompt) {
+    messages = [{ role: 'user', content: String(rawPrompt) }];
+  }
+
   if (!messages || !Array.isArray(messages)) {
-    return res.status(400).json({ error: 'Messages array is required' });
+    return res.status(400).json({ error: 'Messages array or prompt string is required' });
   }
 
   const activeCompany = companyName || 'Apex Enterprises';

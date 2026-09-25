@@ -30,11 +30,85 @@ interface DocsViewProps {
   onUpgradeToPro?: () => void;
 }
 
+// Sample Pre-Loaded Contracts for Instant Demo & Evaluation
+const SAMPLE_CONTRACTS: DocumentItem[] = [
+  {
+    id: 'sample_doc_1',
+    userId: 'demo_user',
+    title: 'Enterprise SaaS Master Services Agreement & SLA.pdf',
+    fileType: 'application/pdf',
+    fileSize: 245000,
+    content: `MASTER SERVICES AGREEMENT (MSA) & SERVICE LEVEL AGREEMENT (SLA)
+BETWEEN: Apex Tech Systems ("Vendor") AND Titan Global Holdings ("Client")
+Effective Date: March 2026
+
+1. SCOPE OF SERVICES: Vendor shall provide autonomous infrastructure and software services.
+2. FEES & PAYMENT: Client agrees to pay $120,000 annually, billed quarterly in advance. Late payments incur 1.5% interest per month.
+3. SERVICE LEVEL COMMITMENT (SLA): Vendor guarantees 99.99% monthly uptime. If uptime drops below 99.95%, Client is entitled to a 50% invoice penalty credit. If downtime exceeds 4 hours in a single calendar month, Client may terminate the agreement immediately with full refund of all prepaid fees for the entire contract term.
+4. INDEMNIFICATION & LIABILITY: Vendor agrees to defend, indemnify, and hold harmless Client against any claims, losses, or legal fees. Vendor's total aggregate liability under this agreement SHALL BE UNLIMITED for any breaches of data security, confidentiality, or performance warranties.
+5. TERMINATION FOR CONVENIENCE: Client may terminate this agreement at any time upon 14 days written notice with zero penalty and full pro-rata refund. Vendor must provide 180 days notice prior to termination.
+6. GOVERNING LAW: This agreement shall be governed by the courts of Delaware.`,
+    uploadedAt: new Date(Date.now() - 3600000).toISOString(),
+    summary: 'High-risk commercial agreement containing severe unilateral liability traps, punitive SLA refund clauses, and asymmetric termination rights heavily favoring the client.',
+    keyPoints: [
+      'Annual contract value: $120,000 billed quarterly',
+      'Unilateral 14-day termination for convenience allowed for client only',
+      '99.99% uptime SLA with extreme penalty multipliers',
+      'Unlimited liability uncapped for confidentiality and data claims'
+    ],
+    risks: [
+      'RED FLAG: Unlimited aggregate liability clause creates catastrophic corporate exposure',
+      'SLA PENALTY TRAP: 4 hours of cumulative downtime triggers full term refund of prepaid fees',
+      'ASYMMETRIC TERMINATION: Client can walk away on 14 days notice, while vendor must give 180 days notice'
+    ],
+    nextActions: [
+      'Strike clause 4 unlimited liability; cap total liability at 12 months fees paid ($120k)',
+      'Renegotiate clause 3: Cap SLA service credit at 15% of monthly billing; remove entire term refund trigger',
+      'Equalize termination notice to 60 days mutual notice'
+    ],
+    category: 'LEGAL'
+  },
+  {
+    id: 'sample_doc_2',
+    userId: 'demo_user',
+    title: 'Freelance Custom Software Development Agreement.docx',
+    fileType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    fileSize: 112000,
+    content: `FREELANCE SOFTWARE DEVELOPMENT AGREEMENT
+Client: Digital Ventures LLC | Developer: Full Stack Pro Agency
+Project: AI Mobile & Web App MVP
+Total Budget: $15,000 ($5,000 upfront deposit, $5,000 on beta milestone, $5,000 on final deployment)
+
+Terms:
+1. Intellectual property transfers immediately upon initial signing before milestone delivery.
+2. Unlimited revisions within 90 days after delivery without additional charges.
+3. Client holds sole discretion over milestone acceptance with no fixed review deadline.`,
+    uploadedAt: new Date(Date.now() - 7200000).toISOString(),
+    summary: 'Freelance contract with scope creep traps, premature IP transfer before full payment, and indefinite client acceptance loops.',
+    keyPoints: [
+      'Project Budget: $15,000 across 3 milestones',
+      'IP transferred prior to final payment completion',
+      'Unlimited revisions clause without hourly boundaries'
+    ],
+    risks: [
+      'IP transferred before payment: Client can use code and refuse final $10,000 payments',
+      'No acceptance deadline: Client can delay payment indefinitely without signing off',
+      'Unlimited revisions causes project scope creep and margin loss'
+    ],
+    nextActions: [
+      'Change IP transfer clause to "Transfers only upon receipt of 100% full cleared payment"',
+      'Add 7-day deemed acceptance clause: If client does not reject in writing within 7 business days, milestone is automatically approved',
+      'Limit revisions to 2 rounds per milestone; extra revisions billed at standard hourly rate'
+    ],
+    category: 'LEGAL'
+  }
+];
+
 export const DocsView: React.FC<DocsViewProps> = ({ onUpgradeToPro }) => {
   const { user, profile, isPro, upgradeToPlan } = useAuth();
-  const [documents, setDocuments] = useState<DocumentItem[]>([]);
-  const [selectedDoc, setSelectedDoc] = useState<DocumentItem | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [documents, setDocuments] = useState<DocumentItem[]>(SAMPLE_CONTRACTS);
+  const [selectedDoc, setSelectedDoc] = useState<DocumentItem | null>(SAMPLE_CONTRACTS[0]);
+  const [loading, setLoading] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState<string>('ALL');
@@ -57,19 +131,22 @@ export const DocsView: React.FC<DocsViewProps> = ({ onUpgradeToPro }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const loadDocuments = async () => {
-    if (!user) return;
     try {
       setLoading(true);
-      const docs = await fetchUserDocuments(user.uid);
-      setDocuments(docs);
-      if (docs.length > 0 && !selectedDoc) {
-        setSelectedDoc(docs[0]);
-      } else if (selectedDoc) {
-        const found = docs.find(d => d.id === selectedDoc.id);
-        if (found) setSelectedDoc(found);
+      if (user) {
+        const docs = await fetchUserDocuments(user.uid);
+        if (docs && docs.length > 0) {
+          setDocuments(docs);
+          setSelectedDoc(docs[0]);
+          return;
+        }
       }
+      setDocuments(SAMPLE_CONTRACTS);
+      setSelectedDoc(SAMPLE_CONTRACTS[0]);
     } catch (err) {
       console.error('Error fetching documents:', err);
+      setDocuments(SAMPLE_CONTRACTS);
+      setSelectedDoc(SAMPLE_CONTRACTS[0]);
     } finally {
       setLoading(false);
     }
@@ -84,10 +161,10 @@ export const DocsView: React.FC<DocsViewProps> = ({ onUpgradeToPro }) => {
     setTimeout(() => setToastMessage(null), 4000);
   };
 
-  // Called when user clicks "Check Another Contract" or initiates a new check after 1st check
+  // Called when user clicks "Check Another Contract" or initiates a new check after initial checks
   const handleRequestNewCheck = (source: 'paste' | 'upload' | 'sample') => {
     const isPaidUser = isPro || localStorage.getItem('prime_contract_pro_unlocked') === 'true';
-    if (!isPaidUser && checkCount >= 1) {
+    if (!isPaidUser && checkCount >= 10) {
       setShowContractPaywall(true);
       return;
     }
@@ -124,16 +201,10 @@ export const DocsView: React.FC<DocsViewProps> = ({ onUpgradeToPro }) => {
   };
 
   const handlePdfExport = () => {
-    const isPaidUser = isPro || localStorage.getItem('prime_contract_pro_unlocked') === 'true';
-    if (!isPaidUser && checkCount >= 1) {
-      setShowContractPaywall(true);
-      return;
-    }
     window.print();
   };
 
   const processAndAnalyzeDoc = async (title: string, content: string, fileType: string, fileSize: number) => {
-    if (!user) return;
     try {
       setIsUploading(true);
       const res = await fetch('/api/gemini/summarize-doc', {
@@ -148,8 +219,9 @@ export const DocsView: React.FC<DocsViewProps> = ({ onUpgradeToPro }) => {
 
       const analysis = await res.json();
 
-      const saved = await saveDocument({
-        userId: user.uid,
+      const docItem: DocumentItem = {
+        id: 'doc_' + Date.now(),
+        userId: user ? user.uid : 'guest_demo_user',
         title,
         fileType,
         fileSize,
@@ -159,8 +231,19 @@ export const DocsView: React.FC<DocsViewProps> = ({ onUpgradeToPro }) => {
         keyPoints: analysis.keyPoints || ['Strategic review executed.'],
         risks: analysis.risks || ['No critical red flags identified.'],
         nextActions: analysis.nextActions || ['Review findings with executive team.'],
-        category: analysis.category || 'STRATEGY'
-      });
+        category: analysis.category || 'LEGAL'
+      };
+
+      if (user) {
+        try {
+          await saveDocument(docItem);
+        } catch (saveErr) {
+          console.warn('Could not persist to Firestore, stored locally in session:', saveErr);
+        }
+      }
+
+      setDocuments(prev => [docItem, ...prev]);
+      setSelectedDoc(docItem);
 
       // Increment check count
       const newCount = checkCount + 1;
@@ -169,9 +252,7 @@ export const DocsView: React.FC<DocsViewProps> = ({ onUpgradeToPro }) => {
         localStorage.setItem('prime_contract_checks_count', newCount.toString());
       } catch {}
 
-      await loadDocuments();
-      setSelectedDoc(saved);
-      showToast(`Document "${title}" analyzed in 30 seconds! 1st Report 100% FREE.`);
+      showToast(`Document "${title}" analyzed in 30 seconds with Real AI!`);
     } catch (err) {
       console.error('Error analyzing document:', err);
       showToast('Failed to analyze document.');
