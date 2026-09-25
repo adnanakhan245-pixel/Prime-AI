@@ -52,7 +52,8 @@ import {
   logVisitorSession, 
   purgeAllMockDataAndResetLive,
   purgeDuplicateAdnanAccountsAndSessions,
-  deleteVisitorSession
+  deleteVisitorSession,
+  deleteAdminUserAccount
 } from '../services/db';
 import { AdminDashboardData, AdminUserRecord, CompanySummary, FeedbackTicket, FeedbackStatus, VisitorSessionRecord } from '../types';
 import { MarketingStudio } from './MarketingStudio';
@@ -1046,7 +1047,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) =>
                           {u.lastActive || 'Recent'}
                         </td>
 
-                        <td className="py-3.5 px-5 text-right">
+                        <td className="py-3.5 px-5 text-right flex items-center justify-end gap-2">
                           <button
                             onClick={() => handleCopyEmail(u.email)}
                             className="p-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-white/50 hover:text-white border border-white/5 transition-colors cursor-pointer text-[10px] inline-flex items-center gap-1"
@@ -1064,6 +1065,26 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) =>
                               </>
                             )}
                           </button>
+
+                          {!u.isSuperAdmin && !isCurrentUser && (
+                            <button
+                              onClick={async () => {
+                                if (window.confirm(`کیا آپ واقعی اکاؤنٹ "${u.displayName}" (${u.email}) کو ڈیلیٹ کرنا چاہتے ہیں؟ اس سے ان کا سارا ٹرائل ڈیٹا اور پروفائل صاف ہو جائے گا۔`)) {
+                                  await deleteAdminUserAccount({
+                                    uid: u.uid,
+                                    email: u.email,
+                                    companyId: u.companyId
+                                  });
+                                  await loadData();
+                                }
+                              }}
+                              className="p-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 hover:text-red-300 border border-red-500/20 transition-colors cursor-pointer text-[10px] inline-flex items-center gap-1"
+                              title="Delete account and reset trial"
+                            >
+                              <Trash2 className="w-3 h-3" />
+                              <span>Delete</span>
+                            </button>
+                          )}
                         </td>
                       </tr>
                     );

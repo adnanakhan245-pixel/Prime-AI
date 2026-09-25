@@ -303,13 +303,8 @@ function AppContent() {
         <LandingPage
           onOpenAuth={handleOpenAuth}
           onEnterDemo={() => {
-            const alreadyUnlocked = typeof window !== 'undefined' && localStorage.getItem('prime_demo_unlocked_email');
-            if (alreadyUnlocked) {
-              setIsDemoMode(true);
-              setCurrentView('dashboard');
-            } else {
-              setDemoLeadModalOpen(true);
-            }
+            setIsDemoMode(true);
+            setCurrentView('dashboard');
           }}
           onOpenClientPayment={() => {
             setTargetedInvoiceId(null);

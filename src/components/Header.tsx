@@ -548,26 +548,35 @@ export const Header: React.FC<HeaderProps> = ({
               )}
             </div>
           ) : (
-            <div className="flex items-center gap-2 sm:gap-3">
-              <button
-                onClick={() => onOpenAuth('login')}
-                className="text-xs uppercase tracking-widest font-semibold text-white/70 hover:text-white transition-colors cursor-pointer px-2 py-1"
-              >
-                Sign In
-              </button>
-              <button
-                onClick={() => onOpenAuth('signup')}
-                className="px-3.5 py-2 bg-gradient-to-r from-[#FFD700] via-amber-300 to-[#FFC700] text-black text-xs font-black rounded-xl hover:brightness-110 transition-all cursor-pointer shadow-[0_0_20px_rgba(255,215,0,0.3)] flex items-center gap-1.5 active:scale-95"
-              >
-                <Crown className="w-3.5 h-3.5 text-black" />
-                <span>Start Free Trial</span>
-              </button>
+            <div className="flex items-center gap-1.5 sm:gap-2.5">
+              {/* Direct Demo Access without email/password */}
               <button
                 onClick={() => onNavigate('dashboard')}
-                className="hidden sm:flex px-3 py-2 bg-white/10 hover:bg-white/20 text-white text-xs font-semibold rounded-xl transition-all cursor-pointer items-center gap-1"
-                title="Explore live demo without signing up"
+                className="flex items-center gap-1.5 px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-xl bg-[#FFD700]/15 hover:bg-[#FFD700] text-[#FFD700] hover:text-black border border-[#FFD700]/40 text-xs font-black transition-all cursor-pointer shadow-[0_0_15px_rgba(255,215,0,0.15)] active:scale-95"
+                title="Enter live demo instantly with zero sign-up or credentials required"
               >
+                <Sparkles className="w-3.5 h-3.5" />
                 <span>Live Demo</span>
+              </button>
+
+              {/* Sign In Option */}
+              <button
+                onClick={() => onOpenAuth('login')}
+                className="flex items-center gap-1 px-2.5 sm:px-3 py-1.5 sm:py-2 text-xs font-semibold text-white/80 hover:text-white hover:bg-white/10 rounded-xl transition-colors cursor-pointer border border-transparent hover:border-white/15"
+                title="Sign in to your registered account"
+              >
+                <LogIn className="w-3.5 h-3.5" />
+                <span>Sign In</span>
+              </button>
+
+              {/* Sign Up Option */}
+              <button
+                onClick={() => onOpenAuth('signup')}
+                className="flex items-center gap-1.5 px-3 py-1.5 sm:px-3.5 sm:py-2 bg-gradient-to-r from-[#FFD700] via-amber-300 to-[#FFC700] text-black text-xs font-black rounded-xl hover:brightness-110 transition-all cursor-pointer shadow-[0_0_20px_rgba(255,215,0,0.25)] active:scale-95"
+                title="Create a new account with 14 days free trial"
+              >
+                <UserPlus className="w-3.5 h-3.5 text-black" />
+                <span>Sign Up</span>
               </button>
             </div>
           )}

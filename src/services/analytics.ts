@@ -155,8 +155,14 @@ export async function recordLeadSignup(lead: {
   industry?: string;
   plan?: string;
 }): Promise<void> {
-  const visitorId = getOrCreateVisitorId();
   const cleanEmail = lead.email.trim().toLowerCase();
+  
+  // Ignore mock demo user registrations from generating phantom leads
+  if (cleanEmail === 'ceo@apexenterprise.com' || lead.fullName.toLowerCase() === 'alexander vance') {
+    return;
+  }
+
+  const visitorId = getOrCreateVisitorId();
   const leadId = 'lead_' + cleanEmail.replace(/[^a-zA-Z0-9]/g, '_');
   const now = new Date().toISOString();
   const device = detectDevice();

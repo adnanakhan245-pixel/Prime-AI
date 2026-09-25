@@ -340,7 +340,9 @@ export async function fetchAdminDashboardData(): Promise<AdminDashboardData> {
     const profilesSnap = await getDocs(query(collection(db, 'profiles'), limit(150)));
     profilesSnap.forEach((docSnap) => {
       const p = docSnap.data() as any;
-      if (p && p.email && !seenEmails.has(p.email.toLowerCase())) {
+      const isMockDemoUser = p?.email?.toLowerCase().includes('ceo@apexenterprise.com') || 
+                             p?.displayName?.toLowerCase() === 'alexander vance';
+      if (p && p.email && !isMockDemoUser && !seenEmails.has(p.email.toLowerCase())) {
         const isSuper = p.email.toLowerCase() === masterAdminEmail || p.role?.includes('Admin');
         usersList.push({
           uid: p.uid || docSnap.id,
@@ -367,7 +369,9 @@ export async function fetchAdminDashboardData(): Promise<AdminDashboardData> {
     const leadsSnap = await getDocs(query(collection(db, 'admin_leads'), limit(150)));
     leadsSnap.forEach((docSnap) => {
       const lead = docSnap.data() as any;
-      if (lead && lead.email && !seenEmails.has(lead.email.toLowerCase())) {
+      const isMockDemoLead = lead?.email?.toLowerCase().includes('ceo@apexenterprise.com') ||
+                             lead?.fullName?.toLowerCase() === 'alexander vance';
+      if (lead && lead.email && !isMockDemoLead && !seenEmails.has(lead.email.toLowerCase())) {
         usersList.push({
           uid: lead.id || docSnap.id,
           email: lead.email,
@@ -3004,6 +3008,75 @@ export async function purgeAllMockDataAndResetLive(): Promise<void> {
   }
 }
 
+export async function deleteAdminUserAccount(userRecord: { uid: string; email: string; companyId?: string }): Promise<void> {
+  const targetEmail = userRecord.email.trim().toLowerCase();
+  
+  // 1. Delete from Firestore 'profiles'
+  try {
+    if (userRecord.uid) {
+      await deleteDoc(doc(db, 'profiles', userRecord.uid));
+    }
+    // Also check if any profile exists with this email
+    const profQ = query(collection(db, 'profiles'), where('email', '==', targetEmail));
+    const profSnap = await getDocs(profQ);
+    for (const d of profSnap.docs) {
+      await deleteDoc(doc(db, 'profiles', d.id));
+    }
+  } catch (e) {
+    console.warn('Firestore profile deletion notice:', e);
+  }
+
+  // 2. Delete from Firestore 'admin_leads'
+  try {
+    const leadId = 'lead_' + targetEmail.replace(/[^a-zA-Z0-9]/g, '_');
+    await deleteDoc(doc(db, 'admin_leads', leadId));
+    
+    // Also delete any leads with matching email
+    const leadsQ = query(collection(db, 'admin_leads'), where('email', '==', targetEmail));
+    const leadsSnap = await getDocs(leadsQ);
+    for (const d of leadsSnap.docs) {
+      await deleteDoc(doc(db, 'admin_leads', d.id));
+    }
+  } catch (e) {
+    console.warn('Firestore admin_leads deletion notice:', e);
+  }
+
+  // 3. Delete from Supabase if available
+  const supabase = getSupabaseClient();
+  if (supabase) {
+    try {
+      await supabase.from('users').delete().eq('email', targetEmail);
+    } catch (e) {}
+  }
+
+  // 4. Clean from local storage registered accounts
+  try {
+    const rawAccounts = localStorage.getItem('prime_ai_registered_accounts');
+    if (rawAccounts) {
+      const accounts = JSON.parse(rawAccounts);
+      delete accounts[targetEmail];
+      localStorage.setItem('prime_ai_registered_accounts', JSON.stringify(accounts));
+    }
+  } catch (e) {}
+
+  // 5. Clean from local storage leads cache
+  try {
+    const rawLeads = localStorage.getItem('prime_cached_admin_leads');
+    if (rawLeads) {
+      const leads = JSON.parse(rawLeads);
+      const filtered = leads.filter((l: any) => l.email?.toLowerCase() !== targetEmail);
+      localStorage.setItem('prime_cached_admin_leads', JSON.stringify(filtered));
+    }
+  } catch (e) {}
+
+  // 6. Clean from visitor sessions
+  try {
+    const existingSessions = getLocalStore<VisitorSessionRecord[]>('all_visitor_sessions', []);
+    const filteredSessions = existingSessions.filter(s => s.userEmail?.toLowerCase() !== targetEmail);
+    setLocalStore('all_visitor_sessions', filteredSessions);
+  } catch (e) {}
+}
+
 export async function deleteVisitorSession(sessionId: string): Promise<void> {
   const existing = getLocalStore<VisitorSessionRecord[]>('all_visitor_sessions', []);
   const updated = existing.filter(s => s.id !== sessionId);
@@ -3020,7 +3093,7 @@ export async function purgeDuplicateAdnanAccountsAndSessions(): Promise<{ delete
   let deletedSessions = 0;
   let deletedAccounts = 0;
 
-  // 1. Clean localStorage visitor sessions for duplicate Adnan Khan records
+  // 1. Clean localStorage visitor sessions for duplicate Adnan Khan and mock Alexander Vance records
   const existingSessions = getLocalStore<VisitorSessionRecord[]>('all_visitor_sessions', []);
   let keptOneAdnanSession = false;
   const filteredSessions: VisitorSessionRecord[] = [];
@@ -3028,6 +3101,8 @@ export async function purgeDuplicateAdnanAccountsAndSessions(): Promise<{ delete
   for (const s of existingSessions) {
     const isAdnan = (s.userEmail && s.userEmail.toLowerCase().includes('adnan')) ||
                     (s.userName && s.userName.toLowerCase().includes('adnan'));
+    const isAlexander = (s.userEmail && s.userEmail.toLowerCase().includes('apexenterprise.com')) ||
+                        (s.userName && s.userName.toLowerCase().includes('alexander'));
     if (isAdnan) {
       if (!keptOneAdnanSession) {
         // Keep strictly this one latest master admin session
@@ -3044,6 +3119,10 @@ export async function purgeDuplicateAdnanAccountsAndSessions(): Promise<{ delete
         // Delete duplicate session from Firestore
         deleteDoc(doc(db, 'visitor_sessions', s.id)).catch(() => {});
       }
+    } else if (isAlexander) {
+      // Purge fake demo alexander accounts from active telemetry
+      deletedSessions++;
+      deleteDoc(doc(db, 'visitor_sessions', s.id)).catch(() => {});
     } else {
       filteredSessions.push(s);
     }
@@ -3059,6 +3138,8 @@ export async function purgeDuplicateAdnanAccountsAndSessions(): Promise<{ delete
       const data = d.data() as VisitorSessionRecord;
       const isAdnan = (data.userEmail && data.userEmail.toLowerCase().includes('adnan')) ||
                       (data.userName && data.userName.toLowerCase().includes('adnan'));
+      const isAlexander = (data.userEmail && data.userEmail.toLowerCase().includes('apexenterprise.com')) ||
+                          (data.userName && data.userName.toLowerCase().includes('alexander'));
       if (isAdnan) {
         if (!keptFirestoreAdnan) {
           keptFirestoreAdnan = true;
@@ -3066,6 +3147,32 @@ export async function purgeDuplicateAdnanAccountsAndSessions(): Promise<{ delete
           deletedSessions++;
           await deleteDoc(doc(db, 'visitor_sessions', d.id));
         }
+      } else if (isAlexander) {
+        deletedSessions++;
+        await deleteDoc(doc(db, 'visitor_sessions', d.id));
+      }
+    }
+  } catch (e) {}
+
+  // 2b. Clean fake Alexander Vance from Firestore 'profiles' and 'admin_leads'
+  try {
+    const profSnap = await getDocs(query(collection(db, 'profiles'), limit(100)));
+    for (const d of profSnap.docs) {
+      const p = d.data() as any;
+      if (p?.email?.toLowerCase().includes('ceo@apexenterprise.com') || p?.displayName?.toLowerCase().includes('alexander')) {
+        deletedAccounts++;
+        await deleteDoc(doc(db, 'profiles', d.id));
+      }
+    }
+  } catch (e) {}
+
+  try {
+    const leadsSnap = await getDocs(query(collection(db, 'admin_leads'), limit(100)));
+    for (const d of leadsSnap.docs) {
+      const l = d.data() as any;
+      if (l?.email?.toLowerCase().includes('ceo@apexenterprise.com') || l?.fullName?.toLowerCase().includes('alexander')) {
+        deletedAccounts++;
+        await deleteDoc(doc(db, 'admin_leads', d.id));
       }
     }
   } catch (e) {}
@@ -3079,6 +3186,7 @@ export async function purgeDuplicateAdnanAccountsAndSessions(): Promise<{ delete
       let keptMain = false;
       for (const [key, acc] of Object.entries<any>(accounts)) {
         const isAdnan = key.toLowerCase().includes('adnan') || (acc.email && acc.email.toLowerCase().includes('adnan'));
+        const isAlexander = key.toLowerCase().includes('apexenterprise') || key.toLowerCase().includes('alexander');
         if (isAdnan) {
           if (!keptMain) {
             cleaned['adnanakhan245@gmail.com'] = {
@@ -3091,6 +3199,8 @@ export async function purgeDuplicateAdnanAccountsAndSessions(): Promise<{ delete
           } else {
             deletedAccounts++;
           }
+        } else if (isAlexander) {
+          deletedAccounts++;
         } else {
           cleaned[key] = acc;
         }
@@ -3144,12 +3254,22 @@ export async function fetchVisitorAnalytics(): Promise<VisitorTrafficStats> {
 
   const mergedMap = new Map<string, VisitorSessionRecord>();
   for (const s of sessions) {
-    if (!s.id.includes('_demo_0') && !s.id.includes('_reg_0')) {
+    const isMockUser = (s.userEmail && s.userEmail.toLowerCase().includes('apexenterprise.com')) ||
+                       (s.userName && s.userName.toLowerCase().includes('alexander')) ||
+                       (s.userEmail && s.userEmail.includes('@enterprise.io')) ||
+                       (s.userName && s.userName.includes('Enterprise Executive'));
+    if (!s.id.includes('_demo_0') && !s.id.includes('_reg_0') && !isMockUser) {
       mergedMap.set(s.id, s);
     }
   }
   for (const s of localSessions) {
-    mergedMap.set(s.id, s);
+    const isMockUser = (s.userEmail && s.userEmail.toLowerCase().includes('apexenterprise.com')) ||
+                       (s.userName && s.userName.toLowerCase().includes('alexander')) ||
+                       (s.userEmail && s.userEmail.includes('@enterprise.io')) ||
+                       (s.userName && s.userName.includes('Enterprise Executive'));
+    if (!isMockUser) {
+      mergedMap.set(s.id, s);
+    }
   }
   sessions = Array.from(mergedMap.values());
 

@@ -15,7 +15,9 @@ import {
   Calculator,
   ArrowUpRight,
   CreditCard,
-  Mail
+  Mail,
+  LogIn,
+  UserPlus
 } from 'lucide-react';
 
 interface LandingPageProps {
@@ -33,6 +35,14 @@ export const LandingPage: React.FC<LandingPageProps> = ({
 }) => {
   const [selectedPillar, setSelectedPillar] = useState<'inbox' | 'docs' | 'brain'>('inbox');
 
+  const handleLaunchDemo = () => {
+    if (onEnterDemo) {
+      onEnterDemo();
+    } else {
+      onOpenAuth('signup');
+    }
+  };
+
   return (
     <div className="w-full min-h-screen bg-[#0A0A0A] text-white">
       {/* Background ambient lighting */}
@@ -40,17 +50,31 @@ export const LandingPage: React.FC<LandingPageProps> = ({
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[900px] h-[350px] bg-gradient-to-b from-[#FFD700]/10 via-amber-500/5 to-transparent blur-3xl pointer-events-none -z-10" />
 
         {/* Top Announcement Bar */}
-        <div className="bg-gradient-to-r from-amber-500/15 via-[#FFD700]/10 to-amber-500/15 border-b border-[#FFD700]/25 py-2 px-4 text-center text-xs font-semibold text-[#FFD700] flex items-center justify-center gap-3">
+        <div className="bg-gradient-to-r from-amber-500/15 via-[#FFD700]/10 to-amber-500/15 border-b border-[#FFD700]/25 py-2.5 px-4 text-center text-xs font-semibold text-[#FFD700] flex flex-wrap items-center justify-center gap-3">
           <div className="flex items-center gap-2">
             <Sparkles className="w-3.5 h-3.5 text-[#FFD700] animate-pulse" />
-            <span>Instant Sandbox Access • No registration or credit card required:</span>
+            <span>Instant Sandbox Access • No email, password or registration required:</span>
           </div>
-          <button 
-            onClick={onEnterDemo || (() => onOpenAuth('signup'))} 
-            className="px-3 py-0.5 rounded-full bg-[#FFD700] text-black text-[11px] font-black hover:bg-white transition-all cursor-pointer shadow-sm flex items-center gap-1"
-          >
-            <span>Launch Live Workspace →</span>
-          </button>
+          <div className="flex items-center gap-2">
+            <button 
+              onClick={handleLaunchDemo} 
+              className="px-3.5 py-1 rounded-full bg-[#FFD700] text-black text-xs font-black hover:bg-white transition-all cursor-pointer shadow-sm flex items-center gap-1"
+            >
+              <span>Instant Live Demo →</span>
+            </button>
+            <button
+              onClick={() => onOpenAuth('signup')}
+              className="px-3 py-1 rounded-full bg-white/10 hover:bg-white/20 text-white text-xs font-bold transition-all cursor-pointer"
+            >
+              Sign Up
+            </button>
+            <button
+              onClick={() => onOpenAuth('login')}
+              className="px-2.5 py-1 rounded-full text-zinc-300 hover:text-white text-xs font-medium transition-all cursor-pointer"
+            >
+              Sign In
+            </button>
+          </div>
         </div>
 
         {/* HERO SECTION */}
@@ -72,32 +96,33 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             AI-powered contract risk, penalty, and redline analysis. Uncover unfavorable terms, SLA traps, and hidden liabilities before you sign.
           </p>
 
-          {/* CTAs */}
+          {/* CTAs: Instant Demo (Zero Credentials), Sign Up, Sign In */}
           <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
-            {onEnterDemo ? (
-              <button
-                onClick={onEnterDemo}
-                className="w-full sm:w-auto px-8 py-4 rounded-xl text-sm font-extrabold text-black bg-gradient-to-r from-[#FFD700] via-amber-300 to-[#FFC700] hover:brightness-110 shadow-[0_0_30px_rgba(255,215,0,0.4)] transition-all flex items-center justify-center gap-2 cursor-pointer group active:scale-95"
-              >
-                <Sparkles className="w-4 h-4 text-black" />
-                <span>Paste Contract Now — Free During Beta</span>
-                <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
-              </button>
-            ) : (
-              <button
-                onClick={() => onOpenAuth('signup')}
-                className="w-full sm:w-auto px-8 py-4 rounded-xl text-sm font-extrabold text-black bg-gradient-to-r from-[#FFD700] via-amber-300 to-[#FFC700] hover:brightness-110 shadow-[0_0_30px_rgba(255,215,0,0.4)] transition-all flex items-center justify-center gap-2 cursor-pointer group active:scale-95"
-              >
-                <Sparkles className="w-4 h-4 text-black" />
-                <span>Paste Contract Now — Free During Beta</span>
-                <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
-              </button>
-            )}
+            <button
+              onClick={handleLaunchDemo}
+              className="w-full sm:w-auto px-8 py-4 rounded-xl text-sm font-extrabold text-black bg-gradient-to-r from-[#FFD700] via-amber-300 to-[#FFC700] hover:brightness-110 shadow-[0_0_30px_rgba(255,215,0,0.4)] transition-all flex items-center justify-center gap-2 cursor-pointer group active:scale-95"
+              title="Enter workspace immediately without entering email, password, or name"
+            >
+              <Sparkles className="w-4 h-4 text-black animate-pulse" />
+              <span>Launch Live Demo (No Sign In)</span>
+              <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+            </button>
+
+            <button
+              onClick={() => onOpenAuth('signup')}
+              className="w-full sm:w-auto px-6 py-4 rounded-xl text-sm font-bold text-white bg-white/10 hover:bg-white/20 border border-white/20 hover:border-[#FFD700]/50 transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-95 shadow-sm"
+              title="Create a new account with 14-day free trial"
+            >
+              <UserPlus className="w-4 h-4 text-[#FFD700]" />
+              <span>Sign Up Free</span>
+            </button>
 
             <button
               onClick={() => onOpenAuth('login')}
               className="w-full sm:w-auto px-5 py-4 rounded-xl text-sm font-semibold text-zinc-300 hover:text-white hover:bg-white/5 border border-zinc-800 transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+              title="Sign in to your existing account"
             >
+              <LogIn className="w-4 h-4 text-zinc-400" />
               <span>Sign In</span>
             </button>
           </div>
@@ -138,13 +163,13 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           {/* Guarantees */}
           <div className="mt-4 flex flex-wrap items-center justify-center gap-4 text-xs text-zinc-400">
             <span className="flex items-center gap-1.5">
-              <Check className="w-3.5 h-3.5 text-[#FFD700]" /> Instant Sandbox Access (No Credit Card Required)
+              <Check className="w-3.5 h-3.5 text-[#FFD700]" /> Instant Demo Access (No Email, Password, or Name Required)
             </span>
             <span className="flex items-center gap-1.5">
-              <Check className="w-3.5 h-3.5 text-[#FFD700]" /> 14-Day Free Access
+              <Check className="w-3.5 h-3.5 text-[#FFD700]" /> 14-Day Free Access upon registration
             </span>
             <span className="flex items-center gap-1.5">
-              <Check className="w-3.5 h-3.5 text-[#FFD700]" /> Enterprise AI Fleet
+              <Check className="w-3.5 h-3.5 text-[#FFD700]" /> No Credit Card Required
             </span>
           </div>
 
@@ -200,7 +225,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             </div>
             <div className="mt-5 pt-3 border-t border-zinc-800">
               <button 
-                onClick={onEnterDemo || (() => onOpenAuth('signup'))} 
+                onClick={handleLaunchDemo} 
                 className="text-xs font-semibold text-[#FFD700] hover:underline flex items-center gap-1 cursor-pointer"
               >
                 <span>Try Inbox Triage</span>
@@ -234,7 +259,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             </div>
             <div className="mt-5 pt-3 border-t border-zinc-800">
               <button 
-                onClick={onEnterDemo || (() => onOpenAuth('signup'))} 
+                onClick={handleLaunchDemo} 
                 className="text-xs font-semibold text-purple-400 hover:underline flex items-center gap-1 cursor-pointer"
               >
                 <span>Try Document Intel</span>
@@ -268,7 +293,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             </div>
             <div className="mt-5 pt-3 border-t border-zinc-800">
               <button 
-                onClick={onEnterDemo || (() => onOpenAuth('signup'))} 
+                onClick={handleLaunchDemo} 
                 className="text-xs font-semibold text-[#FFD700] hover:underline flex items-center gap-1 cursor-pointer"
               >
                 <span>Consult AI COO</span>
@@ -294,7 +319,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             </div>
           </div>
           <button
-            onClick={onEnterDemo || (() => onOpenAuth('signup'))}
+            onClick={handleLaunchDemo}
             className="px-4 py-2 rounded-xl bg-[#FFD700] hover:bg-[#FFE55C] text-black text-xs font-bold transition-all shrink-0 flex items-center gap-1.5 cursor-pointer shadow-sm"
           >
             <span>Explore All 15+ Tools</span>
@@ -350,13 +375,21 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             </div>
           </div>
 
-          <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
+          <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
             <button
-              onClick={onEnterDemo || (() => onOpenAuth('signup'))}
-              className="w-full sm:w-auto px-8 py-3.5 rounded-xl text-sm font-black text-black bg-[#FFD700] hover:bg-yellow-300 transition-all shadow-[0_0_30px_rgba(255,215,0,0.3)] flex items-center justify-center gap-2 cursor-pointer active:scale-95"
+              onClick={handleLaunchDemo}
+              className="w-full sm:w-auto px-7 py-3.5 rounded-xl text-sm font-black text-black bg-[#FFD700] hover:bg-yellow-300 transition-all shadow-[0_0_30px_rgba(255,215,0,0.3)] flex items-center justify-center gap-2 cursor-pointer active:scale-95"
             >
-              <span>Paste Your Contract Now (Free)</span>
+              <Sparkles className="w-4 h-4 text-black" />
+              <span>Launch Live Demo (No Sign In)</span>
               <ArrowRight className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => onOpenAuth('signup')}
+              className="w-full sm:w-auto px-5 py-3.5 rounded-xl text-sm font-bold text-white bg-white/10 hover:bg-white/20 border border-white/20 transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-95"
+            >
+              <UserPlus className="w-4 h-4 text-[#FFD700]" />
+              <span>Sign Up Free</span>
             </button>
           </div>
         </div>
@@ -374,11 +407,25 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           </p>
           <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-3">
             <button
-              onClick={onEnterDemo || (() => onOpenAuth('signup'))}
+              onClick={handleLaunchDemo}
               className="px-6 py-3 rounded-xl text-xs sm:text-sm font-extrabold text-black bg-[#FFD700] hover:bg-white transition-all cursor-pointer inline-flex items-center gap-2 shadow-md"
             >
-              <Crown className="w-4 h-4" />
-              <span>Launch Live Workspace Now</span>
+              <Sparkles className="w-4 h-4 text-black" />
+              <span>Launch Live Workspace (Demo)</span>
+            </button>
+            <button
+              onClick={() => onOpenAuth('signup')}
+              className="px-5 py-3 rounded-xl text-xs sm:text-sm font-bold text-white bg-white/10 hover:bg-white/20 border border-white/20 transition-all cursor-pointer inline-flex items-center gap-2"
+            >
+              <UserPlus className="w-4 h-4 text-[#FFD700]" />
+              <span>Sign Up</span>
+            </button>
+            <button
+              onClick={() => onOpenAuth('login')}
+              className="px-4 py-3 rounded-xl text-xs sm:text-sm font-medium text-zinc-300 hover:text-white hover:bg-white/5 transition-all cursor-pointer inline-flex items-center gap-1.5"
+            >
+              <LogIn className="w-4 h-4 text-zinc-400" />
+              <span>Sign In</span>
             </button>
           </div>
         </div>
