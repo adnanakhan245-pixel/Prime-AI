@@ -162,7 +162,7 @@ export function isTrialExpired(sub: UserSubscription | null): boolean {
 // Premium features ('brain', 'radar', 'closer', 'twin', 'alerts', 'meetings', 'strategy', etc.) lock after 14 days
 export function isFeatureLocked(sub: UserSubscription | null, featureKey: string): boolean {
   // Public/free views that remain accessible to free users
-  const openViews = ['dashboard', 'plans', 'roi-calculator', 'feedback', 'settings', 'white-label', 'admin'];
+  const openViews = ['dashboard', 'plans', 'roi-calculator', 'feedback', 'settings', 'admin'];
   if (openViews.includes(featureKey)) {
     return false;
   }

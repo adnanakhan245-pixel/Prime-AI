@@ -148,7 +148,7 @@ export const UpgradePaywallModal: React.FC = () => {
           <p className="text-xs sm:text-sm text-white/60">
             {isTrialExpired 
               ? 'Your 14-day free trial has expired. Upgrade your workspace to unlock Brain 3.0, Revenue Radar, and continuous 24/7 AI execution.'
-              : `You have ${trialDaysRemaining} days remaining in your 14-day trial. Lock in early founder pricing with uninterrupted access.`}
+              : `Full access active for ${trialDaysRemaining} days. Lock in early founder pricing with uninterrupted access.`}
           </p>
 
           {/* Billing Switcher */}

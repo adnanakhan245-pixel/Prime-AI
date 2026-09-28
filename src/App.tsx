@@ -15,7 +15,6 @@ import { GrowthLabView } from './components/GrowthLabView';
 import { StrategyView } from './components/StrategyView';
 import { BoardPackView } from './components/BoardPackView';
 import { PlansView } from './components/PlansView';
-import { AgencyWhiteLabelView } from './components/AgencyWhiteLabelView';
 import { AdminDashboard } from './components/AdminDashboard';
 import { CEODigitalTwinView } from './components/CEODigitalTwinView';
 import { AdSpendOptimizerView } from './components/AdSpendOptimizerView';
@@ -69,7 +68,7 @@ function AppContent() {
     openUpgradeModal,
     loading 
   } = useAuth();
-  const [currentView, setCurrentView] = useState<'landing' | 'dashboard' | 'radar' | 'inbox' | 'approvals' | 'plans' | 'white-label' | 'admin' | 'closer' | 'hiring' | 'meetings' | 'growth' | 'strategy' | 'board-pack' | 'docs' | 'brain' | 'twin' | 'ad-spend' | 'cashflow-guard' | 'roi-calculator' | 'feedback'>('landing');
+  const [currentView, setCurrentView] = useState<'landing' | 'dashboard' | 'radar' | 'inbox' | 'approvals' | 'plans' | 'admin' | 'closer' | 'hiring' | 'meetings' | 'growth' | 'strategy' | 'board-pack' | 'docs' | 'brain' | 'twin' | 'ad-spend' | 'cashflow-guard' | 'roi-calculator' | 'feedback'>('landing');
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [authMode, setAuthMode] = useState<'login' | 'signup' | 'verify-email' | 'forgot-password'>('login');
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -191,7 +190,7 @@ function AppContent() {
   };
 
   const handleNavigate = (view: string) => {
-    if (['dashboard', 'radar', 'inbox', 'approvals', 'plans', 'white-label', 'admin', 'closer', 'hiring', 'meetings', 'growth', 'strategy', 'board-pack', 'docs', 'brain', 'twin', 'ad-spend', 'cashflow-guard', 'roi-calculator', 'feedback'].includes(view)) {
+    if (['dashboard', 'radar', 'inbox', 'approvals', 'plans', 'admin', 'closer', 'hiring', 'meetings', 'growth', 'strategy', 'board-pack', 'docs', 'brain', 'twin', 'ad-spend', 'cashflow-guard', 'roi-calculator', 'feedback'].includes(view)) {
       if (!user && !isDemoMode) {
         setIsDemoMode(true);
       }
@@ -358,7 +357,6 @@ function AppContent() {
             {currentView === 'inbox' && <InboxView />}
             {currentView === 'approvals' && <ApprovalLogView />}
             {currentView === 'plans' && <PlansView onNavigate={handleNavigate} />}
-            {currentView === 'white-label' && <AgencyWhiteLabelView />}
             {currentView === 'admin' && <AdminDashboard onNavigate={handleNavigate} />}
             {currentView === 'closer' && (
               <FeaturePaywallOverlay 

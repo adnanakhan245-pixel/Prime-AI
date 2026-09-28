@@ -137,7 +137,7 @@ export const PlansView: React.FC<PlansViewProps> = ({ onNavigate }) => {
             ) : isTrialActive ? (
               <div className="px-3 py-1.5 rounded-lg bg-[#FFD700]/15 border border-[#FFD700]/40 text-[#FFD700] flex items-center gap-2 font-bold shadow-[0_0_15px_rgba(255,215,0,0.15)]">
                 <Sparkles className="w-3.5 h-3.5" />
-                <span>⏳ 14-Day Free Trial: <strong>{trialDaysRemaining} days remaining</strong> (No Credit Card Required)</span>
+                <span>⏳ <strong>Full Access for {trialDaysRemaining} Days</strong> (No Credit Card Required)</span>
               </div>
             ) : (
               <div className="px-3 py-1.5 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 flex items-center gap-2 font-bold">
@@ -398,31 +398,6 @@ export const PlansView: React.FC<PlansViewProps> = ({ onNavigate }) => {
             </button>
           </div>
         </div>
-      </div>
-
-      {/* Agency & Reseller Banner for $20K-$40K MRR */}
-      <div className="max-w-6xl mx-auto p-6 sm:p-8 rounded-3xl bg-gradient-to-r from-indigo-950/40 via-purple-950/20 to-black border border-indigo-500/40 flex flex-col md:flex-row items-center justify-between gap-6 shadow-[0_0_40px_rgba(99,102,241,0.15)]">
-        <div className="space-y-2">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/20 text-indigo-300 text-xs font-mono font-bold">
-            <Building2 className="w-3.5 h-3.5" />
-            <span>AGENCY &amp; RESELLER PARTNER PROGRAM</span>
-          </div>
-          <h3 className="text-xl sm:text-2xl font-bold text-white">
-            Want to scale to <span className="text-indigo-400 font-mono font-black">$20,000 – $40,000/month</span> with PRIME AI?
-          </h3>
-          <p className="text-xs sm:text-sm text-zinc-300 max-w-2xl leading-relaxed">
-            Deploy your own 100% White-Label Agency Portal. Provision unlimited client sub-tenants under your custom domain and charge your clients $1,500–$4,000/mo while PRIME AI runs their entire autonomous operations.
-          </p>
-        </div>
-
-        <button
-          onClick={() => onNavigate && onNavigate('white-label')}
-          className="px-6 py-3.5 rounded-2xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-extrabold text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-[0_0_25px_rgba(99,102,241,0.35)] transition-all cursor-pointer whitespace-nowrap"
-        >
-          <Sparkles className="w-4 h-4" />
-          <span>Open Agency Portal</span>
-          <ChevronRight className="w-4 h-4" />
-        </button>
       </div>
 
       {/* Enterprise Security & Data Isolation Assurance */}

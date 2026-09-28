@@ -52,7 +52,6 @@ const CATEGORIES = [
   'Documents Intel',
   'Executive Inbox',
   'CEO Digital Twin',
-  'Agency White-Label',
   'Mobile iOS/APK',
   'Billing & Plans',
   'Security & Permissions',

@@ -109,12 +109,6 @@ export const Header: React.FC<HeaderProps> = ({
             PRIME <span className="text-[#FFD700] font-semibold">SaaS Plans & Billing</span>
           </h2>
         );
-      case 'white-label':
-        return (
-          <h2 className="text-sm sm:text-base md:text-xl font-light tracking-tight text-white leading-tight">
-            PRIME <span className="text-[#FFD700] font-semibold">Agency White-Label &amp; Reseller Portal</span>
-          </h2>
-        );
       case 'admin':
         return (
           <h2 className="text-sm sm:text-base md:text-xl font-light tracking-tight text-white leading-tight">
@@ -222,7 +216,6 @@ export const Header: React.FC<HeaderProps> = ({
       case 'twin': return 'CEO Digital Twin';
       case 'roi-calculator': return 'ROI Calculator';
       case 'plans': return 'SaaS Plans & Billing';
-      case 'white-label': return 'Agency White-Label';
       case 'admin': return 'Super Admin';
       case 'closer': return 'Closer AI';
       case 'hiring': return 'Hiring AI';
@@ -241,22 +234,19 @@ export const Header: React.FC<HeaderProps> = ({
   return (
     <header className="sticky top-0 z-40 w-full border-b border-white/5 bg-[#0A0A0A]/95 backdrop-blur-xl">
       <div className="w-full px-4 sm:px-8 h-20 flex items-center justify-between gap-3">
-        {/* Left Side: Permanent Standalone Brand Logo: Prime Command Center */}
+        {/* Left Side: Brand Logo: PRIME AI */}
         <div className="flex items-center gap-3 min-w-0 shrink-0">
           <div 
             onClick={() => onNavigate(user ? 'dashboard' : 'landing')} 
             className="flex items-center gap-2.5 cursor-pointer select-none shrink-0 group"
-            title="Prime Command Center"
+            title="PRIME AI"
           >
             <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#FFD700] to-[#B8860B] shadow-[0_0_20px_rgba(255,215,0,0.25)] flex items-center justify-center text-black group-hover:scale-105 transition-transform shrink-0">
               <Crown className="w-5 h-5" />
             </div>
             <div className="flex flex-col justify-center">
               <span className="text-base sm:text-lg font-black tracking-tight text-white group-hover:text-[#FFD700] transition-colors leading-none whitespace-nowrap">
-                Prime <span className="text-[#FFD700]">Command Center</span>
-              </span>
-              <span className="text-[10px] text-zinc-400 font-medium tracking-wide mt-1 hidden sm:inline">
-                Autonomous Executive AI
+                PRIME <span className="text-[#FFD700]">AI</span>
               </span>
             </div>
           </div>
@@ -346,15 +336,7 @@ export const Header: React.FC<HeaderProps> = ({
           ) : null}
         </div>
 
-        {/* Center Nav for Landing */}
-        {!user && (
-          <nav className="hidden md:flex items-center gap-8 text-xs uppercase tracking-widest text-white/50 font-medium">
-            <a href="#features" className="hover:text-white transition-colors">Features</a>
-            <a href="#capabilities" className="hover:text-white transition-colors">Capabilities</a>
-            <a href="#roi-calculator" className="hover:text-white transition-colors">ROI Calculator</a>
-            <a href="#pricing" className="hover:text-white transition-colors">Pricing</a>
-          </nav>
-        )}
+        {/* Center Nav for Landing - Removed per requirement for single-feature Radar homepage */}
 
         {/* Right CTA / Status Stack */}
         <div className="flex items-center gap-2 sm:gap-4 shrink-0">
@@ -542,35 +524,14 @@ export const Header: React.FC<HeaderProps> = ({
               )}
             </div>
           ) : (
-            <div className="flex items-center gap-1.5 sm:gap-2.5">
-              {/* Direct Demo Access without email/password */}
-              <button
-                onClick={() => onNavigate('dashboard')}
-                className="flex items-center gap-1.5 px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-xl bg-[#FFD700]/15 hover:bg-[#FFD700] text-[#FFD700] hover:text-black border border-[#FFD700]/40 text-xs font-black transition-all cursor-pointer shadow-[0_0_15px_rgba(255,215,0,0.15)] active:scale-95"
-                title="Enter live demo instantly with zero sign-up or credentials required"
-              >
-                <Sparkles className="w-3.5 h-3.5" />
-                <span>Live Demo</span>
-              </button>
-
-              {/* Sign In Option */}
+            <div className="flex items-center gap-2">
               <button
                 onClick={() => onOpenAuth('login')}
-                className="flex items-center gap-1 px-2.5 sm:px-3 py-1.5 sm:py-2 text-xs font-semibold text-white/80 hover:text-white hover:bg-white/10 rounded-xl transition-colors cursor-pointer border border-transparent hover:border-white/15"
+                className="px-3.5 py-1.5 text-xs font-semibold text-white/80 hover:text-white hover:bg-white/10 rounded-xl transition-colors cursor-pointer border border-white/10 flex items-center gap-1.5"
                 title="Sign in to your registered account"
               >
                 <LogIn className="w-3.5 h-3.5" />
                 <span>Sign In</span>
-              </button>
-
-              {/* Sign Up Option */}
-              <button
-                onClick={() => onOpenAuth('signup')}
-                className="flex items-center gap-1.5 px-3 py-1.5 sm:px-3.5 sm:py-2 bg-gradient-to-r from-[#FFD700] via-amber-300 to-[#FFC700] text-black text-xs font-black rounded-xl hover:brightness-110 transition-all cursor-pointer shadow-[0_0_20px_rgba(255,215,0,0.25)] active:scale-95"
-                title="Create a new account with 14 days free trial"
-              >
-                <UserPlus className="w-3.5 h-3.5 text-black" />
-                <span>Sign Up</span>
               </button>
             </div>
           )}

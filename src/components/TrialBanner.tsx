@@ -131,17 +131,17 @@ export const TrialBanner: React.FC<TrialBannerProps> = ({ onUpgradeClick, compac
           <div className="flex items-center gap-1.5 sm:gap-2">
             <span className="font-bold text-white text-[11px] sm:text-xs truncate">
               <strong className={isUrgent ? 'text-amber-400' : 'text-[#FFD700]'}>
-                {trialDaysRemaining === 1 ? '1 day left' : `${trialDaysRemaining} days left`}
+                Full Access for {trialDaysRemaining} Days
               </strong>
-              <span className="hidden sm:inline"> in your 14-day free trial</span>
+              <span className="hidden sm:inline text-white/70"> (All Features Unlocked)</span>
             </span>
             <span className="text-[9px] font-mono px-1.5 py-0.2 rounded bg-white/10 text-white/70 border border-white/10 hidden md:inline-block">
-              Free Trial
+              Free Access
             </span>
           </div>
 
           <p className="text-[10px] sm:text-[11px] text-white/50 hidden sm:block truncate">
-            Full access to Brain AI, Revenue Radar, and Executive Twin active until{' '}
+            Full access active until{' '}
             <span className="font-mono text-white/80">
               {trialEndDate ? new Date(trialEndDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '14 days'}
             </span>

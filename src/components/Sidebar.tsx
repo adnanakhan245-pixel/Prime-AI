@@ -121,13 +121,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
       badgeClass: 'bg-[#FFD700]/20 text-[#FFD700] border border-[#FFD700]/30',
     },
     {
-      id: 'white-label',
-      label: 'Agency White-Label',
-      icon: Building2,
-      badge: 'PARTNER',
-      badgeClass: 'bg-gradient-to-r from-[#FFD700] to-amber-400 text-black font-extrabold shadow-sm',
-    },
-    {
       id: 'admin',
       label: 'Super Admin',
       icon: ShieldCheck,
