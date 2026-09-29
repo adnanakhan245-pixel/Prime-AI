@@ -4,9 +4,9 @@ const TWIN_STORAGE_KEY = 'prime_ai_ceo_digital_twin_';
 
 export const DEFAULT_TWIN_CONFIG: CEODigitalTwinConfig = {
   id: 'twin_default_01',
-  companyId: 'comp_apex_01',
-  userId: 'user_ceo_01',
-  ceoName: 'Alexander Vance',
+  companyId: '',
+  userId: '',
+  ceoName: 'Executive Leader',
   ceoTitle: 'Chief Executive Officer & Founder',
   archetype: 'HIGH_VELOCITY_CLOSER',
   matrix: {
@@ -17,7 +17,7 @@ export const DEFAULT_TWIN_CONFIG: CEODigitalTwinConfig = {
     optimism: 7,
   },
   signatureHook: 'Team,',
-  signatureSignoff: '- Alexander Vance, CEO',
+  signatureSignoff: '- CEO',
   powerPhrases: [
     'Move with extreme speed',
     'Revenue is vanity, cash flow is sanity',

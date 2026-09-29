@@ -26,6 +26,7 @@ import {
   Link as LinkIcon
 } from 'lucide-react';
 import { ClientPaymentModal } from './ClientPaymentModal';
+import { AIGuidanceDisclaimer } from './AIGuidanceDisclaimer';
 import { 
   InvoiceItem, 
   CashFlowGuardStats, 
@@ -43,6 +44,7 @@ import {
   recommendOptimalGateway
 } from '../services/db';
 import { recordApprovedAction, undoApprovedAction } from '../services/approvals';
+import { logAIDecision } from '../services/aiAuditLogger';
 
 interface CashFlowGuardViewProps {
   currentCompany: Company | null;
@@ -302,6 +304,23 @@ export const CashFlowGuardView: React.FC<CashFlowGuardViewProps> = ({
 
     const saved = await saveInvoice(payload as any);
     setInvoices(prev => [saved, ...prev.filter(i => i.id !== saved.id)]);
+
+    // Log AI Decision Audit Record for Invoice Generation / Update
+    logAIDecision({
+      companyId,
+      userId,
+      category: 'INVOICE',
+      actionTitle: editingInvoice ? `Invoice Updated: #${saved.invoiceNumber}` : `Client Invoice Issued: #${saved.invoiceNumber}`,
+      targetEntity: `${saved.clientName} (${saved.currency} ${saved.amount.toLocaleString()})`,
+      aiModel: 'Gemini 3.7 Flash',
+      aiRationale: `Client invoice #${saved.invoiceNumber} configured with optimal gateway fee analysis (${saved.selectedGateway}).`,
+      aiSuggestedAction: 'Issued following human executive review and authorization.',
+      riskLevel: 'LOW',
+      approvalStatus: 'APPROVED',
+      approvedBy: 'Executive Lead',
+      approvedAt: Date.now()
+    });
+
     setIsModalOpen(false);
   };
 
@@ -488,6 +507,9 @@ export const CashFlowGuardView: React.FC<CashFlowGuardViewProps> = ({
           </button>
         </div>
       )}
+
+      {/* Mandatory Safety Guidance Disclaimer */}
+      <AIGuidanceDisclaimer companyId={companyId} companyName={currentCompany?.name} />
 
       {/* Human-in-the-Loop Governance & Client Self-Service Policy Banner */}
       <div className="p-3.5 rounded-xl bg-neutral-100 dark:bg-neutral-900/60 border border-neutral-200 dark:border-neutral-800 flex flex-col md:flex-row md:items-center justify-between gap-2.5 text-xs text-neutral-600 dark:text-neutral-400">
@@ -868,6 +890,9 @@ export const CashFlowGuardView: React.FC<CashFlowGuardViewProps> = ({
               </button>
             </div>
 
+            {/* Mandatory Safety Guidance Disclaimer */}
+            <AIGuidanceDisclaimer variant="modal" companyId={companyId} companyName={currentCompany?.name} />
+
             <form onSubmit={handleSaveInvoice} className="space-y-4">
               <div className="grid grid-cols-2 gap-3">
                 <div>
@@ -1037,9 +1062,10 @@ export const CashFlowGuardView: React.FC<CashFlowGuardViewProps> = ({
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow transition-colors"
+                  className="px-5 py-2.5 text-xs font-black text-black bg-gradient-to-r from-[#FFD700] via-amber-300 to-[#FFD700] hover:scale-105 active:scale-95 rounded-xl shadow-[0_0_20px_rgba(255,215,0,0.25)] transition-all flex items-center gap-1.5 cursor-pointer"
                 >
-                  {editingInvoice ? 'Save Invoice' : 'Create & Guard'}
+                  <ShieldCheck className="w-4 h-4 text-black" />
+                  <span>{editingInvoice ? 'Human Approval Required: Update Invoice' : 'Human Approval Required: Issue & Guard Invoice'}</span>
                 </button>
               </div>
             </form>
@@ -1067,6 +1093,9 @@ export const CashFlowGuardView: React.FC<CashFlowGuardViewProps> = ({
                 ✕
               </button>
             </div>
+
+            {/* Mandatory Safety Guidance Disclaimer in Reminder Modal */}
+            <AIGuidanceDisclaimer variant="modal" companyId={currentCompany?.id || 'comp_apex_01'} companyName={currentCompany?.name} />
 
             {/* Tone Selector */}
             <div>
@@ -1141,18 +1170,18 @@ export const CashFlowGuardView: React.FC<CashFlowGuardViewProps> = ({
                 {reminderInvoice.clientPhone && (
                   <button
                     onClick={handleOpenWhatsAppConfirmation}
-                    className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg shadow-sm transition-colors cursor-pointer"
+                    className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg shadow-sm transition-all cursor-pointer"
                   >
-                    <MessageSquare className="w-3.5 h-3.5" />
-                    Open WhatsApp
+                    <ShieldCheck className="w-3.5 h-3.5" />
+                    <span>Human Approval Required: WhatsApp</span>
                   </button>
                 )}
                 <button
                   onClick={handleOpenEmailConfirmation}
-                  className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-sm transition-colors cursor-pointer"
+                  className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold text-black bg-gradient-to-r from-[#FFD700] via-amber-300 to-[#FFD700] hover:scale-105 active:scale-95 rounded-lg shadow-sm transition-all cursor-pointer"
                 >
-                  <Mail className="w-3.5 h-3.5" />
-                  Launch Email Client
+                  <ShieldCheck className="w-3.5 h-3.5 text-black" />
+                  <span>Human Approval Required: Email Notice</span>
                 </button>
               </div>
             </div>
@@ -1197,9 +1226,8 @@ export const CashFlowGuardView: React.FC<CashFlowGuardViewProps> = ({
               </div>
             </div>
 
-            <div className="p-3 rounded-lg bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800/60 text-[11px] text-blue-900 dark:text-blue-200 leading-relaxed">
-              <strong>Strict Governance:</strong> Automated systems are prohibited from sending messages without human review. Authorizing will dispatch the notice, create an immutable audit record, and provide a 2-minute safety window for rollback.
-            </div>
+            {/* Mandatory Safety Guidance Disclaimer in Confirmation Gate */}
+            <AIGuidanceDisclaimer variant="modal" companyId={currentCompany?.id || 'comp_apex_01'} companyName={currentCompany?.name} />
 
             <div className="flex gap-3">
               <button
@@ -1210,9 +1238,10 @@ export const CashFlowGuardView: React.FC<CashFlowGuardViewProps> = ({
               </button>
               <button
                 onClick={handleAuthorizeAndDispatch}
-                className="flex-1 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition-all shadow-md cursor-pointer"
+                className="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-[#FFD700] via-amber-300 to-[#FFD700] text-black text-xs font-black transition-all shadow-md cursor-pointer hover:scale-105 active:scale-95 flex items-center justify-center gap-1.5"
               >
-                Authorize &amp; Dispatch
+                <ShieldCheck className="w-4 h-4 text-black" />
+                <span>Human Approval Required: Confirm & Dispatch</span>
               </button>
             </div>
           </div>

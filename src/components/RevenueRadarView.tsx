@@ -46,6 +46,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { recordApprovedAction, undoApprovedAction } from '../services/approvals';
+import { AIGuidanceDisclaimer } from './AIGuidanceDisclaimer';
 import { 
   CRMRecord, 
   RevenueRadarStats,
@@ -841,6 +842,9 @@ export const RevenueRadarView: React.FC = () => {
           <span>{radarToast}</span>
         </div>
       )}
+
+      {/* Mandatory Safety Guidance Disclaimer */}
+      <AIGuidanceDisclaimer companyId={activeCompanyId} companyName={activeCompanyName} />
 
       {/* 2-Minute Undo Action Safety Window Banner */}
       {activeRadarUndo && (
@@ -2054,6 +2058,9 @@ export const RevenueRadarView: React.FC = () => {
               </button>
             </div>
 
+            {/* Mandatory Safety Guidance Disclaimer in Churn Modal */}
+            <AIGuidanceDisclaimer variant="modal" companyId={activeCompanyId} companyName={activeCompanyName} />
+
             {/* Retention Diagnosis */}
             <div className="p-4 rounded-2xl bg-rose-950/20 border border-rose-500/30 space-y-2 text-xs">
               <div className="flex items-center gap-2 text-rose-400 font-bold">
@@ -2106,10 +2113,10 @@ export const RevenueRadarView: React.FC = () => {
 
               <button
                 onClick={handleApplyChurnRescueAction}
-                className="flex-1 py-3 px-4 rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-500 hover:to-emerald-600 text-white text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer shadow-[0_0_25px_rgba(16,185,129,0.3)]"
+                className="flex-1 py-3 px-4 rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-500 hover:to-emerald-600 text-white text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer shadow-[0_0_25px_rgba(16,185,129,0.3)] hover:scale-105 active:scale-95"
               >
-                <CheckCircle2 className="w-4 h-4" />
-                <span>Apply Concession &amp; Mark Stabilized</span>
+                <ShieldCheck className="w-4 h-4 text-[#FFD700]" />
+                <span>Human Approval Required: Apply Concession</span>
               </button>
             </div>
           </div>
@@ -2141,6 +2148,9 @@ export const RevenueRadarView: React.FC = () => {
                 <X className="w-4 h-4" />
               </button>
             </div>
+
+            {/* Mandatory Safety Guidance Disclaimer in Expansion Modal */}
+            <AIGuidanceDisclaimer variant="modal" companyId={activeCompanyId} companyName={activeCompanyName} />
 
             {/* ROI Calculation */}
             <div className="p-4 rounded-2xl bg-amber-950/20 border border-amber-500/30 space-y-2 text-xs">
@@ -2195,10 +2205,10 @@ export const RevenueRadarView: React.FC = () => {
 
               <button
                 onClick={handleApplyExpansionUpgrade}
-                className="flex-1 py-3 px-4 rounded-xl bg-[#FFD700] hover:bg-[#FFE55C] text-black text-xs font-black transition-all flex items-center justify-center gap-2 cursor-pointer shadow-[0_0_25px_rgba(255,215,0,0.3)]"
+                className="flex-1 py-3 px-4 rounded-xl bg-gradient-to-r from-[#FFD700] via-amber-300 to-[#FFD700] hover:scale-105 active:scale-95 text-black text-xs font-black transition-all flex items-center justify-center gap-2 cursor-pointer shadow-[0_0_25px_rgba(255,215,0,0.35)]"
               >
-                <TrendingUp className="w-4 h-4" />
-                <span>Upgrade Account to Enterprise</span>
+                <ShieldCheck className="w-4 h-4 text-black" />
+                <span>Human Approval Required: Upgrade Account</span>
               </button>
             </div>
           </div>
@@ -2288,6 +2298,9 @@ export const RevenueRadarView: React.FC = () => {
               </button>
             </div>
 
+            {/* Mandatory Safety Guidance Disclaimer in PQL Modal */}
+            <AIGuidanceDisclaimer variant="modal" companyId={activeCompanyId} companyName={activeCompanyName} />
+
             {/* Catalyst and Offer */}
             <div className="p-4 rounded-2xl bg-cyan-950/20 border border-cyan-500/30 space-y-2 text-xs">
               <div className="flex items-center justify-between text-cyan-400 font-bold">
@@ -2346,10 +2359,10 @@ export const RevenueRadarView: React.FC = () => {
 
               <button
                 onClick={() => handleConvertPQL(selectedPql)}
-                className="flex-1 py-3 px-4 rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-500 hover:to-emerald-600 text-white text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer shadow-[0_0_25px_rgba(16,185,129,0.3)]"
+                className="flex-1 py-3 px-4 rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-500 hover:to-emerald-600 text-white text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer shadow-[0_0_25px_rgba(16,185,129,0.3)] hover:scale-105 active:scale-95"
               >
-                <CheckCircle2 className="w-4 h-4" />
-                <span>Convert to {selectedPql.targetPlan} (+$${selectedPql.estimatedArrUplift.toLocaleString()} ARR)</span>
+                <ShieldCheck className="w-4 h-4 text-[#FFD700]" />
+                <span>Human Approval Required: Convert to {selectedPql.targetPlan}</span>
               </button>
             </div>
           </div>
@@ -2381,6 +2394,9 @@ export const RevenueRadarView: React.FC = () => {
                 <X className="w-4 h-4" />
               </button>
             </div>
+
+            {/* Mandatory Safety Guidance Disclaimer in Renewal Modal */}
+            <AIGuidanceDisclaimer variant="modal" companyId={activeCompanyId} companyName={activeCompanyName} />
 
             {/* ROI Executive Value Realization */}
             <div className="p-4 rounded-2xl bg-indigo-950/30 border border-indigo-500/30 space-y-1.5 text-xs">
@@ -2718,9 +2734,8 @@ export const RevenueRadarView: React.FC = () => {
               </div>
             </div>
 
-            <div className="p-3 rounded-lg bg-white/5 border border-white/10 text-[11px] text-white/70 leading-relaxed">
-              Authorizing will mark this opportunity converted in the SaaS telemetry pipeline, create an audit log, and grant a 2-minute safety window for rollback.
-            </div>
+            {/* Mandatory Safety Disclaimer in PQL Approval Modal */}
+            <AIGuidanceDisclaimer variant="modal" companyId={activeCompanyId} companyName={activeCompanyName} />
 
             <div className="flex gap-3">
               <button
@@ -2731,9 +2746,9 @@ export const RevenueRadarView: React.FC = () => {
               </button>
               <button
                 onClick={handleConfirmPqlConvert}
-                className="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-purple-500 to-indigo-600 text-white text-xs font-bold transition-all shadow-lg cursor-pointer"
+                className="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-purple-500 to-indigo-600 text-white text-xs font-bold transition-all shadow-lg cursor-pointer hover:scale-105 active:scale-95"
               >
-                Authorize Conversion
+                Human Approval Granted: Convert
               </button>
             </div>
           </div>
@@ -2769,9 +2784,8 @@ export const RevenueRadarView: React.FC = () => {
               </div>
             </div>
 
-            <div className="p-3 rounded-lg bg-white/5 border border-white/10 text-[11px] text-white/70 leading-relaxed">
-              Secures account renewal against competitor poaching. An audit log entry will be created and you will have a 2-minute safety window to recall this lock-in.
-            </div>
+            {/* Mandatory Safety Disclaimer in Multi-Year Modal */}
+            <AIGuidanceDisclaimer variant="modal" companyId={activeCompanyId} companyName={activeCompanyName} />
 
             <div className="flex gap-3">
               <button
@@ -2782,9 +2796,9 @@ export const RevenueRadarView: React.FC = () => {
               </button>
               <button
                 onClick={handleConfirmLockInMultiYear}
-                className="flex-1 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-black text-xs font-bold transition-all shadow-lg cursor-pointer"
+                className="flex-1 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-black text-xs font-bold transition-all shadow-lg cursor-pointer hover:scale-105 active:scale-95"
               >
-                Authorize Contract Lock-In
+                Human Approval Granted: Lock Contract
               </button>
             </div>
           </div>
@@ -2820,9 +2834,8 @@ export const RevenueRadarView: React.FC = () => {
               </div>
             </div>
 
-            <div className="p-3 rounded-lg bg-rose-500/10 border border-rose-500/20 text-[11px] text-rose-200/90 leading-relaxed">
-              Applying concessions affects pricing terms and customer health scores. Authorizing this action creates an audit trail entry with a 2-minute rollback safety window.
-            </div>
+            {/* Mandatory Safety Disclaimer in Churn Modal */}
+            <AIGuidanceDisclaimer variant="modal" companyId={activeCompanyId} companyName={activeCompanyName} />
 
             <div className="flex gap-3">
               <button
@@ -2833,9 +2846,9 @@ export const RevenueRadarView: React.FC = () => {
               </button>
               <button
                 onClick={handleConfirmChurnConcession}
-                className="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-rose-500 to-amber-500 text-white text-xs font-bold transition-all shadow-lg cursor-pointer"
+                className="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-rose-500 to-amber-500 text-white text-xs font-bold transition-all shadow-lg cursor-pointer hover:scale-105 active:scale-95"
               >
-                Authorize &amp; Apply Concession
+                Human Approval Granted: Apply Concession
               </button>
             </div>
           </div>

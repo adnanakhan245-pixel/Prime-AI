@@ -28,6 +28,7 @@ import { useAuth } from '../context/AuthContext';
 import { fetchUserEmails, updateEmailStatus, saveEmail, deleteEmail, saveSentEmailToSupabase } from '../services/db';
 import { recordApprovedAction, undoApprovedAction } from '../services/approvals';
 import { EmailItem } from '../types';
+import { AIGuidanceDisclaimer } from './AIGuidanceDisclaimer';
 
 interface AiDraftModalState {
   email: EmailItem;
@@ -579,6 +580,9 @@ export const InboxView: React.FC = () => {
 
             {/* Modal Body */}
             <div className="p-6 space-y-5">
+              {/* Mandatory AI Safety Disclaimer in Modal */}
+              <AIGuidanceDisclaimer variant="modal" companyId={companyId} companyName={profile?.companyName} />
+
               {/* Context Summary Box */}
               <div className="p-3.5 rounded-xl bg-[#0E0E0E] border border-white/5 space-y-1.5 text-xs">
                 <div className="flex items-center justify-between text-white/50 text-[11px]">
@@ -679,14 +683,14 @@ export const InboxView: React.FC = () => {
                   <span>{aiModal.isEditing ? 'Done Editing' : 'Edit'}</span>
                 </button>
 
-                {/* Button 1: Approve & Send */}
+                {/* Button 1: Human Approval Required */}
                 <button
                   onClick={handleModalApproveAndSend}
                   disabled={aiModal.sending}
-                  className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#FFD700] to-yellow-500 hover:from-[#FFE55C] hover:to-[#FFD700] text-black text-xs font-extrabold shadow-[0_0_20px_rgba(255,215,0,0.3)] transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50"
+                  className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#FFD700] via-amber-300 to-[#FFD700] hover:scale-105 active:scale-95 text-black text-xs font-black shadow-[0_0_25px_rgba(255,215,0,0.35)] transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50"
                 >
-                  <Send className={`w-3.5 h-3.5 ${aiModal.sending ? 'animate-spin' : ''}`} />
-                  <span>{aiModal.sending ? 'Saving & Sending...' : 'Approve & Send'}</span>
+                  <ShieldCheck className={`w-4 h-4 ${aiModal.sending ? 'animate-spin' : ''}`} />
+                  <span>{aiModal.sending ? 'Authorizing & Dispatching...' : 'Human Approval Required: Approve & Send'}</span>
                 </button>
               </div>
             </div>
@@ -724,6 +728,9 @@ export const InboxView: React.FC = () => {
           </button>
         </div>
       )}
+
+      {/* Mandatory Safety Guidance Disclaimer */}
+      <AIGuidanceDisclaimer companyId={companyId} companyName={profile?.companyName} />
 
       {/* Human-in-the-Loop Governance Policy Banner */}
       <div className="p-3.5 rounded-xl bg-black/40 border border-white/10 flex items-center justify-between text-xs text-white/70">
@@ -1048,10 +1055,10 @@ export const InboxView: React.FC = () => {
                     </button>
                     <button
                       onClick={handleApproveAndSend}
-                      className="px-4 py-2 rounded-lg bg-white text-black text-xs font-bold hover:bg-[#FFD700] shadow-[0_0_15px_rgba(255,215,0,0.15)] flex items-center gap-2 cursor-pointer transition-colors"
+                      className="px-4 py-2 rounded-xl bg-gradient-to-r from-[#FFD700] via-amber-300 to-[#FFD700] text-black text-xs font-black hover:scale-105 active:scale-95 shadow-[0_0_20px_rgba(255,215,0,0.25)] flex items-center gap-2 cursor-pointer transition-all"
                     >
-                      <Send className="w-3.5 h-3.5" />
-                      <span>Approve & Send</span>
+                      <ShieldCheck className="w-4 h-4 text-black" />
+                      <span>Human Approval Required</span>
                     </button>
                   </div>
                 </div>

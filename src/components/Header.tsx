@@ -35,6 +35,7 @@ interface HeaderProps {
   onOpenDailyBriefing?: () => void;
   isDemoMode?: boolean;
   onExitDemo?: () => void;
+  onEnterDemo?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -47,6 +48,7 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenDailyBriefing,
   isDemoMode = false,
   onExitDemo,
+  onEnterDemo,
 }) => {
   const { 
     user, 
@@ -100,7 +102,7 @@ export const Header: React.FC<HeaderProps> = ({
       case 'approvals':
         return (
           <h2 className="text-sm sm:text-base md:text-xl font-light tracking-tight text-white leading-tight">
-            PRIME <span className="text-emerald-400 font-semibold">AI Approvals Log & Safety Sentry</span>
+            PRIME <span className="text-[#FFD700] font-semibold">AI Decision Audit Logs & Human Governance</span>
           </h2>
         );
       case 'plans':
@@ -217,6 +219,7 @@ export const Header: React.FC<HeaderProps> = ({
       case 'roi-calculator': return 'ROI Calculator';
       case 'plans': return 'SaaS Plans & Billing';
       case 'admin': return 'Super Admin';
+      case 'approvals': return 'AI Audit & Approvals';
       case 'closer': return 'Closer AI';
       case 'hiring': return 'Hiring AI';
       case 'meetings': return 'Meeting AI';
@@ -525,9 +528,26 @@ export const Header: React.FC<HeaderProps> = ({
             </div>
           ) : (
             <div className="flex items-center gap-2">
+              {onEnterDemo && (
+                <button
+                  onClick={onEnterDemo}
+                  className="px-3 py-1.5 text-xs font-bold text-[#FFD700] hover:text-black hover:bg-[#FFD700] bg-[#FFD700]/10 border border-[#FFD700]/30 rounded-xl transition-all cursor-pointer flex items-center gap-1.5"
+                  title="Test drive interactive demo with simulated data"
+                >
+                  <Sparkles className="w-3.5 h-3.5" />
+                  <span>Demo</span>
+                </button>
+              )}
+              <button
+                onClick={() => onOpenAuth('signup')}
+                className="px-3.5 py-1.5 bg-gradient-to-r from-[#FFD700] via-amber-300 to-[#FFC700] text-black text-xs font-black rounded-xl hover:brightness-110 transition-all cursor-pointer shadow-[0_0_20px_rgba(255,215,0,0.3)] flex items-center gap-1.5 active:scale-95"
+              >
+                <Crown className="w-3.5 h-3.5 text-black" />
+                <span>Sign Up</span>
+              </button>
               <button
                 onClick={() => onOpenAuth('login')}
-                className="px-3.5 py-1.5 text-xs font-semibold text-white/80 hover:text-white hover:bg-white/10 rounded-xl transition-colors cursor-pointer border border-white/10 flex items-center gap-1.5"
+                className="px-3 py-1.5 text-xs font-semibold text-white/80 hover:text-white hover:bg-white/10 rounded-xl transition-colors cursor-pointer border border-white/10 flex items-center gap-1.5"
                 title="Sign in to your registered account"
               >
                 <LogIn className="w-3.5 h-3.5" />

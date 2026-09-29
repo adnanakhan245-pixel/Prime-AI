@@ -27,9 +27,15 @@ import {
   Briefcase,
   BrainCircuit,
   SlidersHorizontal,
-  ChevronRight
+  ChevronRight,
+  ShieldCheck,
+  ShieldAlert,
+  Database,
+  Settings
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { getApprovalActions } from '../services/approvals';
+import { getAIDecisionLogs } from '../services/aiAuditLogger';
 import { AgentSwarmGrid } from './AgentSwarmGrid';
 import { ExecutiveToolsDirectory } from './ExecutiveToolsDirectory';
 import { 
@@ -93,6 +99,8 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigate, onOpen
   const [simulatingEmail, setSimulatingEmail] = useState(false);
   const [brainPrompt, setBrainPrompt] = useState('');
   const [activeTab, setActiveTab] = useState<'overview' | 'executive-suite' | 'profit-suite' | 'swarms' | 'all-tools'>('overview');
+  const [pendingApprovalsCount, setPendingApprovalsCount] = useState<number>(0);
+  const [auditLogsCount, setAuditLogsCount] = useState<number>(0);
 
   const loadDashboardData = async () => {
     const effectiveUid = user?.uid || 'guest_demo_user';
@@ -115,6 +123,12 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigate, onOpen
       setActivities(actData || []);
       const deals = dealsData || [];
       setCrmDeals(deals);
+
+      // Multi-tenant audit and approval telemetry
+      const actions = getApprovalActions(effectiveCompId);
+      const logs = getAIDecisionLogs(effectiveCompId);
+      setPendingApprovalsCount(actions.filter(a => a.status === 'PENDING').length);
+      setAuditLogsCount(logs.length);
 
       const atRisk = filterAtRiskClients(deals);
       const hot = filterHotLeads(deals);
@@ -282,6 +296,21 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigate, onOpen
 
         {/* Feature Action Buttons: Previous Order, 100% English, Zero Overlapping */}
         <div className="flex items-center gap-2 sm:gap-2.5 flex-wrap">
+          {/* 0. AI Audit & Approvals */}
+          <button
+            onClick={() => onNavigate('approvals')}
+            className="px-3 py-2 rounded-xl bg-gradient-to-r from-emerald-500/20 via-[#FFD700]/15 to-emerald-500/10 hover:from-emerald-500/30 hover:to-[#FFD700]/25 text-white border border-[#FFD700]/40 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap shrink-0 shadow-sm"
+            title="View AI Decision Audit Logs & Pending Human Approvals"
+          >
+            <ShieldCheck className="w-3.5 h-3.5 text-[#FFD700]" />
+            <span>AI Audit & Approvals</span>
+            {pendingApprovalsCount > 0 && (
+              <span className="px-1.5 py-0.2 rounded-full bg-amber-400 text-black text-[10px] font-black animate-pulse">
+                {pendingApprovalsCount}
+              </span>
+            )}
+          </button>
+
           {/* 1. Real AI Copilot */}
           <button
             onClick={() => onNavigate('brain')}
@@ -339,15 +368,14 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigate, onOpen
             <span>Daily Briefing</span>
           </button>
 
-          {/* 6. + Sample Email */}
+          {/* 6. Settings */}
           <button
-            onClick={handleSimulateIncomingEmail}
-            disabled={simulatingEmail}
-            className="px-3 py-2 rounded-xl bg-white hover:bg-[#FFD700] text-black text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50 whitespace-nowrap shrink-0"
-            title="Simulate incoming client communication"
+            onClick={onOpenSettings}
+            className="px-3 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap shrink-0 border border-white/10"
+            title="Open B2B Workspace Settings"
           >
-            <Sparkles className="w-3.5 h-3.5" />
-            <span>{simulatingEmail ? 'Synthesizing...' : '+ Sample Email'}</span>
+            <Settings className="w-3.5 h-3.5 text-[#FFD700]" />
+            <span>Workspace Settings</span>
           </button>
 
           {/* 7. Refresh */}
@@ -531,6 +559,48 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigate, onOpen
           </div>
         </section>
       )}
+
+      {/* AI SAFETY & MULTI-TENANT AUDIT GOVERNANCE SENTRY */}
+      <section className="bg-gradient-to-r from-zinc-900 via-[#18160E] to-zinc-900 rounded-2xl border border-[#FFD700]/30 p-5 shadow-2xl flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="flex items-start sm:items-center gap-3.5">
+          <div className="w-10 h-10 rounded-xl bg-[#FFD700]/15 border border-[#FFD700]/30 flex items-center justify-center text-[#FFD700] shrink-0 mt-0.5 sm:mt-0">
+            <ShieldCheck className="w-5 h-5" />
+          </div>
+          <div>
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-xs font-black text-white tracking-wide uppercase">
+                AI Safety &amp; Multi-Tenant Governance Sentry
+              </span>
+              <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 font-bold flex items-center gap-1">
+                <Database className="w-3 h-3" />
+                <span>Isolated: {companyName || companyId}</span>
+              </span>
+              <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-[#FFD700]/15 text-[#FFD700] border border-[#FFD700]/30 font-bold">
+                Human Approval Required
+              </span>
+            </div>
+            <p className="text-xs text-zinc-300 mt-1">
+              Zero unapproved emails, invoices, or playbooks. All AI suggestions require human review before taking action.
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2.5 shrink-0">
+          <button
+            onClick={() => onNavigate('approvals')}
+            className="px-4 py-2 rounded-xl bg-[#FFD700] hover:bg-[#FFE55C] text-black text-xs font-black transition-all shadow-[0_0_20px_rgba(255,215,0,0.25)] flex items-center gap-1.5 cursor-pointer hover:scale-105 active:scale-95"
+          >
+            <ShieldAlert className="w-3.5 h-3.5 text-black" />
+            <span>Review Pending Approvals ({pendingApprovalsCount})</span>
+          </button>
+          <button
+            onClick={() => onNavigate('approvals')}
+            className="px-3.5 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-white text-xs font-bold transition-all border border-white/10 flex items-center gap-1.5 cursor-pointer"
+          >
+            <span>Audit Trail ({auditLogsCount})</span>
+          </button>
+        </div>
+      </section>
 
       {/* CORE REQUIRED SLEEK METRICS GRID (4 CARDS) */}
       <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">

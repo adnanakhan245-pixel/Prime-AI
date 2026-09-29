@@ -118,6 +118,39 @@ export function getDunningRecoveries(companyId: string): DunningRecoveryItem[] {
       return JSON.parse(local);
     }
   } catch (e) {}
+
+  // In Demo Mode only: generate realistic simulated dunning items
+  if (companyId.includes('demo')) {
+    const demoItems: DunningRecoveryItem[] = [
+      {
+        id: 'dunning_demo_01',
+        companyId,
+        customerName: 'Stellar Dynamics Corp',
+        customerEmail: 'vchen@stellardynamics.io',
+        planName: 'Enterprise Annual',
+        failedAmount: 6500,
+        currency: 'USD',
+        failedDate: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+        retryAttempts: 2,
+        status: 'PENDING',
+      },
+      {
+        id: 'dunning_demo_02',
+        companyId,
+        customerName: 'Apex Logistics International',
+        customerEmail: 'd.kowalski@apexlogistics.de',
+        planName: 'Pro Tier',
+        failedAmount: 3850,
+        currency: 'USD',
+        failedDate: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+        retryAttempts: 3,
+        status: 'PENDING',
+      }
+    ];
+    saveDunningRecoveries(companyId, demoItems);
+    return demoItems;
+  }
+
   return [];
 }
 
@@ -228,7 +261,8 @@ export function savePQLSignals(companyId: string, signals: PQLSignal[]): void {
 }
 
 export function generateSeedPQLSignals(companyId: string, companyName: string): PQLSignal[] {
-  return [];
+  // Only generate simulated signals in demo mode
+  if (!companyId.includes('demo')) return [];
   const now = Date.now();
   const minMs = 60 * 1000;
   const hourMs = 60 * minMs;
@@ -415,7 +449,8 @@ export function saveRenewalDefenseItems(companyId: string, items: RenewalDefense
 }
 
 export function generateSeedRenewalDefenseItems(companyId: string, companyName: string): RenewalDefenseItem[] {
-  return [];
+  // Only generate simulated renewal threats in demo mode
+  if (!companyId.includes('demo')) return [];
   const now = Date.now();
   const dayMs = 24 * 60 * 60 * 1000;
 

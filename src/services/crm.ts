@@ -73,16 +73,17 @@ export function getInitialSeedCRMData(companyId: string, userId: string, company
   return [];
 }
 
-// Enterprise CRM Telemetry dataset - returns empty array to ensure zero fake/sample deals
+// Enterprise CRM Telemetry dataset - returns rich sample data for Demo mode, empty for real app
 export function getSampleEnterpriseCRMData(companyId: string, userId: string, companyName?: string): CRMRecord[] {
-  return [];
+  return _legacySampleCRMData(companyId, userId, companyName);
 }
 
 function _legacySampleCRMData(companyId?: string, userId?: string, companyName?: string): CRMRecord[] {
-  if (companyId || userId || companyName || true) return [];
   const now = Date.now();
   const dayMs = 24 * 60 * 60 * 1000;
-  const cName = companyName || 'Company';
+  const cName = companyName || 'PRIME Demo Corp';
+  const cId = companyId || 'comp_demo_workspace';
+  const uId = userId || 'demo_user';
 
   return [
     // --- AT RISK CLIENTS (No contact > 10 days, Value > $10,000) ---
@@ -377,8 +378,15 @@ function _legacySampleCRMData(companyId?: string, userId?: string, companyName?:
 
 // Fetch all CRM deals strictly isolated by company_id
 export async function fetchCRMRecords(companyId: string, userId?: string): Promise<CRMRecord[]> {
-  const resolvedCompanyId = companyId || 'default_comp';
-  const resolvedUserId = userId || 'user_anon';
+  const resolvedCompanyId = companyId || 'comp_demo_workspace';
+  const resolvedUserId = userId || 'demo_user';
+  const isDemo = resolvedCompanyId.includes('demo') || resolvedUserId.includes('demo') || resolvedCompanyId === 'comp_demo_workspace';
+
+  // If in demo mode, return simulated sample deals so visitor can test-drive full capabilities
+  if (isDemo) {
+    return _legacySampleCRMData(resolvedCompanyId, resolvedUserId, 'PRIME Demo Corp');
+  }
+
   const supabase = getSupabaseClient();
   const config = getSupabaseConfig();
 

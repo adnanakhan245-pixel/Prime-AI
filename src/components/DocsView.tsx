@@ -106,8 +106,8 @@ Terms:
 
 export const DocsView: React.FC<DocsViewProps> = ({ onUpgradeToPro }) => {
   const { user, profile, isPro, upgradeToPlan } = useAuth();
-  const [documents, setDocuments] = useState<DocumentItem[]>(SAMPLE_CONTRACTS);
-  const [selectedDoc, setSelectedDoc] = useState<DocumentItem | null>(SAMPLE_CONTRACTS[0]);
+  const [documents, setDocuments] = useState<DocumentItem[]>([]);
+  const [selectedDoc, setSelectedDoc] = useState<DocumentItem | null>(null);
   const [loading, setLoading] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -141,12 +141,12 @@ export const DocsView: React.FC<DocsViewProps> = ({ onUpgradeToPro }) => {
           return;
         }
       }
-      setDocuments(SAMPLE_CONTRACTS);
-      setSelectedDoc(SAMPLE_CONTRACTS[0]);
+      setDocuments([]);
+      setSelectedDoc(null);
     } catch (err) {
       console.error('Error fetching documents:', err);
-      setDocuments(SAMPLE_CONTRACTS);
-      setSelectedDoc(SAMPLE_CONTRACTS[0]);
+      setDocuments([]);
+      setSelectedDoc(null);
     } finally {
       setLoading(false);
     }

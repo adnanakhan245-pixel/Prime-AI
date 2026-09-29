@@ -49,7 +49,7 @@ export const CEODigitalTwinView: React.FC = () => {
   const { user, profile, companyName, companyId } = useAuth();
   
   const [config, setConfig] = useState<CEODigitalTwinConfig>(() => 
-    getDigitalTwinConfig(companyId || 'comp_apex_01', user?.uid || 'user_ceo_01', profile?.displayName || user?.displayName || 'Alexander Vance')
+    getDigitalTwinConfig(companyId || '', user?.uid || '', profile?.displayName || user?.displayName || 'Executive Leader')
   );
 
   const [activeTab, setActiveTab] = useState<'simulator' | 'matrix' | 'fingerprints' | 'calibration' | 'heuristics'>('simulator');
@@ -661,7 +661,7 @@ export const CEODigitalTwinView: React.FC = () => {
                   type="text"
                   value={config.signatureSignoff}
                   onChange={(e) => updateConfig({ signatureSignoff: e.target.value })}
-                  placeholder="e.g. - Alexander Vance, CEO or Onward,"
+                  placeholder="e.g. - CEO or Onward,"
                   className="w-full bg-black/50 border border-white/10 focus:border-[#FFD700] rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none transition-colors"
                 />
               </div>

@@ -190,16 +190,19 @@ function AppContent() {
   };
 
   const handleNavigate = (view: string) => {
+    if (view === 'landing') {
+      setIsDemoMode(false);
+      setCurrentView('landing');
+      return;
+    }
+    if (!user) {
+      handleOpenAuth('signup');
+      return;
+    }
     if (['dashboard', 'radar', 'inbox', 'approvals', 'plans', 'admin', 'closer', 'hiring', 'meetings', 'growth', 'strategy', 'board-pack', 'docs', 'brain', 'twin', 'ad-spend', 'cashflow-guard', 'roi-calculator', 'feedback'].includes(view)) {
-      if (!user && !isDemoMode) {
-        setIsDemoMode(true);
-      }
       setCurrentView(view as any);
     } else {
-      if (isDemoMode && view === 'landing') {
-        setIsDemoMode(false);
-      }
-      setCurrentView('landing');
+      setCurrentView('dashboard');
     }
   };
 
@@ -237,6 +240,10 @@ function AppContent() {
         onExitDemo={() => {
           setIsDemoMode(false);
           setCurrentView('landing');
+        }}
+        onEnterDemo={() => {
+          setIsDemoMode(true);
+          setCurrentView('radar');
         }}
       />
 
@@ -299,7 +306,7 @@ function AppContent() {
           onOpenAuth={handleOpenAuth}
           onEnterDemo={() => {
             setIsDemoMode(true);
-            setCurrentView('dashboard');
+            setCurrentView('radar');
           }}
           onOpenClientPayment={() => {
             setTargetedInvoiceId(null);
@@ -534,6 +541,7 @@ function AppContent() {
           setSettingsOpen(false);
           handleOpenAuth('verify-email');
         }}
+        onNavigate={handleNavigate}
       />
 
       {/* Global Command Palette (Cmd + K) */}

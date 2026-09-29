@@ -87,10 +87,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
     },
     {
       id: 'approvals',
-      label: 'Approvals',
-      icon: CheckSquare,
-      badge: 'LOG',
-      badgeClass: 'bg-emerald-400 text-black font-extrabold',
+      label: 'AI Audit & Approvals',
+      icon: ShieldCheck,
+      badge: 'AUDIT',
+      badgeClass: 'bg-[#FFD700] text-black font-extrabold',
     },
     {
       id: 'brain',
@@ -186,6 +186,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
       label: 'Documents Intel',
       icon: FileText,
       badge: null,
+    },
+    {
+      id: 'settings',
+      label: 'Workspace Settings',
+      icon: Settings,
+      badge: 'B2B',
+      badgeClass: 'bg-[#FFD700]/10 text-[#FFD700] border border-[#FFD700]/30',
     }
   ];
 
@@ -243,7 +250,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
             return (
               <div
                 key={item.id}
-                onClick={() => onNavigate(item.id)}
+                onClick={() => {
+                  if (item.id === 'settings') {
+                    onOpenSettings();
+                  } else {
+                    onNavigate(item.id);
+                  }
+                }}
                 className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition-all cursor-pointer ${
                   isActive
                     ? 'bg-[#FFD700]/10 border border-[#FFD700]/20 text-[#FFD700] font-medium'

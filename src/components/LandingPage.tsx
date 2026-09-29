@@ -1,10 +1,18 @@
-import React, { useRef, useState, useEffect } from 'react';
+import React from 'react';
 import { 
   Crown, 
   Radar, 
-  RotateCcw
+  ShieldCheck, 
+  AlertTriangle, 
+  ArrowRight, 
+  DollarSign, 
+  TrendingUp, 
+  Lock, 
+  Sparkles, 
+  LogIn, 
+  Mail, 
+  Send
 } from 'lucide-react';
-import { RevenueRadarView } from './RevenueRadarView';
 
 interface LandingPageProps {
   onOpenAuth: (mode: 'login' | 'signup' | 'verify-email' | 'forgot-password') => void;
@@ -13,112 +21,321 @@ interface LandingPageProps {
   onOpenClientContact?: () => void;
 }
 
-export const LandingPage: React.FC<LandingPageProps> = () => {
-  const radarSectionRef = useRef<HTMLDivElement>(null);
-  const [demoUndoActive, setDemoUndoActive] = useState(false);
-  const [undoSecondsLeft, setUndoSecondsLeft] = useState(120);
-
-  // 2-minute countdown timer for the demo undo
-  useEffect(() => {
-    if (!demoUndoActive) return;
-    const timer = setInterval(() => {
-      setUndoSecondsLeft(prev => {
-        if (prev <= 1) {
-          setDemoUndoActive(false);
-          return 120;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-    return () => clearInterval(timer);
-  }, [demoUndoActive]);
-
-  const handleTryRadar = () => {
-    // Activate 2-minute undo demo
-    setDemoUndoActive(true);
-    setUndoSecondsLeft(120);
-    // Smooth scroll to the Radar screen below
-    radarSectionRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
-
-  const handleUndoDemo = () => {
-    setDemoUndoActive(false);
-    setUndoSecondsLeft(120);
+export const LandingPage: React.FC<LandingPageProps> = ({ onOpenAuth, onEnterDemo }) => {
+  // Clicking interactive demo launches demo mode with sample data
+  const handleLaunchDemo = () => {
+    if (onEnterDemo) {
+      onEnterDemo();
+    } else {
+      onOpenAuth('signup');
+    }
   };
 
   return (
-    <div className="w-full min-h-screen bg-[#0A0A0A] text-white flex flex-col items-center">
-      {/* Top Hero Section */}
-      <section className="w-full max-w-5xl mx-auto px-4 pt-16 pb-12 sm:pt-24 sm:pb-16 flex flex-col items-center text-center">
-        {/* Top: PRIME AI */}
-        <div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-2xl bg-white/5 border border-white/10 mb-8 shadow-sm">
-          <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-[#FFD700] to-[#B8860B] flex items-center justify-center text-black">
-            <Crown className="w-3.5 h-3.5" />
-          </div>
-          <span className="text-sm font-black tracking-wider text-white">
-            PRIME <span className="text-[#FFD700]">AI</span>
-          </span>
+    <div className="w-full min-h-screen bg-[#0A0A0A] text-white flex flex-col items-center selection:bg-[#FFD700] selection:text-black">
+      
+      {/* Hero Section */}
+      <main className="w-full max-w-5xl mx-auto px-4 pt-8 pb-8 sm:pt-14 sm:pb-12 flex flex-col items-center text-center">
+        
+        {/* Subtle Badge */}
+        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 border border-[#FFD700]/30 text-xs font-bold text-[#FFD700] mb-6 shadow-sm">
+          <Radar className="w-4 h-4 text-[#FFD700] animate-pulse" />
+          <span>REVENUE RADAR AUTOPILOT</span>
         </div>
 
-        {/* Headline */}
+        {/* Short, Punchy, Tailored Headline */}
         <h1 className="text-4xl sm:text-6xl md:text-7xl font-black tracking-tight text-white max-w-4xl leading-[1.08]">
-          Your business on <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#FFD700] via-amber-300 to-[#FFD700]">Autopilot</span>
+          Stop Revenue Leaks <br />
+          <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#FFD700] via-amber-300 to-[#FFD700]">
+            On Autopilot.
+          </span>
         </h1>
 
-        {/* Subheadline */}
+        {/* Clear, Understandable Subtitle */}
         <p className="mt-5 text-base sm:text-xl text-zinc-400 max-w-2xl leading-relaxed font-normal">
-          We watch your inbox, find risks, and never act without your approval.
+          PRIME AI watches your accounts 24/7, flags silent churn risks, and recovers overdue cash — with human approval on every action.
         </p>
 
-        {/* One button only: [Try Radar - 30 Second Demo] */}
-        <div className="mt-8">
+        {/* 3 Core Buttons: Sign Up, Demo, Sign In */}
+        <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3 w-full max-w-2xl">
           <button
-            onClick={handleTryRadar}
-            className="px-8 py-4 bg-gradient-to-r from-[#FFD700] via-amber-300 to-[#FFD700] text-black font-black text-sm sm:text-base rounded-2xl shadow-[0_0_35px_rgba(255,215,0,0.35)] hover:scale-105 active:scale-95 transition-all flex items-center gap-2.5 cursor-pointer"
+            onClick={() => onOpenAuth('signup')}
+            className="w-full sm:w-auto px-7 py-3.5 bg-gradient-to-r from-[#FFD700] via-amber-300 to-[#FFD700] text-black font-black text-sm rounded-2xl shadow-[0_0_30px_rgba(255,215,0,0.35)] hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer"
           >
-            <Radar className="w-5 h-5 text-black" />
-            <span>Try Radar - 30 Second Demo</span>
+            <Crown className="w-4 h-4 text-black" />
+            <span>Sign Up (14 Days Free)</span>
+          </button>
+
+          <button
+            onClick={handleLaunchDemo}
+            className="w-full sm:w-auto px-6 py-3.5 bg-[#FFD700]/10 hover:bg-[#FFD700]/20 text-[#FFD700] font-bold text-sm rounded-2xl border border-[#FFD700]/40 shadow-md hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer"
+            title="Explore full interactive demo with simulated data"
+          >
+            <Sparkles className="w-4 h-4 text-[#FFD700]" />
+            <span>Live Demo (Sample Data)</span>
+          </button>
+
+          <button
+            onClick={() => onOpenAuth('login')}
+            className="w-full sm:w-auto px-5 py-3.5 rounded-2xl border border-white/10 hover:border-white/20 bg-white/5 hover:bg-white/10 text-white font-bold text-sm transition-all flex items-center justify-center gap-2 cursor-pointer"
+          >
+            <LogIn className="w-4 h-4 text-zinc-400" />
+            <span>Sign In</span>
           </button>
         </div>
-      </section>
 
-      {/* Below: Show only Radar screen with 2-minute undo */}
-      <section ref={radarSectionRef} className="w-full max-w-7xl mx-auto px-4 pb-24">
-        {/* 2-Minute Undo Demo Alert Banner */}
-        {demoUndoActive && (
-          <div className="mb-6 p-4 rounded-2xl bg-gradient-to-r from-amber-500/20 via-yellow-500/15 to-transparent border border-[#FFD700]/50 shadow-2xl flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 animate-in fade-in slide-in-from-top-4 duration-300">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-[#FFD700]/20 border border-[#FFD700]/40 flex items-center justify-center text-[#FFD700] shrink-0">
-                <RotateCcw className="w-5 h-5 animate-spin" style={{ animationDuration: '6s' }} />
-              </div>
-              <div className="text-left">
-                <div className="flex items-center gap-2 font-bold text-white text-xs sm:text-sm">
-                  <span>⚡ 2-Minute Undo Window Active</span>
-                  <span className="font-mono text-[#FFD700] bg-[#FFD700]/10 px-2 py-0.5 rounded-full border border-[#FFD700]/30 text-xs">
-                    {undoSecondsLeft}s remaining
-                  </span>
+        {/* Trust Line - Reassurance (No credit card, but requires registration) */}
+        <div className="mt-4 flex items-center justify-center gap-2 text-xs text-zinc-400 font-medium">
+          <ShieldCheck className="w-4 h-4 text-emerald-400" />
+          <span>No Credit Card Required • Live Interactive Demo Available • Real Workspace Isolated</span>
+        </div>
+      </main>
+
+      {/* The ONE Feature Showcase: Revenue Radar */}
+      <section className="w-full max-w-5xl mx-auto px-4 pb-20">
+        
+        {/* Feature Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 px-2">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-lg bg-[#FFD700]/10 border border-[#FFD700]/30 flex items-center justify-center text-[#FFD700]">
+              <Radar className="w-4 h-4" />
+            </div>
+            <div>
+              <h2 className="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
+                <span>Revenue Radar Sentry</span>
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+              </h2>
+              <p className="text-xs text-zinc-400">Continuous AI deal risk telemetry & autonomous revenue protection</p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 text-xs text-[#FFD700] bg-[#FFD700]/10 border border-[#FFD700]/30 px-3 py-1 rounded-xl font-bold">
+            <ShieldCheck className="w-3.5 h-3.5 text-[#FFD700]" />
+            <span>Human Approval Required On Every Action</span>
+          </div>
+        </div>
+
+        {/* Interactive Radar Sentry Container */}
+        <div 
+          className="relative w-full rounded-3xl bg-[#0E0E0E] border border-white/10 hover:border-[#FFD700]/50 p-5 sm:p-7 shadow-2xl transition-all group"
+        >
+          {/* Top Sentry Status Bar with Demo & Signup */}
+          <div className="flex flex-wrap items-center justify-between gap-3 mb-6 pb-4 border-b border-white/5">
+            <div className="flex items-center gap-2">
+              <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
+              <span className="text-xs font-mono font-bold text-emerald-400">RADAR SENTRY LIVE TELEMETRY</span>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={handleLaunchDemo}
+                className="px-3 py-1.5 rounded-xl bg-[#FFD700]/10 hover:bg-[#FFD700]/20 text-[#FFD700] border border-[#FFD700]/30 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-sm"
+              >
+                <Sparkles className="w-3.5 h-3.5" />
+                <span>Launch Interactive Demo</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => onOpenAuth('signup')}
+                className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-[#FFD700] to-amber-400 text-black text-xs font-black shadow hover:brightness-110 transition-all flex items-center gap-1.5 cursor-pointer"
+              >
+                <Crown className="w-3.5 h-3.5 text-black" />
+                <span>Create Real Account</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Quick Metrics Strip */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-6">
+            <div className="p-3.5 rounded-2xl bg-white/[0.03] border border-white/5">
+              <span className="text-[10px] uppercase font-bold text-zinc-400">At-Risk Pipeline</span>
+              <p className="text-lg sm:text-xl font-extrabold text-white mt-1">$148,000</p>
+              <span className="text-[10px] text-amber-400 font-mono">3 Accounts Silent</span>
+            </div>
+
+            <div className="p-3.5 rounded-2xl bg-white/[0.03] border border-white/5">
+              <span className="text-[10px] uppercase font-bold text-zinc-400">Churn Rescued</span>
+              <p className="text-lg sm:text-xl font-extrabold text-emerald-400 mt-1">+$48,000</p>
+              <span className="text-[10px] text-emerald-400/80 font-mono">100% Retained</span>
+            </div>
+
+            <div className="p-3.5 rounded-2xl bg-white/[0.03] border border-white/5">
+              <span className="text-[10px] uppercase font-bold text-zinc-400">Dunning Recovered</span>
+              <p className="text-lg sm:text-xl font-extrabold text-[#FFD700] mt-1">+$24,500</p>
+              <span className="text-[10px] text-[#FFD700]/80 font-mono">2 Invoices Settled</span>
+            </div>
+
+            <div className="p-3.5 rounded-2xl bg-white/[0.03] border border-white/5">
+              <span className="text-[10px] uppercase font-bold text-zinc-400">Expansion Pipeline</span>
+              <p className="text-lg sm:text-xl font-extrabold text-blue-400 mt-1">+$76,000</p>
+              <span className="text-[10px] text-blue-400/80 font-mono">Seat Caps Approached</span>
+            </div>
+          </div>
+
+          {/* 3 Real Telemetry Action Items */}
+          <div className="space-y-3">
+            
+            {/* 1. At-Risk Churn Rescue */}
+            <div className="p-4 rounded-2xl bg-gradient-to-r from-red-950/20 via-zinc-900/40 to-transparent border border-red-500/20 hover:border-red-500/40 transition-colors flex flex-col md:flex-row md:items-center justify-between gap-3">
+              <div className="flex items-start gap-3">
+                <div className="w-9 h-9 rounded-xl bg-red-500/10 border border-red-500/30 flex items-center justify-center text-red-400 shrink-0">
+                  <AlertTriangle className="w-4 h-4" />
                 </div>
-                <p className="text-xs text-white/70 mt-0.5">
-                  Action approved: Churn rescue email drafted for Acme Corp. You have 2 minutes to undo before execution.
-                </p>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-bold text-white">Stellar Dynamics Corp</span>
+                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-red-500/10 text-red-400 border border-red-500/20 font-mono font-bold">
+                      76% Churn Risk
+                    </span>
+                    <span className="text-[10px] text-zinc-500 font-mono hidden sm:inline">Silent 14 Days</span>
+                  </div>
+                  <p className="text-xs text-zinc-400 mt-0.5">
+                    $78k ARR Tier-1 contract. Support ticket unresolved. AI drafted SLA concession playbook.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 shrink-0">
+                <button
+                  type="button"
+                  onClick={handleLaunchDemo}
+                  className="w-full md:w-auto px-4 py-2 rounded-xl bg-gradient-to-r from-[#FFD700] to-amber-400 text-black font-extrabold text-xs flex items-center justify-center gap-1.5 shadow-md hover:brightness-110 cursor-pointer"
+                >
+                  <Mail className="w-3.5 h-3.5" />
+                  <span>Test Churn Rescue Demo</span>
+                </button>
               </div>
             </div>
 
+            {/* 2. Dunning & Overdue Cash Recovery */}
+            <div className="p-4 rounded-2xl bg-gradient-to-r from-amber-950/20 via-zinc-900/40 to-transparent border border-amber-500/20 hover:border-amber-500/40 transition-colors flex flex-col md:flex-row md:items-center justify-between gap-3">
+              <div className="flex items-start gap-3">
+                <div className="w-9 h-9 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400 shrink-0">
+                  <DollarSign className="w-4 h-4" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-bold text-white">Apex Logistics Global</span>
+                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20 font-mono font-bold">
+                      $12,500 Past Due
+                    </span>
+                    <span className="text-[10px] text-zinc-500 font-mono hidden sm:inline">18 Days Overdue</span>
+                  </div>
+                  <p className="text-xs text-zinc-400 mt-0.5">
+                    Invoice #INV-2041 unpaid. AI drafted one-click instant payment link reminder.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 shrink-0">
+                <button
+                  type="button"
+                  onClick={handleLaunchDemo}
+                  className="w-full md:w-auto px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white font-extrabold text-xs flex items-center justify-center gap-1.5 border border-white/10 cursor-pointer"
+                >
+                  <Send className="w-3.5 h-3.5 text-[#FFD700]" />
+                  <span>Test Payment Recovery</span>
+                </button>
+              </div>
+            </div>
+
+            {/* 3. Product-Led Expansion (PQL) */}
+            <div className="p-4 rounded-2xl bg-gradient-to-r from-blue-950/20 via-zinc-900/40 to-transparent border border-blue-500/20 hover:border-blue-500/40 transition-colors flex flex-col md:flex-row md:items-center justify-between gap-3">
+              <div className="flex items-start gap-3">
+                <div className="w-9 h-9 rounded-xl bg-blue-500/10 border border-blue-500/30 flex items-center justify-center text-blue-400 shrink-0">
+                  <TrendingUp className="w-4 h-4" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-bold text-white">NovaStack Technologies</span>
+                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20 font-mono font-bold">
+                      +$36k ARR Upsell
+                    </span>
+                    <span className="text-[10px] text-zinc-500 font-mono hidden sm:inline">14/15 Seats Used</span>
+                  </div>
+                  <p className="text-xs text-zinc-400 mt-0.5">
+                    Client approached 93% seat limit. AI generated Enterprise expansion proposal.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 shrink-0">
+                <button
+                  type="button"
+                  onClick={handleLaunchDemo}
+                  className="w-full md:w-auto px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white font-extrabold text-xs flex items-center justify-center gap-1.5 border border-white/10 cursor-pointer"
+                >
+                  <Sparkles className="w-3.5 h-3.5 text-blue-400" />
+                  <span>Test Expansion Pitch</span>
+                </button>
+              </div>
+            </div>
+
+          </div>
+
+          {/* Bottom Callout Overlay */}
+          <div className="mt-6 pt-5 border-t border-white/5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex items-center gap-2 text-xs text-zinc-400">
+              <Lock className="w-3.5 h-3.5 text-[#FFD700]" />
+              <span>Multi-Tenant Enterprise Isolation • Demo data is strictly segregated from real accounts</span>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={handleLaunchDemo}
+                className="text-xs font-bold text-[#FFD700] hover:underline flex items-center gap-1 cursor-pointer"
+              >
+                <span>Launch Full Demo Sandbox</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </button>
+              <span className="text-zinc-600">|</span>
+              <button
+                type="button"
+                onClick={() => onOpenAuth('signup')}
+                className="text-xs font-bold text-white hover:text-[#FFD700] transition-colors cursor-pointer"
+              >
+                Create Real Workspace
+              </button>
+            </div>
+          </div>
+        </div>
+
+      </section>
+
+      {/* Clean Footer */}
+      <footer className="w-full border-t border-white/5 py-8 text-center text-xs text-zinc-500">
+        <div className="max-w-5xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-2">
+            <Crown className="w-4 h-4 text-[#FFD700]" />
+            <span className="text-zinc-400 font-bold">PRIME AI</span>
+            <span>— The Autonomous CEO Command Center</span>
+          </div>
+
+          <div className="flex items-center gap-4">
             <button
-              onClick={handleUndoDemo}
-              className="px-4 py-2 rounded-xl bg-gradient-to-r from-[#FFD700] to-amber-500 text-black font-extrabold text-xs hover:brightness-110 transition-all flex items-center justify-center gap-1.5 shadow-md cursor-pointer shrink-0"
+              onClick={handleLaunchDemo}
+              className="text-[#FFD700] hover:underline transition-colors cursor-pointer font-semibold"
             >
-              <RotateCcw className="w-3.5 h-3.5" />
-              <span>Undo Action</span>
+              Live Demo
+            </button>
+            <button
+              onClick={() => onOpenAuth('login')}
+              className="hover:text-white transition-colors cursor-pointer"
+            >
+              Sign In
+            </button>
+            <button
+              onClick={() => onOpenAuth('signup')}
+              className="px-3 py-1.5 rounded-lg bg-[#FFD700] text-black hover:brightness-110 transition-colors font-bold cursor-pointer"
+            >
+              Sign Up
             </button>
           </div>
-        )}
-
-        {/* The Radar screen */}
-        <div className="w-full rounded-3xl bg-[#0E0E0E] border border-white/10 p-4 sm:p-6 lg:p-8 shadow-2xl">
-          <RevenueRadarView />
         </div>
-      </section>
+      </footer>
+
     </div>
   );
 };
