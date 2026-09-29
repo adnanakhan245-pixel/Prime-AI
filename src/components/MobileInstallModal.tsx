@@ -196,7 +196,7 @@ class _PrimeAIWebViewState extends State<PrimeAIWebView> {
               <li className="p-2.5 rounded-xl bg-black/40 border border-white/5 flex items-start gap-2.5">
                 <PlusSquare className="w-4 h-4 text-[#FFD700] shrink-0 mt-0.5" />
                 <div>
-                  <strong>Step 2:</strong> Scroll down and select <strong>"Add to Home Screen" (ہوم اسکرین پر شامل کریں)</strong>.
+                  <strong>Step 2:</strong> Scroll down and select <strong>"Add to Home Screen"</strong>.
                 </div>
               </li>
               <li className="p-2.5 rounded-xl bg-black/40 border border-white/5 flex items-start gap-2.5">

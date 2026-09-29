@@ -81,7 +81,7 @@ export function getSampleEnterpriseCRMData(companyId: string, userId: string, co
 function _legacySampleCRMData(companyId?: string, userId?: string, companyName?: string): CRMRecord[] {
   const now = Date.now();
   const dayMs = 24 * 60 * 60 * 1000;
-  const cName = companyName || 'PRIME Demo Corp';
+  const cName = companyName || 'Apex Global Technologies';
   const cId = companyId || 'comp_demo_workspace';
   const uId = userId || 'demo_user';
 
@@ -384,7 +384,7 @@ export async function fetchCRMRecords(companyId: string, userId?: string): Promi
 
   // If in demo mode, return simulated sample deals so visitor can test-drive full capabilities
   if (isDemo) {
-    return _legacySampleCRMData(resolvedCompanyId, resolvedUserId, 'PRIME Demo Corp');
+    return _legacySampleCRMData(resolvedCompanyId, resolvedUserId, 'Apex Global Technologies');
   }
 
   const supabase = getSupabaseClient();

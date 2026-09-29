@@ -569,11 +569,7 @@ Click any quick tool below or type your question directly in the console.`,
       setMessages(prev => [...prev, assistantMsg]);
     } catch (err) {
       console.error('Error in Real AI execution:', err);
-      // Helpful, contextual fallback based on language and query
-      const isUrdu = /[\u0600-\u06FF]/.test(queryText);
-      const fallbackText = isUrdu 
-        ? `آپ کے سوال "${queryText}" کا تجزیہ:\n\n1. کاروباری ترجیح: اپنے اہم کلائنٹس اور پینڈنگ معاملات کو ترجیحی بنیادوں پر حل کریں۔\n2. فوری اقدام: گاہکوں سے واٹس ایپ یا ای میل پر رابطہ قائم کریں اور پرکشش آفر پیش کریں۔\n3. نفع میں اضافہ: غیر ضروری اخراجات میں کمی کریں اور سروسز کی بروقت ڈیلیوری یقینی بنائیں۔`
-        : `Analysis for "${queryText}":\n\n1. Core Priority: Address high-urgency client requests and active pipeline bottlenecks.\n2. Recommended Play: Align executive outreach with tailored incentives or clear milestone terms.\n3. Next Step: Review your active inbox and contract safeguards.`;
+      const fallbackText = `Executive Strategic Analysis for "${queryText}":\n\n1. Core Priority: Address high-urgency client requests and active pipeline bottlenecks.\n2. Recommended Play: Align executive outreach with tailored incentives or clear milestone terms.\n3. Next Step: Review your active inbox and contract safeguards.`;
 
       const fallbackMsg: ChatMessage = {
         id: 'asst_fb_' + Date.now(),
@@ -628,7 +624,7 @@ Click any quick tool below or type your question directly in the console.`,
               </span>
             </div>
             <p className="text-[11px] text-white/40">
-              Autonomous Intelligence • Real AI Generation • اردو اور انگریزی مکمل سپورٹ
+              Autonomous Intelligence • Real AI Generation • Enterprise Executive Reasoning
             </p>
           </div>
         </div>

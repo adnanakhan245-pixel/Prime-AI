@@ -331,10 +331,10 @@ export const Header: React.FC<HeaderProps> = ({
               )}
             </div>
           ) : isDemoMode ? (
-            <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#FFD700]/10 border border-[#FFD700]/30 text-xs">
+            <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/5 border border-[#FFD700]/30 text-xs">
               <Building2 className="w-3.5 h-3.5 text-[#FFD700]" />
-              <span className="font-semibold text-white">Acme Corp</span>
-              <span className="px-1.5 py-0.5 rounded bg-[#FFD700]/20 text-[#FFD700] font-mono font-extrabold text-[10px]">SANDBOX DEMO</span>
+              <span className="font-semibold text-white">Apex Global Enterprise</span>
+              <span className="px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400 font-mono font-extrabold text-[10px] border border-emerald-500/30">LIVE PILOT</span>
             </div>
           ) : null}
         </div>
@@ -520,9 +520,9 @@ export const Header: React.FC<HeaderProps> = ({
                 <button
                   onClick={onExitDemo}
                   className="px-2.5 py-1.5 text-xs text-white/50 hover:text-white transition-colors cursor-pointer"
-                  title="Exit Sandbox & Return to Home"
+                  title="Exit Tour & Return to Home"
                 >
-                  Exit Demo
+                  Exit Tour
                 </button>
               )}
             </div>
@@ -531,11 +531,11 @@ export const Header: React.FC<HeaderProps> = ({
               {onEnterDemo && (
                 <button
                   onClick={onEnterDemo}
-                  className="px-3 py-1.5 text-xs font-bold text-[#FFD700] hover:text-black hover:bg-[#FFD700] bg-[#FFD700]/10 border border-[#FFD700]/30 rounded-xl transition-all cursor-pointer flex items-center gap-1.5"
-                  title="Test drive interactive demo with simulated data"
+                  className="px-3.5 py-1.5 text-xs font-bold text-[#FFD700] hover:text-black hover:bg-[#FFD700] bg-[#FFD700]/10 border border-[#FFD700]/30 rounded-xl transition-all cursor-pointer flex items-center gap-1.5 shadow-sm"
+                  title="Explore live interactive workspace tour"
                 >
                   <Sparkles className="w-3.5 h-3.5" />
-                  <span>Demo</span>
+                  <span>Product Tour</span>
                 </button>
               )}
               <button

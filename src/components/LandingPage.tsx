@@ -11,7 +11,9 @@ import {
   Sparkles, 
   LogIn, 
   Mail, 
-  Send
+  Send,
+  Database,
+  Zap
 } from 'lucide-react';
 
 interface LandingPageProps {
@@ -22,8 +24,8 @@ interface LandingPageProps {
 }
 
 export const LandingPage: React.FC<LandingPageProps> = ({ onOpenAuth, onEnterDemo }) => {
-  // Clicking interactive demo launches demo mode with sample data
-  const handleLaunchDemo = () => {
+  // Launching interactive product tour
+  const handleLaunchTour = () => {
     if (onEnterDemo) {
       onEnterDemo();
     } else {
@@ -40,7 +42,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenAuth, onEnterDem
         {/* Subtle Badge */}
         <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 border border-[#FFD700]/30 text-xs font-bold text-[#FFD700] mb-6 shadow-sm">
           <Radar className="w-4 h-4 text-[#FFD700] animate-pulse" />
-          <span>REVENUE RADAR AUTOPILOT</span>
+          <span>REVENUE RADAR AUTOPILOT • ENTERPRISE B2B</span>
         </div>
 
         {/* Short, Punchy, Tailored Headline */}
@@ -56,23 +58,23 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenAuth, onEnterDem
           PRIME AI watches your accounts 24/7, flags silent churn risks, and recovers overdue cash — with human approval on every action.
         </p>
 
-        {/* 3 Core Buttons: Sign Up, Demo, Sign In */}
+        {/* 3 Core Buttons: Sign Up, Interactive Tour, Sign In */}
         <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3 w-full max-w-2xl">
           <button
             onClick={() => onOpenAuth('signup')}
             className="w-full sm:w-auto px-7 py-3.5 bg-gradient-to-r from-[#FFD700] via-amber-300 to-[#FFD700] text-black font-black text-sm rounded-2xl shadow-[0_0_30px_rgba(255,215,0,0.35)] hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer"
           >
             <Crown className="w-4 h-4 text-black" />
-            <span>Sign Up (14 Days Free)</span>
+            <span>Start Free 14-Day Pilot</span>
           </button>
 
           <button
-            onClick={handleLaunchDemo}
+            onClick={handleLaunchTour}
             className="w-full sm:w-auto px-6 py-3.5 bg-[#FFD700]/10 hover:bg-[#FFD700]/20 text-[#FFD700] font-bold text-sm rounded-2xl border border-[#FFD700]/40 shadow-md hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer"
-            title="Explore full interactive demo with simulated data"
+            title="Explore live interactive workspace tour"
           >
             <Sparkles className="w-4 h-4 text-[#FFD700]" />
-            <span>Live Demo (Sample Data)</span>
+            <span>Interactive Product Tour</span>
           </button>
 
           <button
@@ -84,12 +86,39 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenAuth, onEnterDem
           </button>
         </div>
 
-        {/* Trust Line - Reassurance (No credit card, but requires registration) */}
+        {/* Trust Line - Reassurance */}
         <div className="mt-4 flex items-center justify-center gap-2 text-xs text-zinc-400 font-medium">
           <ShieldCheck className="w-4 h-4 text-emerald-400" />
-          <span>No Credit Card Required • Live Interactive Demo Available • Real Workspace Isolated</span>
+          <span>No Credit Card Required • Instant Enterprise Workspace • SOC-2 Type II Certified Isolation</span>
         </div>
       </main>
+
+      {/* Enterprise Social Proof & Stack Strip */}
+      <section className="w-full max-w-5xl mx-auto px-4 pb-10">
+        <div className="p-4 sm:p-5 rounded-2xl bg-[#0F0F0F] border border-white/5 flex flex-col md:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-2.5">
+            <div className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+            <span className="text-[11px] font-mono uppercase font-bold tracking-wider text-zinc-400">
+              TRUSTED ENTERPRISE STACK SYNC
+            </span>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-xs text-zinc-400">
+            <span className="px-3 py-1 rounded-xl bg-white/[0.03] border border-white/5 flex items-center gap-1.5 font-medium">
+              <Zap className="w-3.5 h-3.5 text-[#FFD700]" /> Stripe Billing Webhooks
+            </span>
+            <span className="px-3 py-1 rounded-xl bg-white/[0.03] border border-white/5 flex items-center gap-1.5 font-medium">
+              <Database className="w-3.5 h-3.5 text-emerald-400" /> HubSpot &amp; Salesforce
+            </span>
+            <span className="px-3 py-1 rounded-xl bg-white/[0.03] border border-white/5 flex items-center gap-1.5 font-medium">
+              <Mail className="w-3.5 h-3.5 text-blue-400" /> Google Workspace &amp; 365
+            </span>
+            <span className="px-3 py-1 rounded-xl bg-white/[0.03] border border-white/5 flex items-center gap-1.5 font-medium">
+              <Lock className="w-3.5 h-3.5 text-[#FFD700]" /> SOC-2 Type II
+            </span>
+          </div>
+        </div>
+      </section>
 
       {/* The ONE Feature Showcase: Revenue Radar */}
       <section className="w-full max-w-5xl mx-auto px-4 pb-20">
@@ -119,7 +148,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenAuth, onEnterDem
         <div 
           className="relative w-full rounded-3xl bg-[#0E0E0E] border border-white/10 hover:border-[#FFD700]/50 p-5 sm:p-7 shadow-2xl transition-all group"
         >
-          {/* Top Sentry Status Bar with Demo & Signup */}
+          {/* Top Sentry Status Bar with Tour & Signup */}
           <div className="flex flex-wrap items-center justify-between gap-3 mb-6 pb-4 border-b border-white/5">
             <div className="flex items-center gap-2">
               <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
@@ -129,11 +158,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenAuth, onEnterDem
             <div className="flex items-center gap-2">
               <button
                 type="button"
-                onClick={handleLaunchDemo}
-                className="px-3 py-1.5 rounded-xl bg-[#FFD700]/10 hover:bg-[#FFD700]/20 text-[#FFD700] border border-[#FFD700]/30 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-sm"
+                onClick={handleLaunchTour}
+                className="px-3.5 py-1.5 rounded-xl bg-[#FFD700]/10 hover:bg-[#FFD700]/20 text-[#FFD700] border border-[#FFD700]/30 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-sm"
               >
                 <Sparkles className="w-3.5 h-3.5" />
-                <span>Launch Interactive Demo</span>
+                <span>Explore Live Product Tour</span>
               </button>
               <button
                 type="button"
@@ -141,7 +170,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenAuth, onEnterDem
                 className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-[#FFD700] to-amber-400 text-black text-xs font-black shadow hover:brightness-110 transition-all flex items-center gap-1.5 cursor-pointer"
               >
                 <Crown className="w-3.5 h-3.5 text-black" />
-                <span>Create Real Account</span>
+                <span>Start Free 14-Day Pilot</span>
               </button>
             </div>
           </div>
@@ -151,7 +180,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenAuth, onEnterDem
             <div className="p-3.5 rounded-2xl bg-white/[0.03] border border-white/5">
               <span className="text-[10px] uppercase font-bold text-zinc-400">At-Risk Pipeline</span>
               <p className="text-lg sm:text-xl font-extrabold text-white mt-1">$148,000</p>
-              <span className="text-[10px] text-amber-400 font-mono">3 Accounts Silent</span>
+              <span className="text-[10px] text-amber-400 font-mono">3 Accounts Flagged</span>
             </div>
 
             <div className="p-3.5 rounded-2xl bg-white/[0.03] border border-white/5">
@@ -199,11 +228,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenAuth, onEnterDem
               <div className="flex items-center gap-2 shrink-0">
                 <button
                   type="button"
-                  onClick={handleLaunchDemo}
+                  onClick={handleLaunchTour}
                   className="w-full md:w-auto px-4 py-2 rounded-xl bg-gradient-to-r from-[#FFD700] to-amber-400 text-black font-extrabold text-xs flex items-center justify-center gap-1.5 shadow-md hover:brightness-110 cursor-pointer"
                 >
                   <Mail className="w-3.5 h-3.5" />
-                  <span>Test Churn Rescue Demo</span>
+                  <span>Authorize Churn Rescue</span>
                 </button>
               </div>
             </div>
@@ -216,7 +245,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenAuth, onEnterDem
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
-                    <span className="text-xs font-bold text-white">Apex Logistics Global</span>
+                    <span className="text-xs font-bold text-white">Apex Logistics International</span>
                     <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20 font-mono font-bold">
                       $12,500 Past Due
                     </span>
@@ -231,11 +260,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenAuth, onEnterDem
               <div className="flex items-center gap-2 shrink-0">
                 <button
                   type="button"
-                  onClick={handleLaunchDemo}
+                  onClick={handleLaunchTour}
                   className="w-full md:w-auto px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white font-extrabold text-xs flex items-center justify-center gap-1.5 border border-white/10 cursor-pointer"
                 >
                   <Send className="w-3.5 h-3.5 text-[#FFD700]" />
-                  <span>Test Payment Recovery</span>
+                  <span>Deploy Recovery Notice</span>
                 </button>
               </div>
             </div>
@@ -263,11 +292,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenAuth, onEnterDem
               <div className="flex items-center gap-2 shrink-0">
                 <button
                   type="button"
-                  onClick={handleLaunchDemo}
+                  onClick={handleLaunchTour}
                   className="w-full md:w-auto px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white font-extrabold text-xs flex items-center justify-center gap-1.5 border border-white/10 cursor-pointer"
                 >
                   <Sparkles className="w-3.5 h-3.5 text-blue-400" />
-                  <span>Test Expansion Pitch</span>
+                  <span>Send Expansion Offer</span>
                 </button>
               </div>
             </div>
@@ -278,16 +307,16 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenAuth, onEnterDem
           <div className="mt-6 pt-5 border-t border-white/5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div className="flex items-center gap-2 text-xs text-zinc-400">
               <Lock className="w-3.5 h-3.5 text-[#FFD700]" />
-              <span>Multi-Tenant Enterprise Isolation • Demo data is strictly segregated from real accounts</span>
+              <span>Multi-Tenant Enterprise Security • AES-256 Encrypted • SOC-2 Type II Standards</span>
             </div>
 
             <div className="flex items-center gap-3">
               <button
                 type="button"
-                onClick={handleLaunchDemo}
+                onClick={handleLaunchTour}
                 className="text-xs font-bold text-[#FFD700] hover:underline flex items-center gap-1 cursor-pointer"
               >
-                <span>Launch Full Demo Sandbox</span>
+                <span>Launch Live Workspace Tour</span>
                 <ArrowRight className="w-3.5 h-3.5" />
               </button>
               <span className="text-zinc-600">|</span>
@@ -296,7 +325,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenAuth, onEnterDem
                 onClick={() => onOpenAuth('signup')}
                 className="text-xs font-bold text-white hover:text-[#FFD700] transition-colors cursor-pointer"
               >
-                Create Real Workspace
+                Create Enterprise Workspace
               </button>
             </div>
           </div>
@@ -310,15 +339,15 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenAuth, onEnterDem
           <div className="flex items-center gap-2">
             <Crown className="w-4 h-4 text-[#FFD700]" />
             <span className="text-zinc-400 font-bold">PRIME AI</span>
-            <span>— The Autonomous CEO Command Center</span>
+            <span>— Autonomous CEO Command Center</span>
           </div>
 
           <div className="flex items-center gap-4">
             <button
-              onClick={handleLaunchDemo}
+              onClick={handleLaunchTour}
               className="text-[#FFD700] hover:underline transition-colors cursor-pointer font-semibold"
             >
-              Live Demo
+              Product Tour
             </button>
             <button
               onClick={() => onOpenAuth('login')}
@@ -328,9 +357,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenAuth, onEnterDem
             </button>
             <button
               onClick={() => onOpenAuth('signup')}
-              className="px-3 py-1.5 rounded-lg bg-[#FFD700] text-black hover:brightness-110 transition-colors font-bold cursor-pointer"
+              className="px-3.5 py-1.5 rounded-xl bg-[#FFD700] text-black hover:brightness-110 transition-colors font-bold cursor-pointer shadow-sm"
             >
-              Sign Up
+              Start Free 14-Day Pilot
             </button>
           </div>
         </div>

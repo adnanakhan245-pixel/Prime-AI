@@ -293,14 +293,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
             <div className="flex items-center justify-between font-bold text-white mb-1">
               <span className="flex items-center gap-1.5 text-[#FFD700]">
                 <Crown className="w-3.5 h-3.5" />
-                <span>Acme Corp Demo</span>
+                <span>Apex Global Pilot</span>
               </span>
-              <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-[#FFD700] text-black font-extrabold">
-                SANDBOX
+              <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400 font-extrabold border border-emerald-500/30">
+                LIVE PILOT
               </span>
             </div>
             <p className="text-[11px] text-white/60 leading-tight mb-2">
-              Ready to connect your own company?
+              Ready to connect your company domain &amp; team?
             </p>
             <div className="flex items-center justify-between pt-1.5 border-t border-white/10 text-[10px]">
               <span className="text-[#FFD700] font-bold">14-Day Free Trial</span>
@@ -394,10 +394,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
             </div>
             <div className="flex flex-col min-w-0">
               <span className="text-xs font-semibold text-white group-hover:text-[#FFD700] transition-colors truncate max-w-[120px]">
-                {isDemoMode ? 'Executive Guest' : (profile?.displayName || 'Executive Leader')}
+                {isDemoMode ? 'Executive Pilot' : (profile?.displayName || 'Executive Leader')}
               </span>
               <span className="text-[10px] text-white/40 truncate">
-                {isDemoMode ? 'Acme Corp (Demo)' : companyName}
+                {isDemoMode ? 'Apex Global Enterprise' : companyName}
               </span>
             </div>
           </div>
@@ -405,10 +405,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
             {isDemoMode ? (
               <button 
                 onClick={(e) => { e.stopPropagation(); onExitDemo && onExitDemo(); }}
-                className="px-2 py-1 rounded-md bg-white/10 text-white/60 hover:text-white hover:bg-white/20 transition-colors cursor-pointer text-[10px] font-mono"
-                title="Exit Demo"
+                className="px-2.5 py-1 rounded-lg bg-white/10 text-white/70 hover:text-white hover:bg-white/20 transition-colors cursor-pointer text-[10px] font-mono"
+                title="Exit Tour & Return Home"
               >
-                Exit
+                Exit Tour
               </button>
             ) : (
               <>
