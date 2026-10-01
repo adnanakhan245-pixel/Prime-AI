@@ -352,15 +352,18 @@ export const Header: React.FC<HeaderProps> = ({
             <div className="relative">
               <button
                 onClick={() => setFeaturesDropdownOpen(!featuresDropdownOpen)}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
+                className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
                   featuresDropdownOpen 
                     ? 'bg-[#FFD700] text-black border-[#FFD700] shadow-[0_0_15px_rgba(255,215,0,0.3)]' 
                     : 'bg-white/5 hover:bg-white/10 border-white/10 text-white'
                 }`}
-                title="All Features Dropdown"
+                title="C-Suite Autonomous AI Tools (12 Live Working Features)"
               >
-                <Layers className="w-3.5 h-3.5 text-[#FFD700]" />
-                <span className="hidden sm:inline">Features</span>
+                <Sparkles className="w-3.5 h-3.5 text-[#FFD700]" />
+                <span className="hidden sm:inline">Executive AI Suite</span>
+                <span className="px-1.5 py-0.2 rounded-full bg-[#FFD700]/20 text-[#FFD700] font-mono text-[9px] font-extrabold border border-[#FFD700]/30">
+                  12 Active
+                </span>
                 <ChevronDown className={`w-3.5 h-3.5 text-white/60 transition-transform duration-200 ${featuresDropdownOpen ? 'rotate-180 text-black' : ''}`} />
               </button>
 

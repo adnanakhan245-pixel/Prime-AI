@@ -2980,6 +2980,39 @@ export async function logVisitorSession(options: LogVisitorOptions): Promise<Vis
   const { deviceType, browser } = detectVisitorDevice();
   const referrer = detectReferrer();
 
+  // Exclude owner / admin visits from being tracked as visitors
+  const masterOwnerEmail = 'adnanakhan245@gmail.com';
+  const isOwner = (options.userEmail && options.userEmail.toLowerCase() === masterOwnerEmail) ||
+                  (options.userName && options.userName.toLowerCase().includes('adnan')) ||
+                  (options.userId === 'usr_adnan_master') ||
+                  (typeof window !== 'undefined' && localStorage.getItem('prime_is_owner_admin') === 'true');
+
+  if (isOwner) {
+    // Clean any session created by the owner
+    try {
+      if (sessionId) {
+        deleteDoc(doc(db, 'visitor_sessions', sessionId)).catch(() => {});
+      }
+      const existingSessions = getLocalStore<VisitorSessionRecord[]>('all_visitor_sessions', []);
+      setLocalStore('all_visitor_sessions', existingSessions.filter(s => s.id !== sessionId && !s.userEmail?.toLowerCase().includes('adnan')));
+    } catch (e) {}
+
+    return {
+      id: sessionId,
+      visitorType: options.visitorType,
+      userEmail: options.userEmail,
+      deviceType: 'Desktop',
+      browser: 'Admin Console',
+      entryPath: options.entryPath || '/',
+      referrer: referrer || 'Direct (Admin)',
+      timestamp: now,
+      dateKey: dateKey,
+      actionsCount: 1,
+      lastActiveAt: now,
+      convertedToSignup: false,
+    };
+  }
+
   const existingSessions = getLocalStore<VisitorSessionRecord[]>('all_visitor_sessions', []);
   const existing = existingSessions.find(s => s.id === sessionId);
 
@@ -3119,34 +3152,17 @@ export async function purgeDuplicateAdnanAccountsAndSessions(): Promise<{ delete
   let deletedSessions = 0;
   let deletedAccounts = 0;
 
-  // 1. Clean localStorage visitor sessions for duplicate Adnan Khan and mock Alexander Vance records
+  // 1. Clean localStorage visitor sessions: Remove ALL owner (Adnan Khan) sessions so owner visits are not counted
   const existingSessions = getLocalStore<VisitorSessionRecord[]>('all_visitor_sessions', []);
-  let keptOneAdnanSession = false;
   const filteredSessions: VisitorSessionRecord[] = [];
 
   for (const s of existingSessions) {
     const isAdnan = (s.userEmail && s.userEmail.toLowerCase().includes('adnan')) ||
-                    (s.userName && s.userName.toLowerCase().includes('adnan'));
+                    (s.userName && s.userName.toLowerCase().includes('adnan')) ||
+                    s.userId === 'usr_adnan_master';
     const isAlexander = (s.userEmail && s.userEmail.toLowerCase().includes('apexenterprise.com')) ||
                         (s.userName && s.userName.toLowerCase().includes('alexander'));
-    if (isAdnan) {
-      if (!keptOneAdnanSession) {
-        // Keep strictly this one latest master admin session
-        filteredSessions.push({
-          ...s,
-          userName: 'Adnan Khan',
-          userEmail: 'adnanakhan245@gmail.com',
-          visitorType: 'REGISTERED_ACCOUNT',
-          companyName: 'Apex Enterprises (HQ)'
-        });
-        keptOneAdnanSession = true;
-      } else {
-        deletedSessions++;
-        // Delete duplicate session from Firestore
-        deleteDoc(doc(db, 'visitor_sessions', s.id)).catch(() => {});
-      }
-    } else if (isAlexander) {
-      // Purge fake demo alexander accounts from active telemetry
+    if (isAdnan || isAlexander) {
       deletedSessions++;
       deleteDoc(doc(db, 'visitor_sessions', s.id)).catch(() => {});
     } else {
@@ -3155,25 +3171,18 @@ export async function purgeDuplicateAdnanAccountsAndSessions(): Promise<{ delete
   }
   setLocalStore('all_visitor_sessions', filteredSessions);
 
-  // 2. Clean Firestore visitor_sessions duplicates
+  // 2. Clean Firestore visitor_sessions: Delete all owner sessions from Firestore
   try {
     const colRef = collection(db, 'visitor_sessions');
-    const snap = await getDocs(query(colRef, limit(100)));
-    let keptFirestoreAdnan = false;
+    const snap = await getDocs(query(colRef, limit(150)));
     for (const d of snap.docs) {
       const data = d.data() as VisitorSessionRecord;
       const isAdnan = (data.userEmail && data.userEmail.toLowerCase().includes('adnan')) ||
-                      (data.userName && data.userName.toLowerCase().includes('adnan'));
+                      (data.userName && data.userName.toLowerCase().includes('adnan')) ||
+                      data.userId === 'usr_adnan_master';
       const isAlexander = (data.userEmail && data.userEmail.toLowerCase().includes('apexenterprise.com')) ||
                           (data.userName && data.userName.toLowerCase().includes('alexander'));
-      if (isAdnan) {
-        if (!keptFirestoreAdnan) {
-          keptFirestoreAdnan = true;
-        } else {
-          deletedSessions++;
-          await deleteDoc(doc(db, 'visitor_sessions', d.id));
-        }
-      } else if (isAlexander) {
+      if (isAdnan || isAlexander) {
         deletedSessions++;
         await deleteDoc(doc(db, 'visitor_sessions', d.id));
       }
@@ -3279,12 +3288,24 @@ export async function fetchVisitorAnalytics(): Promise<VisitorTrafficStats> {
   }
 
   const mergedMap = new Map<string, VisitorSessionRecord>();
+  const isOwnerSession = (s: VisitorSessionRecord) => {
+    return (s.userEmail && s.userEmail.toLowerCase().includes('adnan')) ||
+           (s.userName && s.userName.toLowerCase().includes('adnan')) ||
+           (s.userId === 'usr_adnan_master') ||
+           (s.userEmail && s.userEmail.toLowerCase() === 'adnanakhan245@gmail.com');
+  };
+
   for (const s of sessions) {
     const isMockUser = (s.userEmail && s.userEmail.toLowerCase().includes('apexenterprise.com')) ||
                        (s.userName && s.userName.toLowerCase().includes('alexander')) ||
                        (s.userEmail && s.userEmail.includes('@enterprise.io')) ||
                        (s.userName && s.userName.includes('Enterprise Executive'));
-    if (!s.id.includes('_demo_0') && !s.id.includes('_reg_0') && !isMockUser) {
+    const isOwner = isOwnerSession(s);
+    if (isOwner) {
+      // Automatically clean legacy owner sessions from Firestore
+      deleteDoc(doc(db, 'visitor_sessions', s.id)).catch(() => {});
+    }
+    if (!s.id.includes('_demo_0') && !s.id.includes('_reg_0') && !isMockUser && !isOwner) {
       mergedMap.set(s.id, s);
     }
   }
@@ -3293,7 +3314,8 @@ export async function fetchVisitorAnalytics(): Promise<VisitorTrafficStats> {
                        (s.userName && s.userName.toLowerCase().includes('alexander')) ||
                        (s.userEmail && s.userEmail.includes('@enterprise.io')) ||
                        (s.userName && s.userName.includes('Enterprise Executive'));
-    if (!isMockUser) {
+    const isOwner = isOwnerSession(s);
+    if (!isMockUser && !isOwner) {
       mergedMap.set(s.id, s);
     }
   }

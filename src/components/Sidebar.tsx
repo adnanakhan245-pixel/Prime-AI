@@ -97,20 +97,20 @@ export const Sidebar: React.FC<SidebarProps> = ({
     }] : [])
   ];
 
-  // Secondary Power Modules (Safely tucked under an optional collapsible)
+  // Secondary Power Modules (Showcased clearly with active value tags)
   const secondaryNavItems = [
-    { id: 'inbox', label: 'Executive Inbox Triage', icon: Inbox },
-    { id: 'docs', label: 'Contract Risk Audit', icon: FileText },
-    { id: 'brain', label: 'Brain AI Copilot', icon: Brain },
-    { id: 'twin', label: 'CEO Digital Twin 3.0', icon: Sparkles },
-    { id: 'closer', label: 'PRIME Closer AI (Sales)', icon: Mic },
-    { id: 'hiring', label: 'PRIME Hiring AI', icon: Users },
-    { id: 'meetings', label: 'PRIME Meeting AI', icon: Video },
-    { id: 'strategy', label: 'Strategy Board', icon: TrendingUp },
-    { id: 'board-pack', label: 'Board Pack Generator', icon: FileText },
-    { id: 'cashflow-guard', label: 'Cash Flow Guard', icon: DollarSign },
-    { id: 'ad-spend', label: 'Ad Spend Optimizer', icon: TrendingUp },
-    { id: 'roi-calculator', label: 'ROI Calculator', icon: Activity },
+    { id: 'cashflow-guard', label: 'Cash Flow Guard', sublabel: 'Runway Defense & Invoices', tag: 'FINANCE', icon: DollarSign, color: 'text-emerald-400' },
+    { id: 'roi-calculator', label: 'ROI Calculator', sublabel: 'Measure Value Realization', tag: 'ROI', icon: Activity, color: 'text-emerald-400' },
+    { id: 'ad-spend', label: 'Ad Spend Optimizer', sublabel: 'Cut Wasted CAC & ROAS', tag: 'MARKETING', icon: TrendingUp, color: 'text-amber-400' },
+    { id: 'twin', label: 'CEO Digital Twin 3.0', sublabel: '24/7 Delegation Engine', tag: 'EXECUTIVE', icon: Sparkles, color: 'text-[#FFD700]' },
+    { id: 'brain', label: 'Brain AI Copilot', sublabel: 'Neural Knowledge Core', tag: 'AI BRAIN', icon: Brain, color: 'text-purple-400' },
+    { id: 'closer', label: 'PRIME Closer AI', sublabel: 'Live Sales Negotiation', tag: 'SALES', icon: Mic, color: 'text-rose-400' },
+    { id: 'docs', label: 'Contract Risk Audit', sublabel: 'Redline & Liability Sentry', tag: 'LEGAL', icon: FileText, color: 'text-blue-400' },
+    { id: 'inbox', label: 'Executive Inbox Triage', sublabel: 'Zero Unread VIP Sentry', tag: 'INBOX', icon: Inbox, color: 'text-cyan-400' },
+    { id: 'meetings', label: 'PRIME Meeting AI', sublabel: 'Audio & Action Extraction', tag: 'MEETINGS', icon: Video, color: 'text-indigo-400' },
+    { id: 'strategy', label: 'Strategy Board', sublabel: 'Moats & Market Simulator', tag: 'STRATEGY', icon: Target, color: 'text-teal-400' },
+    { id: 'board-pack', label: 'Board Pack Generator', sublabel: '1-Click Investor Briefs', tag: 'GOVERNANCE', icon: FileText, color: 'text-emerald-400' },
+    { id: 'hiring', label: 'PRIME Hiring AI', sublabel: 'Talent Scout & Interviewer', tag: 'RECRUITING', icon: Users, color: 'text-amber-400' },
   ];
 
   const isSecondaryActive = secondaryNavItems.some(item => item.id === currentView);
@@ -167,10 +167,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
               <div
                 key={item.id}
                 onClick={() => {
-                  if (item.id === 'settings') {
-                    onOpenSettings();
-                  } else {
-                    onNavigate(item.id);
+                  onNavigate(item.id);
+                  if (item.id === 'settings' && onOpenSettings) {
+                    // Also support callback if any modal listeners exist
                   }
                 }}
                 className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition-all cursor-pointer ${
@@ -190,35 +189,47 @@ export const Sidebar: React.FC<SidebarProps> = ({
             );
           })}
 
-          {/* Collapsible Secondary Power Tools (Zero Rush, Keeps Main UI Pristine) */}
+          {/* Executive AI Modules Dropdown - High-Clarity Showcase of Working C-Suite Tools */}
           <div className="pt-3 border-t border-white/5 mt-3">
             <button
               type="button"
               onClick={() => setShowAddons(!showAddons)}
-              className={`w-full flex items-center justify-between px-3 py-2.5 text-xs font-bold transition-all cursor-pointer rounded-xl border ${
+              className={`w-full flex items-center justify-between p-2.5 text-xs font-bold transition-all cursor-pointer rounded-2xl border ${
                 isAddonsOpen 
-                  ? 'bg-white/10 text-white border-white/15 shadow-sm' 
-                  : 'bg-white/[0.02] text-zinc-400 hover:text-white hover:bg-white/5 border-white/5'
+                  ? 'bg-gradient-to-r from-white/10 to-white/5 text-white border-white/15 shadow-md' 
+                  : 'bg-white/[0.03] hover:bg-white/[0.07] text-zinc-300 hover:text-white border-white/5'
               }`}
             >
-              <div className="flex items-center gap-2">
-                <Layers className="w-3.5 h-3.5 text-[#FFD700]" />
-                <span>Other Features (Dropdown)</span>
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div className="w-7 h-7 rounded-xl bg-gradient-to-br from-[#FFD700] to-amber-500 text-black flex items-center justify-center shrink-0 shadow-sm font-black">
+                  <Sparkles className="w-3.5 h-3.5 text-black" />
+                </div>
+                <div className="text-left truncate">
+                  <div className="text-xs font-bold text-white flex items-center gap-1.5">
+                    <span>Executive AI Modules</span>
+                  </div>
+                  <div className="text-[10px] text-zinc-400 font-normal">12 Live Working Tools</div>
+                </div>
               </div>
-              <div className="flex items-center gap-1.5">
-                <span className="text-[9px] px-1.5 py-0.5 rounded bg-white/10 font-mono text-zinc-400 font-bold">
-                  {secondaryNavItems.length}
+
+              <div className="flex items-center gap-1.5 shrink-0">
+                <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-[#FFD700]/20 text-[#FFD700] font-mono font-extrabold border border-[#FFD700]/30">
+                  12 ACTIVE
                 </span>
                 {isAddonsOpen ? (
-                  <ChevronDown className="w-3.5 h-3.5 text-white/70" />
+                  <ChevronDown className="w-3.5 h-3.5 text-[#FFD700]" />
                 ) : (
-                  <ChevronRight className="w-3.5 h-3.5 text-zinc-500" />
+                  <ChevronRight className="w-3.5 h-3.5 text-zinc-400" />
                 )}
               </div>
             </button>
 
             {isAddonsOpen && (
-              <div className="space-y-1 mt-2 pl-1 animate-in fade-in duration-150 max-h-72 overflow-y-auto pr-1">
+              <div className="space-y-1.5 mt-2.5 pl-1 animate-in fade-in duration-150 max-h-80 overflow-y-auto pr-1">
+                <div className="px-2 py-1 flex items-center justify-between text-[9px] font-mono text-zinc-500 uppercase tracking-wider font-bold">
+                  <span>C-Suite Power Suite</span>
+                  <span className="text-[#FFD700]">Click to launch</span>
+                </div>
                 {secondaryNavItems.map((item) => {
                   const Icon = item.icon;
                   const isActive = currentView === item.id;
@@ -227,14 +238,26 @@ export const Sidebar: React.FC<SidebarProps> = ({
                       key={item.id}
                       type="button"
                       onClick={() => onNavigate(item.id)}
-                      className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium transition-all cursor-pointer text-left ${
+                      className={`w-full flex items-center justify-between p-2 rounded-xl text-xs transition-all cursor-pointer text-left group ${
                         isActive
-                          ? 'bg-[#FFD700]/15 text-[#FFD700] font-bold border border-[#FFD700]/30'
-                          : 'text-zinc-400 hover:text-white hover:bg-white/5'
+                          ? 'bg-[#FFD700]/15 text-[#FFD700] font-bold border border-[#FFD700]/30 shadow-sm'
+                          : 'text-zinc-300 hover:text-white hover:bg-white/5 border border-transparent'
                       }`}
                     >
-                      <Icon className="w-3.5 h-3.5 text-zinc-500" />
-                      <span className="truncate">{item.label}</span>
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <Icon className={`w-3.5 h-3.5 shrink-0 ${isActive ? 'text-[#FFD700]' : item.color}`} />
+                        <div className="truncate">
+                          <div className={`truncate font-semibold ${isActive ? 'text-[#FFD700]' : 'text-white'}`}>
+                            {item.label}
+                          </div>
+                          <div className="text-[9px] text-zinc-400 truncate">
+                            {item.sublabel}
+                          </div>
+                        </div>
+                      </div>
+                      <span className="text-[8px] font-mono font-bold px-1.5 py-0.5 rounded bg-white/5 text-zinc-400 group-hover:text-white group-hover:bg-white/10 shrink-0 ml-1">
+                        {item.tag}
+                      </span>
                     </button>
                   );
                 })}

@@ -47,6 +47,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) =>
   const loadData = async () => {
     setLoading(true);
     try {
+      await purgeDuplicateAdnanAccountsAndSessions().catch(() => {});
       const res = await fetchAdminDashboardData();
       setData(res);
       setLastRefreshed(new Date().toLocaleTimeString());
@@ -265,10 +266,15 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) =>
             <span className="text-xs text-zinc-500 font-medium">All-Time Visitors</span>
           </div>
 
-          <p className="mt-4 pt-4 border-t border-white/5 text-xs text-zinc-400 flex items-center gap-1.5">
-            <Calendar className="w-3.5 h-3.5 text-emerald-400" />
-            <span>Today&apos;s Visitors: <strong className="text-white">{data?.visitorStats?.totalVisitorsToday || 0}</strong></span>
-          </p>
+          <div className="mt-4 pt-4 border-t border-white/5 space-y-1">
+            <p className="text-xs text-zinc-400 flex items-center gap-1.5">
+              <Calendar className="w-3.5 h-3.5 text-emerald-400" />
+              <span>Today&apos;s Visitors: <strong className="text-white">{data?.visitorStats?.totalVisitorsToday || 0}</strong></span>
+            </p>
+            <p className="text-[10px] text-zinc-500 font-mono">
+              ✓ Platform owner visits excluded (Real external traffic only)
+            </p>
+          </div>
         </div>
 
         {/* OPTION 3: TOTAL REGISTERED ACCOUNTS */}

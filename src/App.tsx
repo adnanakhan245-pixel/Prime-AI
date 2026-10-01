@@ -24,6 +24,7 @@ import { FeedbackHubView } from './components/FeedbackHubView';
 import { ApprovalLogView } from './components/ApprovalLogView';
 import { AuthModal } from './components/AuthModal';
 import { SettingsModal } from './components/SettingsModal';
+import { SettingsView } from './components/SettingsView';
 import { CommandPalette } from './components/CommandPalette';
 import { VoiceExecutiveModal } from './components/VoiceExecutiveModal';
 import { DailyBriefingModal } from './components/DailyBriefingModal';
@@ -69,7 +70,7 @@ function AppContent() {
     openUpgradeModal,
     loading 
   } = useAuth();
-  const [currentView, setCurrentView] = useState<'landing' | 'dashboard' | 'radar' | 'inbox' | 'approvals' | 'plans' | 'admin' | 'closer' | 'hiring' | 'meetings' | 'growth' | 'strategy' | 'board-pack' | 'docs' | 'brain' | 'twin' | 'ad-spend' | 'cashflow-guard' | 'roi-calculator' | 'feedback'>('landing');
+  const [currentView, setCurrentView] = useState<'landing' | 'dashboard' | 'radar' | 'inbox' | 'approvals' | 'plans' | 'admin' | 'closer' | 'hiring' | 'meetings' | 'growth' | 'strategy' | 'board-pack' | 'docs' | 'brain' | 'twin' | 'ad-spend' | 'cashflow-guard' | 'roi-calculator' | 'feedback' | 'settings'>('landing');
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [authMode, setAuthMode] = useState<'login' | 'signup' | 'verify-email' | 'forgot-password'>('login');
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -169,9 +170,16 @@ function AppContent() {
     }
   }, [user, currentView]);
 
-  // Real-time visitor & session tracking (Tracks Demo vs Registered Account visitors)
+  // Real-time visitor & session tracking (Excludes Platform Owner / Admin visits)
   useEffect(() => {
     if (loading) return;
+    const isOwner = user?.email?.toLowerCase() === 'adnanakhan245@gmail.com' || isAdmin;
+    if (isOwner) {
+      try {
+        localStorage.setItem('prime_is_owner_admin', 'true');
+      } catch (e) {}
+      return; // Do NOT log owner's visits
+    }
     const vType = user ? 'REGISTERED_ACCOUNT' : (isDemoMode ? 'DEMO_GUEST' : 'LANDING_VISITOR');
     logVisitorSession({
       visitorType: vType,
@@ -182,7 +190,7 @@ function AppContent() {
       companyName: profile?.companyName,
       entryPath: currentView === 'landing' ? '/' : `/${currentView}`
     }).catch(() => {});
-  }, [user, isDemoMode, currentView, loading]);
+  }, [user, isAdmin, isDemoMode, currentView, loading]);
 
   const handleOpenAuth = (mode: 'login' | 'signup' | 'verify-email' | 'forgot-password', reason?: string) => {
     setAuthMode(mode);
@@ -196,7 +204,7 @@ function AppContent() {
       setCurrentView('landing');
       return;
     }
-    if (!user) {
+    if (!user && !isDemoMode) {
       handleOpenAuth('signup');
       return;
     }
@@ -204,7 +212,7 @@ function AppContent() {
       setCurrentView('radar');
       return;
     }
-    if (['inbox', 'approvals', 'plans', 'admin', 'closer', 'hiring', 'meetings', 'growth', 'strategy', 'board-pack', 'docs', 'brain', 'twin', 'ad-spend', 'cashflow-guard', 'roi-calculator', 'feedback'].includes(view)) {
+    if (['inbox', 'approvals', 'plans', 'admin', 'closer', 'hiring', 'meetings', 'growth', 'strategy', 'board-pack', 'docs', 'brain', 'twin', 'ad-spend', 'cashflow-guard', 'roi-calculator', 'feedback', 'settings'].includes(view)) {
       setCurrentView(view as any);
     } else {
       setCurrentView('radar');
@@ -232,11 +240,7 @@ function AppContent() {
         onNavigate={handleNavigate}
         onOpenAuth={handleOpenAuth}
         onOpenSettings={() => {
-          if (isDemoMode && !user) {
-            handleOpenAuth('signup');
-          } else {
-            setSettingsOpen(true);
-          }
+          handleNavigate('settings');
         }}
         onOpenCommandPalette={() => setCommandPaletteOpen(true)}
         onOpenVoiceHUD={() => setVoiceHUDOpen(true)}
@@ -327,11 +331,7 @@ function AppContent() {
             onNavigate={handleNavigate}
             pendingEmailsCount={pendingEmailsCount}
             onOpenSettings={() => {
-              if (isDemoMode && !user) {
-                handleOpenAuth('signup');
-              } else {
-                setSettingsOpen(true);
-              }
+              handleNavigate('settings');
             }}
             isDemoMode={isDemoMode && !user}
             onOpenAuth={handleOpenAuth}
@@ -435,6 +435,12 @@ function AppContent() {
               />
             )}
             {currentView === 'feedback' && <FeedbackHubView />}
+            {currentView === 'settings' && (
+              <SettingsView 
+                onNavigate={handleNavigate} 
+                onOpenAuth={handleOpenAuth} 
+              />
+            )}
           </main>
 
           {/* Mobile Bottom Navigation Bar (4 Clean Pillars Only) */}
@@ -473,8 +479,10 @@ function AppContent() {
               <span className="truncate">Plans</span>
             </button>
             <button
-              onClick={() => setSettingsOpen(true)}
-              className="flex flex-col items-center justify-center gap-1 text-[10px] font-bold text-white/40 hover:text-white"
+              onClick={() => handleNavigate('settings')}
+              className={`flex flex-col items-center justify-center gap-1 text-[10px] font-bold ${
+                currentView === 'settings' ? 'text-[#FFD700]' : 'text-white/40 hover:text-white'
+              }`}
             >
               <Settings className="w-4 h-4" />
               <span className="truncate">Settings</span>
@@ -536,7 +544,7 @@ function AppContent() {
         }}
         onOpenSettings={() => {
           setCommandPaletteOpen(false);
-          setSettingsOpen(true);
+          handleNavigate('settings');
         }}
       />
 
