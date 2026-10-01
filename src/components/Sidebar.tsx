@@ -1,29 +1,28 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { 
-  LayoutDashboard, 
-  Inbox, 
-  FileText, 
-  Zap, 
+  Radar, 
+  ShieldCheck, 
+  CreditCard, 
   Settings, 
-  Shield, 
-  Crown,
-  Radar,
-  Mic,
+  Crown, 
+  Building2, 
+  LogOut, 
+  ChevronDown, 
+  ChevronRight,
+  Shield,
+  FileText,
+  Inbox,
+  Brain,
+  Sparkles,
   Users,
   Video,
-  TrendingUp,
+  Mic,
   Target,
-  Briefcase,
-  CreditCard,
-  ShieldCheck,
-  Building2,
-  Brain,
-  Lightbulb,
-  LogOut,
-  Sparkles,
-  Calculator,
-  MessageSquarePlus,
-  CheckSquare
+  LayoutDashboard,
+  TrendingUp,
+  DollarSign,
+  Activity,
+  Layers
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
@@ -50,11 +49,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
     profile, 
     user, 
     isPro, 
-    isTrialActive,
-    isTrialExpired,
-    trialDaysRemaining, 
-    daysRemaining,
-    aiActionsRemaining, 
     company, 
     companyName, 
     companyId,
@@ -64,137 +58,64 @@ export const Sidebar: React.FC<SidebarProps> = ({
     signOut
   } = useAuth();
 
-  const navItems = [
-    {
-      id: 'dashboard',
-      label: 'Command Center',
-      icon: LayoutDashboard,
-      badge: null,
-    },
+  // Core Hero Features - Clean, Razor-Sharp, Zero Rush for CEOs
+  const primaryNavItems = [
     {
       id: 'radar',
       label: 'Revenue Radar',
       icon: Radar,
-      badge: 'LIVE',
-      badgeClass: 'bg-rose-500 text-white animate-pulse',
-    },
-    {
-      id: 'inbox',
-      label: 'Executive Inbox',
-      icon: Inbox,
-      badge: pendingEmailsCount > 0 ? pendingEmailsCount : null,
-      badgeClass: 'bg-[#FFD700] text-black',
+      badge: 'LIVE SENTRY',
+      badgeClass: 'bg-rose-500 text-white animate-pulse font-extrabold shadow-sm',
     },
     {
       id: 'approvals',
-      label: 'AI Audit & Approvals',
+      label: 'AI Approvals & Audit',
       icon: ShieldCheck,
-      badge: 'AUDIT',
-      badgeClass: 'bg-[#FFD700] text-black font-extrabold',
-    },
-    {
-      id: 'brain',
-      label: 'Brain',
-      icon: Brain,
-      badge: '3.0',
-      badgeClass: 'bg-[#FFD700] text-black font-extrabold',
-    },
-    {
-      id: 'twin',
-      label: 'CEO Digital Twin',
-      icon: Sparkles,
-      badge: 'CLONE',
-      badgeClass: 'bg-gradient-to-r from-[#FFD700] to-amber-500 text-black font-extrabold shadow-sm',
-    },
-    {
-      id: 'roi-calculator',
-      label: 'ROI Calculator',
-      icon: Calculator,
-      badge: 'D3.JS',
-      badgeClass: 'bg-gradient-to-r from-[#FFD700] to-amber-500 text-black font-extrabold shadow-sm',
+      badge: pendingEmailsCount > 0 ? `${pendingEmailsCount} PENDING` : 'ACTIVE',
+      badgeClass: pendingEmailsCount > 0 ? 'bg-amber-400 text-black font-black' : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-mono',
     },
     {
       id: 'plans',
-      label: 'Pro Upgrade',
+      label: 'Plan & Billing',
       icon: CreditCard,
-      badge: 'UPGRADE',
-      badgeClass: 'bg-[#FFD700]/20 text-[#FFD700] border border-[#FFD700]/30',
-    },
-    {
-      id: 'admin',
-      label: 'Super Admin',
-      icon: ShieldCheck,
-      badge: 'GLOBAL',
-      badgeClass: 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30',
-    },
-    {
-      id: 'closer',
-      label: 'PRIME Closer AI',
-      icon: Mic,
-      badge: 'NEW',
-      badgeClass: 'bg-[#FFD700] text-black font-extrabold',
-    },
-    {
-      id: 'hiring',
-      label: 'PRIME Hiring AI',
-      icon: Users,
-      badge: 'NEW',
-      badgeClass: 'bg-[#FFD700] text-black font-extrabold',
-    },
-    {
-      id: 'meetings',
-      label: 'PRIME Meeting AI',
-      icon: Video,
-      badge: 'NEW',
-      badgeClass: 'bg-[#FFD700] text-black font-extrabold',
-    },
-    {
-      id: 'growth',
-      label: 'PRIME Growth Lab',
-      icon: TrendingUp,
-      badge: 'NEW',
-      badgeClass: 'bg-emerald-400 text-black font-extrabold',
-    },
-    {
-      id: 'ad-spend',
-      label: 'Ad Spend Optimizer',
-      icon: Target,
-      badge: 'SAVE $',
-      badgeClass: 'bg-emerald-400 text-black font-extrabold',
-    },
-    {
-      id: 'cashflow-guard',
-      label: 'Cash Flow & Invoices',
-      icon: ShieldCheck,
-      badge: 'RECOVER',
-      badgeClass: 'bg-blue-400 text-black font-extrabold',
-    },
-    {
-      id: 'strategy',
-      label: 'PRIME Strategy Board',
-      icon: Target,
-      badge: null,
-    },
-    {
-      id: 'board-pack',
-      label: 'PRIME Board Pack',
-      icon: Briefcase,
-      badge: null,
-    },
-    {
-      id: 'docs',
-      label: 'Documents Intel',
-      icon: FileText,
-      badge: null,
+      badge: isPro ? 'PRO' : 'PILOT',
+      badgeClass: 'bg-[#FFD700]/20 text-[#FFD700] border border-[#FFD700]/30 font-bold',
     },
     {
       id: 'settings',
       label: 'Workspace Settings',
       icon: Settings,
-      badge: 'B2B',
-      badgeClass: 'bg-[#FFD700]/10 text-[#FFD700] border border-[#FFD700]/30',
-    }
+      badge: null,
+      badgeClass: '',
+    },
+    ...(isAdmin ? [{
+      id: 'admin',
+      label: 'Super Admin',
+      icon: Crown,
+      badge: 'HQ',
+      badgeClass: 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30',
+    }] : [])
   ];
+
+  // Secondary Power Modules (Safely tucked under an optional collapsible)
+  const secondaryNavItems = [
+    { id: 'inbox', label: 'Executive Inbox Triage', icon: Inbox },
+    { id: 'docs', label: 'Contract Risk Audit', icon: FileText },
+    { id: 'brain', label: 'Brain AI Copilot', icon: Brain },
+    { id: 'twin', label: 'CEO Digital Twin 3.0', icon: Sparkles },
+    { id: 'closer', label: 'PRIME Closer AI (Sales)', icon: Mic },
+    { id: 'hiring', label: 'PRIME Hiring AI', icon: Users },
+    { id: 'meetings', label: 'PRIME Meeting AI', icon: Video },
+    { id: 'strategy', label: 'Strategy Board', icon: TrendingUp },
+    { id: 'board-pack', label: 'Board Pack Generator', icon: FileText },
+    { id: 'cashflow-guard', label: 'Cash Flow Guard', icon: DollarSign },
+    { id: 'ad-spend', label: 'Ad Spend Optimizer', icon: TrendingUp },
+    { id: 'roi-calculator', label: 'ROI Calculator', icon: Activity },
+  ];
+
+  const isSecondaryActive = secondaryNavItems.some(item => item.id === currentView);
+  const [showAddons, setShowAddons] = useState(false);
+  const isAddonsOpen = showAddons || isSecondaryActive;
 
   const userInitials = profile?.displayName
     ? profile.displayName.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()
@@ -203,11 +124,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
   return (
     <aside className="w-72 border-r border-white/5 bg-[#0D0D0D] flex flex-col justify-between shrink-0 hidden md:flex min-h-[calc(100vh-4.5rem)]">
       <div>
-        {/* Brand Header */}
+        {/* Brand Header - 1-Click to Revenue Radar */}
         <div 
-          onClick={() => onNavigate('dashboard')}
+          onClick={() => onNavigate('radar')}
           className="p-5 border-b border-white/5 cursor-pointer group hover:bg-white/[0.02] transition-colors"
-          title="PRIME AI — Command Center"
+          title="PRIME AI — Revenue Radar Command"
         >
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 flex items-center justify-center bg-gradient-to-br from-[#FFD700] to-[#B8860B] rounded-xl shadow-[0_0_20px_rgba(255,215,0,0.15)] text-black shrink-0 group-hover:scale-105 transition-transform">
@@ -216,7 +137,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             <div className="flex flex-col">
               <span className="text-lg font-bold tracking-tight text-[#FFD700] leading-none">PRIME AI</span>
               <span className="text-[10px] uppercase font-bold tracking-[0.16em] text-white/70 group-hover:text-[#FFD700] transition-colors mt-1">
-                Command Center
+                Revenue Radar
               </span>
             </div>
           </div>
@@ -229,20 +150,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
           </div>
           <div className="min-w-0 flex-1">
             <div className="text-xs font-bold text-white truncate">{companyName}</div>
-            <div className="text-[9px] font-mono text-white/40 truncate">Tenant: {companyId}</div>
+            <div className="text-[9px] font-mono text-white/40 truncate">Tenant: {companyId.slice(0, 14)}</div>
           </div>
         </div>
         
-        {/* Navigation Items */}
-        <nav className="px-4 py-3 space-y-1 max-h-[calc(100vh-22rem)] overflow-y-auto">
-          {navItems
-            .filter((item) => {
-              if (item.id === 'admin') {
-                return isAdmin;
-              }
-              return true;
-            })
-            .map((item) => {
+        {/* Navigation Items (Single-Feature Hero Focus) */}
+        <nav className="px-4 py-3 space-y-1.5">
+          
+          {/* Primary 4-5 Essential Links */}
+          {primaryNavItems.map((item) => {
             const Icon = item.icon;
             const isActive = currentView === item.id;
             const locked = isFeatureLocked(item.id);
@@ -259,32 +175,79 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 }}
                 className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition-all cursor-pointer ${
                   isActive
-                    ? 'bg-[#FFD700]/10 border border-[#FFD700]/20 text-[#FFD700] font-medium'
-                    : 'text-white/50 hover:bg-white/5 hover:text-white border border-transparent'
+                    ? 'bg-[#FFD700]/15 border border-[#FFD700]/30 text-[#FFD700] font-bold shadow-[0_0_15px_rgba(255,215,0,0.1)]'
+                    : 'text-zinc-400 hover:bg-white/5 hover:text-white border border-transparent'
                 }`}
               >
-                <Icon className={`w-4 h-4 ${isActive ? 'text-[#FFD700]' : locked ? 'text-white/30' : 'text-white/50'}`} />
-                <span className={`text-xs font-semibold ${locked ? 'text-white/40' : ''}`}>{item.label}</span>
-                {locked ? (
-                  <span className="ml-auto text-[9px] px-1.5 py-0.5 rounded bg-red-500/20 text-red-400 font-mono font-bold border border-red-500/30">
-                    🔒 LOCK
+                <Icon className={`w-4 h-4 ${isActive ? 'text-[#FFD700]' : locked ? 'text-zinc-600' : 'text-zinc-400'}`} />
+                <span className="text-xs font-semibold">{item.label}</span>
+                {item.badge !== null && (
+                  <span className={`ml-auto text-[9px] px-2 py-0.5 rounded-full font-bold ${item.badgeClass}`}>
+                    {item.badge}
                   </span>
-                ) : (
-                  item.badge !== null && (
-                    <span className={`ml-auto text-[9px] px-2 py-0.5 rounded-full font-bold ${item.badgeClass || 'bg-[#FFD700] text-black'}`}>
-                      {item.badge}
-                    </span>
-                  )
                 )}
               </div>
             );
           })}
+
+          {/* Collapsible Secondary Power Tools (Zero Rush, Keeps Main UI Pristine) */}
+          <div className="pt-3 border-t border-white/5 mt-3">
+            <button
+              type="button"
+              onClick={() => setShowAddons(!showAddons)}
+              className={`w-full flex items-center justify-between px-3 py-2.5 text-xs font-bold transition-all cursor-pointer rounded-xl border ${
+                isAddonsOpen 
+                  ? 'bg-white/10 text-white border-white/15 shadow-sm' 
+                  : 'bg-white/[0.02] text-zinc-400 hover:text-white hover:bg-white/5 border-white/5'
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                <Layers className="w-3.5 h-3.5 text-[#FFD700]" />
+                <span>Other Features (Dropdown)</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="text-[9px] px-1.5 py-0.5 rounded bg-white/10 font-mono text-zinc-400 font-bold">
+                  {secondaryNavItems.length}
+                </span>
+                {isAddonsOpen ? (
+                  <ChevronDown className="w-3.5 h-3.5 text-white/70" />
+                ) : (
+                  <ChevronRight className="w-3.5 h-3.5 text-zinc-500" />
+                )}
+              </div>
+            </button>
+
+            {isAddonsOpen && (
+              <div className="space-y-1 mt-2 pl-1 animate-in fade-in duration-150 max-h-72 overflow-y-auto pr-1">
+                {secondaryNavItems.map((item) => {
+                  const Icon = item.icon;
+                  const isActive = currentView === item.id;
+                  return (
+                    <button
+                      key={item.id}
+                      type="button"
+                      onClick={() => onNavigate(item.id)}
+                      className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium transition-all cursor-pointer text-left ${
+                        isActive
+                          ? 'bg-[#FFD700]/15 text-[#FFD700] font-bold border border-[#FFD700]/30'
+                          : 'text-zinc-400 hover:text-white hover:bg-white/5'
+                      }`}
+                    >
+                      <Icon className="w-3.5 h-3.5 text-zinc-500" />
+                      <span className="truncate">{item.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
         </nav>
       </div>
 
-      {/* Footer Profile & Subscription Telemetry */}
+      {/* Footer Profile & Pilot Telemetry */}
       <div className="p-5 border-t border-white/5 bg-[#080808]">
-        {/* Trial, Demo or Pro Badge */}
+        {/* Trial or Pro Badge */}
         {isDemoMode ? (
           <div 
             onClick={() => onOpenAuth ? onOpenAuth('signup') : null}
@@ -316,67 +279,27 @@ export const Sidebar: React.FC<SidebarProps> = ({
           >
             <span className="flex items-center gap-1.5">
               <ShieldCheck className="w-3.5 h-3.5" />
-              <span>{company?.plan || 'Pro'} ({daysRemaining}d left)</span>
+              <span>{company?.plan || 'Enterprise Pro'}</span>
             </span>
-            <span className="text-[10px] text-white/50 font-mono font-normal">Manage</span>
-          </div>
-        ) : isTrialExpired ? (
-          <div 
-            onClick={() => openUpgradeModal('Pro')}
-            className="mb-3 p-3 rounded-xl bg-gradient-to-r from-red-500/15 via-zinc-900 to-amber-500/15 border border-red-500/40 hover:border-[#FFD700] transition-all cursor-pointer group shadow-sm"
-          >
-            <div className="flex items-center justify-between text-[11px] font-bold">
-              <span className="text-red-400 flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-red-400 animate-pulse" />
-                14-Day Trial Expired
-              </span>
-              <span className="text-[#FFD700] font-mono text-[10px]">Upgrade</span>
-            </div>
-            <div className="flex items-center justify-between mt-1.5 pt-1.5 border-t border-white/5 text-[10px]">
-              <span className="text-white/50">Unlock Brain &amp; Radar</span>
-              <span className="text-[#FFD700] font-bold group-hover:underline">Pro with Stripe →</span>
-            </div>
+            <span className="text-[10px] text-emerald-400 font-mono">ACTIVE</span>
           </div>
         ) : (
           <div 
             onClick={() => openUpgradeModal('Pro')}
             className="mb-3 p-2.5 rounded-xl bg-[#141414] border border-[#FFD700]/20 hover:border-[#FFD700]/50 transition-all cursor-pointer group text-xs"
           >
-            <div className="flex items-center justify-between font-bold text-white">
+            <div className="flex items-center justify-between font-bold text-white mb-1">
               <span className="flex items-center gap-1.5 text-[#FFD700]">
-                <span>⏳</span>
-                <span>{trialDaysRemaining}d Trial Left</span>
+                <Crown className="w-3.5 h-3.5" />
+                <span>14-Day Free Pilot</span>
               </span>
-              <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-[#FFD700]/10 text-[#FFD700]">
-                No CC
-              </span>
+              <span className="text-[9px] font-mono text-[#FFD700]">Upgrade</span>
             </div>
-            <div className="flex items-center justify-between mt-1.5 pt-1.5 border-t border-white/5 text-[10px]">
-              <span className="text-white/50">Upgrade anytime</span>
-              <span className="text-[#FFD700] font-bold group-hover:underline">Upgrade →</span>
-            </div>
+            <p className="text-[10px] text-white/40">Full Revenue Radar Sentry Active</p>
           </div>
         )}
 
-        {/* Discreet Feedback & Roadmap Button */}
-        <button
-          onClick={() => onNavigate('feedback')}
-          className={`w-full mb-3 flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer border ${
-            currentView === 'feedback'
-              ? 'bg-[#FFD700] text-black border-[#FFD700] shadow-sm'
-              : 'bg-white/5 hover:bg-white/10 text-white/70 hover:text-white border-white/5 hover:border-white/15'
-          }`}
-          title="Product Feedback, Feature Requests & Roadmap"
-        >
-          <span className="flex items-center gap-2">
-            <MessageSquarePlus className={`w-3.5 h-3.5 ${currentView === 'feedback' ? 'text-black' : 'text-[#FFD700]'}`} />
-            <span>Feedback & Roadmap</span>
-          </span>
-          <span className={`text-[9px] font-mono font-bold px-1.5 py-0.5 rounded ${currentView === 'feedback' ? 'bg-black/20 text-black' : 'bg-[#FFD700]/15 text-[#FFD700]'}`}>
-            Hub
-          </span>
-        </button>
-
+        {/* User Profile Card */}
         <div 
           onClick={() => {
             if (isDemoMode && onOpenAuth) {
@@ -390,7 +313,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         >
           <div className="flex items-center gap-2.5 min-w-0">
             <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-amber-500/30 to-amber-700/30 border border-[#FFD700]/30 flex items-center justify-center text-xs font-bold text-[#FFD700] shrink-0">
-              {isDemoMode ? 'AC' : userInitials}
+              {isDemoMode ? 'EP' : userInitials}
             </div>
             <div className="flex flex-col min-w-0">
               <span className="text-xs font-semibold text-white group-hover:text-[#FFD700] transition-colors truncate max-w-[120px]">
@@ -437,9 +360,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
         {/* Multi-Tenant Security Telemetry */}
         <div className="flex items-center justify-between text-[9px] text-white/40 pt-2 border-t border-white/5 uppercase tracking-widest font-mono">
-          <span>company_id Isolated</span>
+          <span>Tenant Isolated</span>
           <span className="flex items-center gap-1 text-emerald-400 font-mono">
-            <Shield className="w-2.5 h-2.5" /> Supabase
+            <Shield className="w-2.5 h-2.5" /> SOC-2 Ready
           </span>
         </div>
       </div>

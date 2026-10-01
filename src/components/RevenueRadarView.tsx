@@ -17,6 +17,7 @@ import {
   Filter, 
   ArrowUpRight, 
   ChevronRight, 
+  ChevronDown,
   ShieldAlert, 
   Zap, 
   Building2, 
@@ -103,7 +104,9 @@ export const RevenueRadarView: React.FC = () => {
   const activeCompanyId = companyId || 'comp_apex_01';
   const activeCompanyName = companyName || profile?.companyName || 'Apex Enterprises';
 
-  const [activeTab, setActiveTab] = useState<'health_trends' | 'churn_rescue' | 'expansion_radar' | 'pql_signals' | 'renewal_defense' | 'stripe_telemetry' | 'all_pipeline'>('health_trends');
+  const [activeTab, setActiveTab] = useState<'health_trends' | 'churn_rescue' | 'expansion_radar' | 'pql_signals' | 'renewal_defense' | 'stripe_telemetry' | 'all_pipeline'>('churn_rescue');
+  const [focusDropdownOpen, setFocusDropdownOpen] = useState(false);
+  const [dataDropdownOpen, setDataDropdownOpen] = useState(false);
   const [records, setRecords] = useState<CRMRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -843,9 +846,6 @@ export const RevenueRadarView: React.FC = () => {
         </div>
       )}
 
-      {/* Mandatory Safety Guidance Disclaimer */}
-      <AIGuidanceDisclaimer companyId={activeCompanyId} companyName={activeCompanyName} />
-
       {/* 2-Minute Undo Action Safety Window Banner */}
       {activeRadarUndo && (
         <div className="p-4 rounded-2xl bg-gradient-to-r from-amber-500/20 via-yellow-500/15 to-transparent border border-[#FFD700]/50 shadow-2xl flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 animate-pulse">
@@ -877,19 +877,6 @@ export const RevenueRadarView: React.FC = () => {
         </div>
       )}
 
-      {/* Human-in-the-Loop Governance Guarantee Banner */}
-      <div className="p-3.5 rounded-xl bg-black/40 border border-white/10 flex items-center justify-between text-xs text-white/70">
-        <div className="flex items-center gap-2.5">
-          <ShieldCheck className="w-4 h-4 text-[#FFD700]" />
-          <span>
-            <strong className="text-white">Strict Executive Governance:</strong> Deals are never auto-moved and emails are never dispatched without explicit human approval. Every action creates an audit log with a 2-minute undo safety window.
-          </span>
-        </div>
-        <span className="text-[10px] font-mono uppercase tracking-wider text-emerald-400 font-bold bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-500/20 whitespace-nowrap">
-          Zero Auto-Move Enforced
-        </span>
-      </div>
-
       {/* Top Banner / Breadcrumb & Global Action Controls */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 pb-2 border-b border-white/5">
         <div className="space-y-2">
@@ -913,8 +900,9 @@ export const RevenueRadarView: React.FC = () => {
           </div>
         </div>
 
-        {/* Global Action Buttons */}
+        {/* Global Action Controls - All Options Directly Visible */}
         <div className="flex items-center flex-wrap gap-2.5">
+          {/* 1. Stripe Telemetry */}
           <button
             onClick={() => setActiveTab('stripe_telemetry')}
             className={`flex items-center gap-2 px-3.5 py-2 rounded-xl border text-xs font-semibold transition-all cursor-pointer shadow-sm ${
@@ -922,6 +910,7 @@ export const RevenueRadarView: React.FC = () => {
                 ? 'bg-purple-950/40 border-purple-500/40 text-purple-200'
                 : 'bg-[#141414] hover:bg-[#1C1C1C] border-white/10 text-white/80 hover:text-white'
             }`}
+            title="Stripe Payment Telemetry & Dunning"
           >
             <CreditCard className="w-4 h-4 text-purple-400" />
             <span>Stripe Telemetry</span>
@@ -930,43 +919,50 @@ export const RevenueRadarView: React.FC = () => {
             )}
           </button>
 
+          {/* 2. Supabase Sync */}
           <button
             onClick={() => setSupabaseModalOpen(true)}
             className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-[#141414] hover:bg-[#1C1C1C] border border-white/10 text-white/80 hover:text-white text-xs font-semibold transition-all cursor-pointer shadow-sm"
+            title="Configure Supabase PostgreSQL Connection"
           >
             <Database className="w-4 h-4 text-emerald-400" />
             <span>Supabase Sync</span>
           </button>
 
-          <button
-            onClick={handleExportCsv}
-            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#141414] hover:bg-[#1C1C1C] border border-white/10 text-white/80 hover:text-white text-xs font-semibold transition-all cursor-pointer shadow-sm"
-            title="Export SaaS Telemetry CSV"
-          >
-            <Download className="w-3.5 h-3.5 text-blue-400" />
-            <span>Export CSV</span>
-          </button>
-
+          {/* 3. Sync Pipeline */}
           <button
             onClick={handleImportSampleData}
             className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#141414] hover:bg-[#1C1C1C] border border-white/10 text-white/80 hover:text-white text-xs font-semibold transition-all cursor-pointer shadow-sm"
-            title="Sync Enterprise CRM Telemetry"
+            title="Sync Enterprise Pipeline Data"
           >
             <Sparkles className="w-3.5 h-3.5 text-amber-400" />
             <span>Sync Pipeline</span>
           </button>
 
+          {/* 4. Export CSV */}
+          <button
+            onClick={handleExportCsv}
+            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#141414] hover:bg-[#1C1C1C] border border-white/10 text-white/80 hover:text-white text-xs font-semibold transition-all cursor-pointer shadow-sm"
+            title="Export SaaS Telemetry to CSV"
+          >
+            <Download className="w-3.5 h-3.5 text-blue-400" />
+            <span>Export CSV</span>
+          </button>
+
+          {/* 5. Add Account */}
           <button
             onClick={() => setNewRecordModalOpen(true)}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#FFD700] hover:bg-[#FFE55C] text-black text-xs font-bold transition-all shadow-[0_0_20px_rgba(255,215,0,0.2)] cursor-pointer"
+            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#FFD700] hover:bg-[#FFE55C] text-black text-xs font-bold transition-all shadow-[0_0_20px_rgba(255,215,0,0.25)] cursor-pointer"
+            title="Add a New Customer or Account"
           >
             <Plus className="w-4 h-4" />
             <span>Add Account</span>
           </button>
 
+          {/* 6. Refresh Live Data */}
           <button
             onClick={loadData}
-            title="Refresh Telemetry"
+            title="Refresh Live Telemetry"
             className="p-2 rounded-xl bg-[#141414] hover:bg-[#1C1C1C] border border-white/10 text-white/60 hover:text-white transition-all cursor-pointer"
           >
             <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
@@ -1062,127 +1058,176 @@ export const RevenueRadarView: React.FC = () => {
         </div>
       </div>
 
-      {/* Main SaaS Navigation Tabs */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-[#111111] p-2 rounded-2xl border border-white/5">
-        <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0">
-          <button
-            onClick={() => setActiveTab('health_trends')}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
-              activeTab === 'health_trends'
-                ? 'bg-gradient-to-r from-amber-400 to-[#FFD700] text-black shadow-[0_0_20px_rgba(255,215,0,0.35)]'
-                : 'text-white/60 hover:text-white hover:bg-white/5'
-            }`}
-          >
-            <Activity className="w-4 h-4 text-black" />
-            <span>30D Deal Health Trends</span>
-            <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-black ${
-              activeTab === 'health_trends' ? 'bg-black/30 text-black' : 'bg-amber-400/20 text-[#FFD700]'
-            }`}>
-              {records.filter(r => r.stage !== 'Closed Lost').length}
-            </span>
-          </button>
+      {/* Radar View Focus Selector - Clean Dropdown to Eliminate Clutter */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-[#111111] p-3 rounded-2xl border border-white/5">
+        <div className="flex items-center gap-3">
+          <span className="text-xs font-mono uppercase tracking-wider text-white/40 font-bold hidden sm:inline">
+            Radar View:
+          </span>
+          {/* Dropdown Button */}
+          <div className="relative">
+            <button
+              onClick={() => setFocusDropdownOpen(!focusDropdownOpen)}
+              className="flex items-center gap-2.5 px-4 py-2.5 rounded-xl bg-[#1A1A1A] hover:bg-[#222] border border-white/10 text-white font-bold text-xs shadow-md transition-all cursor-pointer"
+            >
+              {activeTab === 'churn_rescue' && <ShieldAlert className="w-4 h-4 text-rose-400" />}
+              {activeTab === 'health_trends' && <Activity className="w-4 h-4 text-[#FFD700]" />}
+              {activeTab === 'expansion_radar' && <TrendingUp className="w-4 h-4 text-[#FFD700]" />}
+              {activeTab === 'pql_signals' && <Zap className="w-4 h-4 text-cyan-400" />}
+              {activeTab === 'renewal_defense' && <Swords className="w-4 h-4 text-indigo-400" />}
+              {activeTab === 'stripe_telemetry' && <CreditCard className="w-4 h-4 text-purple-400" />}
+              {activeTab === 'all_pipeline' && <SlidersHorizontal className="w-4 h-4 text-white" />}
 
-          <button
-            onClick={() => setActiveTab('churn_rescue')}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
-              activeTab === 'churn_rescue'
-                ? 'bg-rose-500 text-white shadow-[0_0_20px_rgba(244,63,94,0.35)]'
-                : 'text-white/60 hover:text-white hover:bg-white/5'
-            }`}
-          >
-            <ShieldAlert className="w-4 h-4" />
-            <span>AI Churn Predictor &amp; Rescue</span>
-            <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-black ${
-              activeTab === 'churn_rescue' ? 'bg-black/30 text-white' : 'bg-rose-500/20 text-rose-300'
-            }`}>
-              {churnRisks.length}
-            </span>
-          </button>
+              <span>
+                {activeTab === 'churn_rescue' && `AI Churn Predictor & Rescue (${churnRisks.length} at risk)`}
+                {activeTab === 'health_trends' && `30D Deal Health Trends (${records.filter(r => r.stage !== 'Closed Lost').length} deals)`}
+                {activeTab === 'expansion_radar' && `Expansion & Upsell Radar (${expansionTargets.length} ready)`}
+                {activeTab === 'pql_signals' && `PLG & PQL Signals (${pqlSignals.filter(s => s.status === 'NEW_OPPORTUNITY' || s.status === 'PITCHED').length} active)`}
+                {activeTab === 'renewal_defense' && `Renewal & Competitor Defense (${renewalItems.filter(r => r.status !== 'MULTI_YEAR_LOCKED').length} contracts)`}
+                {activeTab === 'stripe_telemetry' && `Stripe Telemetry & Failed Charges (${dunningItems.filter(d => d.status === 'PENDING').length} delinquent)`}
+                {activeTab === 'all_pipeline' && `All Pipeline Deals & Accounts (${records.length} accounts)`}
+              </span>
+              <ChevronDown className={`w-3.5 h-3.5 text-white/50 ml-1 transition-transform ${focusDropdownOpen ? 'rotate-180' : ''}`} />
+            </button>
 
-          <button
-            onClick={() => setActiveTab('expansion_radar')}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
-              activeTab === 'expansion_radar'
-                ? 'bg-[#FFD700] text-black shadow-[0_0_20px_rgba(255,215,0,0.35)]'
-                : 'text-white/60 hover:text-white hover:bg-white/5'
-            }`}
-          >
-            <TrendingUp className="w-4 h-4 text-black" />
-            <span>Expansion &amp; Upsell Radar</span>
-            <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-black ${
-              activeTab === 'expansion_radar' ? 'bg-black/30 text-black' : 'bg-amber-400/20 text-[#FFD700]'
-            }`}>
-              {expansionTargets.length}
-            </span>
-          </button>
+            {focusDropdownOpen && (
+              <div 
+                className="absolute left-0 top-full mt-2 w-80 sm:w-96 rounded-2xl bg-[#181818] border border-white/15 p-2 shadow-2xl z-40 animate-fade-in"
+                onMouseLeave={() => setFocusDropdownOpen(false)}
+              >
+                <div className="px-3 py-1.5 text-[10px] uppercase font-mono text-white/40 border-b border-white/10 mb-1 flex items-center justify-between">
+                  <span>Select Radar Telemetry View</span>
+                  <span className="text-[#FFD700] font-bold">1 Focus at a time</span>
+                </div>
 
-          <button
-            onClick={() => setActiveTab('pql_signals')}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
-              activeTab === 'pql_signals'
-                ? 'bg-cyan-500 text-black shadow-[0_0_20px_rgba(6,182,212,0.35)]'
-                : 'text-white/60 hover:text-white hover:bg-white/5'
-            }`}
-          >
-            <Zap className="w-4 h-4 text-cyan-400" />
-            <span>PLG &amp; PQL Signals</span>
-            <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-black ${
-              activeTab === 'pql_signals' ? 'bg-black/30 text-black' : 'bg-cyan-500/20 text-cyan-300'
-            }`}>
-              {pqlSignals.filter(s => s.status === 'NEW_OPPORTUNITY' || s.status === 'PITCHED').length}
-            </span>
-          </button>
+                <button
+                  onClick={() => { setActiveTab('churn_rescue'); setFocusDropdownOpen(false); }}
+                  className={`w-full flex items-center justify-between p-2.5 rounded-xl text-xs font-semibold transition-colors cursor-pointer text-left ${
+                    activeTab === 'churn_rescue' ? 'bg-rose-500/20 text-rose-300 font-bold border border-rose-500/30' : 'hover:bg-white/5 text-white'
+                  }`}
+                >
+                  <div className="flex items-center gap-2.5">
+                    <ShieldAlert className="w-4 h-4 text-rose-400 shrink-0" />
+                    <div>
+                      <div className="font-bold">AI Churn Predictor &amp; Rescue</div>
+                      <div className="text-[10px] text-white/50">Deal risk mitigation &amp; concession playbooks</div>
+                    </div>
+                  </div>
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-300 font-mono font-bold">
+                    {churnRisks.length} at risk
+                  </span>
+                </button>
 
-          <button
-            onClick={() => setActiveTab('renewal_defense')}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
-              activeTab === 'renewal_defense'
-                ? 'bg-indigo-500 text-white shadow-[0_0_20px_rgba(99,102,241,0.35)]'
-                : 'text-white/60 hover:text-white hover:bg-white/5'
-            }`}
-          >
-            <Swords className="w-4 h-4 text-indigo-400" />
-            <span>Renewal &amp; Competitor Defense</span>
-            <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-black ${
-              activeTab === 'renewal_defense' ? 'bg-black/30 text-white' : 'bg-indigo-500/20 text-indigo-300'
-            }`}>
-              {renewalItems.filter(r => r.status !== 'MULTI_YEAR_LOCKED').length}
-            </span>
-          </button>
+                <button
+                  onClick={() => { setActiveTab('health_trends'); setFocusDropdownOpen(false); }}
+                  className={`w-full flex items-center justify-between p-2.5 rounded-xl text-xs font-semibold transition-colors cursor-pointer text-left ${
+                    activeTab === 'health_trends' ? 'bg-amber-400/20 text-[#FFD700] font-bold border border-amber-400/30' : 'hover:bg-white/5 text-white'
+                  }`}
+                >
+                  <div className="flex items-center gap-2.5">
+                    <Activity className="w-4 h-4 text-amber-400 shrink-0" />
+                    <div>
+                      <div className="font-bold">30D Deal Health Trends</div>
+                      <div className="text-[10px] text-white/50">Historical momentum &amp; trajectory graph</div>
+                    </div>
+                  </div>
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-400/20 text-[#FFD700] font-mono font-bold">
+                    {records.filter(r => r.stage !== 'Closed Lost').length}
+                  </span>
+                </button>
 
-          <button
-            onClick={() => setActiveTab('stripe_telemetry')}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
-              activeTab === 'stripe_telemetry'
-                ? 'bg-purple-600 text-white shadow-[0_0_20px_rgba(168,85,247,0.35)]'
-                : 'text-white/60 hover:text-white hover:bg-white/5'
-            }`}
-          >
-            <CreditCard className="w-4 h-4" />
-            <span>Stripe Telemetry &amp; Dunning</span>
-            <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-black ${
-              activeTab === 'stripe_telemetry' ? 'bg-black/30 text-white' : 'bg-purple-500/20 text-purple-300'
-            }`}>
-              {dunningItems.filter(d => d.status === 'PENDING').length}
-            </span>
-          </button>
+                <button
+                  onClick={() => { setActiveTab('expansion_radar'); setFocusDropdownOpen(false); }}
+                  className={`w-full flex items-center justify-between p-2.5 rounded-xl text-xs font-semibold transition-colors cursor-pointer text-left ${
+                    activeTab === 'expansion_radar' ? 'bg-[#FFD700]/20 text-[#FFD700] font-bold border border-[#FFD700]/30' : 'hover:bg-white/5 text-white'
+                  }`}
+                >
+                  <div className="flex items-center gap-2.5">
+                    <TrendingUp className="w-4 h-4 text-[#FFD700] shrink-0" />
+                    <div>
+                      <div className="font-bold">Expansion &amp; Upsell Radar</div>
+                      <div className="text-[10px] text-white/50">Seat cap triggers &amp; enterprise tier upsell</div>
+                    </div>
+                  </div>
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#FFD700]/20 text-[#FFD700] font-mono font-bold">
+                    {expansionTargets.length} ready
+                  </span>
+                </button>
 
-          <button
-            onClick={() => setActiveTab('all_pipeline')}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
-              activeTab === 'all_pipeline'
-                ? 'bg-white text-black shadow-[0_0_20px_rgba(255,255,255,0.2)]'
-                : 'text-white/60 hover:text-white hover:bg-white/5'
-            }`}
-          >
-            <SlidersHorizontal className="w-4 h-4" />
-            <span>All Deals &amp; Pipeline</span>
-            <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-black ${
-              activeTab === 'all_pipeline' ? 'bg-black/30 text-black' : 'bg-white/10 text-white/80'
-            }`}>
-              {records.length}
-            </span>
-          </button>
+                <button
+                  onClick={() => { setActiveTab('pql_signals'); setFocusDropdownOpen(false); }}
+                  className={`w-full flex items-center justify-between p-2.5 rounded-xl text-xs font-semibold transition-colors cursor-pointer text-left ${
+                    activeTab === 'pql_signals' ? 'bg-cyan-500/20 text-cyan-300 font-bold border border-cyan-500/30' : 'hover:bg-white/5 text-white'
+                  }`}
+                >
+                  <div className="flex items-center gap-2.5">
+                    <Zap className="w-4 h-4 text-cyan-400 shrink-0" />
+                    <div>
+                      <div className="font-bold">PLG &amp; PQL Signals</div>
+                      <div className="text-[10px] text-white/50">Product-qualified lead triggers &amp; pitches</div>
+                    </div>
+                  </div>
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 font-mono font-bold">
+                    {pqlSignals.filter(s => s.status === 'NEW_OPPORTUNITY' || s.status === 'PITCHED').length}
+                  </span>
+                </button>
+
+                <button
+                  onClick={() => { setActiveTab('renewal_defense'); setFocusDropdownOpen(false); }}
+                  className={`w-full flex items-center justify-between p-2.5 rounded-xl text-xs font-semibold transition-colors cursor-pointer text-left ${
+                    activeTab === 'renewal_defense' ? 'bg-indigo-500/20 text-indigo-300 font-bold border border-indigo-500/30' : 'hover:bg-white/5 text-white'
+                  }`}
+                >
+                  <div className="flex items-center gap-2.5">
+                    <Swords className="w-4 h-4 text-indigo-400 shrink-0" />
+                    <div>
+                      <div className="font-bold">Renewal &amp; Competitor Defense</div>
+                      <div className="text-[10px] text-white/50">Pre-empt churn &amp; lock in multi-year deals</div>
+                    </div>
+                  </div>
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 font-mono font-bold">
+                    {renewalItems.filter(r => r.status !== 'MULTI_YEAR_LOCKED').length}
+                  </span>
+                </button>
+
+                <button
+                  onClick={() => { setActiveTab('stripe_telemetry'); setFocusDropdownOpen(false); }}
+                  className={`w-full flex items-center justify-between p-2.5 rounded-xl text-xs font-semibold transition-colors cursor-pointer text-left ${
+                    activeTab === 'stripe_telemetry' ? 'bg-purple-500/20 text-purple-300 font-bold border border-purple-500/30' : 'hover:bg-white/5 text-white'
+                  }`}
+                >
+                  <div className="flex items-center gap-2.5">
+                    <CreditCard className="w-4 h-4 text-purple-400 shrink-0" />
+                    <div>
+                      <div className="font-bold">Stripe Telemetry &amp; Dunning</div>
+                      <div className="text-[10px] text-white/50">Failed payment recovery &amp; overdue charges</div>
+                    </div>
+                  </div>
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300 font-mono font-bold">
+                    {dunningItems.filter(d => d.status === 'PENDING').length} delinquent
+                  </span>
+                </button>
+
+                <button
+                  onClick={() => { setActiveTab('all_pipeline'); setFocusDropdownOpen(false); }}
+                  className={`w-full flex items-center justify-between p-2.5 rounded-xl text-xs font-semibold transition-colors cursor-pointer text-left ${
+                    activeTab === 'all_pipeline' ? 'bg-white/15 text-white font-bold border border-white/20' : 'hover:bg-white/5 text-white'
+                  }`}
+                >
+                  <div className="flex items-center gap-2.5">
+                    <SlidersHorizontal className="w-4 h-4 text-white shrink-0" />
+                    <div>
+                      <div className="font-bold">All Pipeline Deals &amp; Accounts</div>
+                      <div className="text-[10px] text-white/50">Full CRM registry &amp; stage management</div>
+                    </div>
+                  </div>
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/10 text-white font-mono font-bold">
+                    {records.length}
+                  </span>
+                </button>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Search */}

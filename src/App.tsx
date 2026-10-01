@@ -52,7 +52,8 @@ import {
   CreditCard,
   ShieldCheck,
   Brain,
-  Lightbulb
+  Lightbulb,
+  Settings
 } from 'lucide-react';
 
 function AppContent() {
@@ -199,10 +200,14 @@ function AppContent() {
       handleOpenAuth('signup');
       return;
     }
-    if (['dashboard', 'radar', 'inbox', 'approvals', 'plans', 'admin', 'closer', 'hiring', 'meetings', 'growth', 'strategy', 'board-pack', 'docs', 'brain', 'twin', 'ad-spend', 'cashflow-guard', 'roi-calculator', 'feedback'].includes(view)) {
+    if (view === 'dashboard' || view === 'radar') {
+      setCurrentView('radar');
+      return;
+    }
+    if (['inbox', 'approvals', 'plans', 'admin', 'closer', 'hiring', 'meetings', 'growth', 'strategy', 'board-pack', 'docs', 'brain', 'twin', 'ad-spend', 'cashflow-guard', 'roi-calculator', 'feedback'].includes(view)) {
       setCurrentView(view as any);
     } else {
-      setCurrentView('dashboard');
+      setCurrentView('radar');
     }
   };
 
@@ -338,20 +343,7 @@ function AppContent() {
 
           {/* Main App Container */}
           <main className="flex-1 p-6 sm:p-8 lg:p-10 overflow-y-auto pb-24 md:pb-10 max-w-7xl">
-            {currentView === 'dashboard' && (
-              <DashboardView 
-                onNavigate={handleNavigate} 
-                onOpenSettings={() => {
-                  if (isDemoMode && !user) {
-                    handleOpenAuth('signup');
-                  } else {
-                    setSettingsOpen(true);
-                  }
-                }}
-                onOpenDailyBriefing={() => setDailyBriefingOpen(true)}
-              />
-            )}
-            {currentView === 'radar' && (
+            {(currentView === 'dashboard' || currentView === 'radar') && (
               <FeaturePaywallOverlay 
                 featureName="Revenue Radar & Churn Sentry" 
                 featureDescription="Real-time multi-tenant deal risk monitoring, executive rescue scripts, and autonomous revenue pipeline telemetry."
@@ -445,67 +437,56 @@ function AppContent() {
             {currentView === 'feedback' && <FeedbackHubView />}
           </main>
 
-          {/* Mobile Bottom Navigation Bar */}
-          <div className={`md:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#0E0E0E]/95 backdrop-blur-xl border-t border-white/5 grid ${isAdmin ? 'grid-cols-6' : 'grid-cols-5'} items-center py-2.5 px-1`}>
-            <button
-              onClick={() => handleNavigate('dashboard')}
-              className={`flex flex-col items-center justify-center gap-1 text-[9px] sm:text-[10px] font-bold ${
-                currentView === 'dashboard' ? 'text-[#FFD700]' : 'text-white/40'
-              }`}
-            >
-              <LayoutDashboard className="w-4 h-4" />
-              <span className="truncate">Command</span>
-            </button>
+          {/* Mobile Bottom Navigation Bar (4 Clean Pillars Only) */}
+          <div className={`md:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#0E0E0E]/95 backdrop-blur-xl border-t border-white/5 grid ${isAdmin ? 'grid-cols-5' : 'grid-cols-4'} items-center py-2.5 px-1`}>
             <button
               onClick={() => handleNavigate('radar')}
-              className={`flex flex-col items-center justify-center gap-1 text-[9px] sm:text-[10px] font-bold relative ${
-                currentView === 'radar' ? 'text-rose-400' : 'text-white/40'
+              className={`flex flex-col items-center justify-center gap-1 text-[10px] font-bold relative ${
+                currentView === 'radar' || currentView === 'dashboard' ? 'text-[#FFD700]' : 'text-white/40'
               }`}
             >
               <Radar className="w-4 h-4" />
-              <span className="truncate">Radar</span>
-              <span className="absolute 0 top-0.5 right-2 w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
+              <span className="truncate">Revenue Radar</span>
+              <span className="absolute top-0.5 right-4 w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
             </button>
             <button
-              onClick={() => handleNavigate('inbox')}
-              className={`flex flex-col items-center justify-center gap-1 text-[9px] sm:text-[10px] font-bold relative ${
-                currentView === 'inbox' ? 'text-[#FFD700]' : 'text-white/40'
+              onClick={() => handleNavigate('approvals')}
+              className={`flex flex-col items-center justify-center gap-1 text-[10px] font-bold relative ${
+                currentView === 'approvals' ? 'text-[#FFD700]' : 'text-white/40'
               }`}
             >
-              <Inbox className="w-4 h-4" />
-              <span className="truncate">Inbox</span>
+              <ShieldCheck className="w-4 h-4" />
+              <span className="truncate">Approvals</span>
               {pendingEmailsCount > 0 && (
-                <span className="absolute 0 top-0 right-2 w-3.5 h-3.5 rounded-full bg-[#FFD700] text-black text-[8px] font-extrabold flex items-center justify-center">
+                <span className="absolute top-0 right-4 w-3.5 h-3.5 rounded-full bg-[#FFD700] text-black text-[8px] font-extrabold flex items-center justify-center">
                   {pendingEmailsCount}
                 </span>
               )}
             </button>
             <button
-              onClick={() => handleNavigate('brain')}
-              className={`flex flex-col items-center justify-center gap-1 text-[9px] sm:text-[10px] font-bold ${
-                currentView === 'brain' ? 'text-[#FFD700]' : 'text-white/40'
-              }`}
-            >
-              <Brain className="w-4 h-4" />
-              <span className="truncate">Brain</span>
-            </button>
-            <button
               onClick={() => handleNavigate('plans')}
-              className={`flex flex-col items-center justify-center gap-1 text-[9px] sm:text-[10px] font-bold ${
+              className={`flex flex-col items-center justify-center gap-1 text-[10px] font-bold ${
                 currentView === 'plans' ? 'text-[#FFD700]' : 'text-white/40'
               }`}
             >
               <CreditCard className="w-4 h-4" />
               <span className="truncate">Plans</span>
             </button>
+            <button
+              onClick={() => setSettingsOpen(true)}
+              className="flex flex-col items-center justify-center gap-1 text-[10px] font-bold text-white/40 hover:text-white"
+            >
+              <Settings className="w-4 h-4" />
+              <span className="truncate">Settings</span>
+            </button>
             {isAdmin && (
               <button
                 onClick={() => handleNavigate('admin')}
-                className={`flex flex-col items-center justify-center gap-1 text-[9px] sm:text-[10px] font-bold ${
+                className={`flex flex-col items-center justify-center gap-1 text-[10px] font-bold ${
                   currentView === 'admin' ? 'text-emerald-400' : 'text-white/40'
                 }`}
               >
-                <ShieldCheck className="w-4 h-4" />
+                <Crown className="w-4 h-4" />
                 <span className="truncate">Admin</span>
               </button>
             )}
@@ -529,7 +510,7 @@ function AppContent() {
           setIsDemoMode(false);
           setAuthModalOpen(false);
           setSavePromptReason(null);
-          setCurrentView('dashboard');
+          setCurrentView('radar');
         }}
       />
 
@@ -604,7 +585,7 @@ function AppContent() {
         onSuccess={() => {
           setDemoLeadModalOpen(false);
           setIsDemoMode(true);
-          setCurrentView('dashboard');
+          setCurrentView('radar');
         }}
       />
     </div>

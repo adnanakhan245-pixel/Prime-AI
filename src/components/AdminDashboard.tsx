@@ -8,10 +8,20 @@ import {
   ShieldCheck, 
   ArrowLeft,
   CheckCircle2,
-  Calendar
+  Calendar,
+  Search,
+  Copy,
+  Check,
+  Building2,
+  Trash2,
+  Sparkles
 } from 'lucide-react';
-import { fetchAdminDashboardData } from '../services/db';
-import { AdminDashboardData } from '../types';
+import { 
+  fetchAdminDashboardData, 
+  deleteAdminUserAccount, 
+  purgeDuplicateAdnanAccountsAndSessions 
+} from '../services/db';
+import { AdminDashboardData, AdminUserRecord } from '../types';
 import { useAuth } from '../context/AuthContext';
 
 interface AdminDashboardProps {
@@ -22,7 +32,17 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) =>
   const { user } = useAuth();
   const [data, setData] = useState<AdminDashboardData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [purging, setPurging] = useState(false);
+  const [deletingEmail, setDeletingEmail] = useState<string | null>(null);
   const [lastRefreshed, setLastRefreshed] = useState<string>(new Date().toLocaleTimeString());
+  const [searchQuery, setSearchQuery] = useState('');
+  const [copiedEmail, setCopiedEmail] = useState<string | null>(null);
+  const [toastMsg, setToastMsg] = useState<string | null>(null);
+
+  const showToast = (msg: string) => {
+    setToastMsg(msg);
+    setTimeout(() => setToastMsg(null), 3500);
+  };
 
   const loadData = async () => {
     setLoading(true);
@@ -41,21 +61,107 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) =>
     loadData();
   }, []);
 
-  const totalUsers = data?.totalUsers ?? (data?.users?.length || 0);
+  const handleCopyEmail = (email: string) => {
+    navigator.clipboard.writeText(email);
+    setCopiedEmail(email);
+    setTimeout(() => setCopiedEmail(null), 2000);
+  };
+
+  // 1-Click Purge Duplicates
+  const handlePurgeDuplicates = async () => {
+    setPurging(true);
+    try {
+      const result = await purgeDuplicateAdnanAccountsAndSessions();
+      await loadData();
+      showToast(`Cleaned duplicates: ${result.deletedAccounts} accounts & ${result.deletedSessions} sessions.`);
+    } catch (e) {
+      console.error('Purge error:', e);
+    } finally {
+      setPurging(false);
+    }
+  };
+
+  // Delete specific account
+  const handleDeleteAccount = async (account: AdminUserRecord) => {
+    const isMaster = account.isSuperAdmin || account.email === 'adnanakhan245@gmail.com';
+    if (isMaster) {
+      alert('Master Platform Owner account cannot be deleted.');
+      return;
+    }
+
+    if (!window.confirm(`Are you sure you want to remove account "${account.email}"? This action is permanent.`)) {
+      return;
+    }
+
+    setDeletingEmail(account.email);
+    try {
+      await deleteAdminUserAccount({
+        uid: account.uid,
+        email: account.email,
+        companyId: account.companyId
+      });
+      await loadData();
+      showToast(`Account "${account.email}" deleted successfully.`);
+    } catch (err) {
+      console.error('Error deleting account:', err);
+      alert('Could not delete account. Please try again.');
+    } finally {
+      setDeletingEmail(null);
+    }
+  };
+
+  const rawUsersList: AdminUserRecord[] = data?.users || [];
+
+  // Strict 100% Unique Deduplication Map by Normalized Email
+  const uniqueUsersMap = new Map<string, AdminUserRecord>();
+  for (const u of rawUsersList) {
+    if (!u.email) continue;
+    const norm = u.email.trim().toLowerCase();
+    if (!uniqueUsersMap.has(norm)) {
+      uniqueUsersMap.set(norm, { ...u, email: norm });
+    } else {
+      const existing = uniqueUsersMap.get(norm)!;
+      if (u.isSuperAdmin || (!existing.displayName && u.displayName)) {
+        uniqueUsersMap.set(norm, { ...u, email: norm });
+      }
+    }
+  }
+
+  const uniqueUsersList = Array.from(uniqueUsersMap.values());
+  const totalUsers = uniqueUsersList.length;
   const totalVisitors = data?.visitorStats?.totalVisitorsAllTime ?? (data?.visitorStats?.totalVisitorsToday || 0);
-  const totalRegistered = data?.visitorStats?.totalRegisteredAllTime ?? (data?.users?.length || 0);
+  const totalRegistered = uniqueUsersList.length;
+
+  const filteredUsers = uniqueUsersList.filter(u => {
+    const q = searchQuery.toLowerCase().trim();
+    if (!q) return true;
+    return (
+      u.email?.toLowerCase().includes(q) ||
+      u.displayName?.toLowerCase().includes(q) ||
+      u.companyName?.toLowerCase().includes(q) ||
+      u.role?.toLowerCase().includes(q)
+    );
+  });
 
   return (
     <div className="w-full max-w-6xl mx-auto space-y-8 animate-in fade-in duration-200">
       
+      {/* Toast Notification */}
+      {toastMsg && (
+        <div className="fixed bottom-6 right-6 z-50 p-4 rounded-2xl bg-gradient-to-r from-[#FFD700] to-amber-400 text-black font-extrabold text-xs shadow-2xl flex items-center gap-2 animate-bounce border border-black/20">
+          <CheckCircle2 className="w-4 h-4 text-black shrink-0" />
+          <span>{toastMsg}</span>
+        </div>
+      )}
+
       {/* Top Header Bar */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-white/5">
         <div className="flex items-center gap-3">
           {onNavigate && (
             <button
-              onClick={() => onNavigate('dashboard')}
+              onClick={() => onNavigate('radar')}
               className="p-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-white/70 hover:text-white transition-colors cursor-pointer border border-white/10"
-              title="Back to Command Center"
+              title="Back to Revenue Radar"
             >
               <ArrowLeft className="w-4 h-4" />
             </button>
@@ -75,12 +181,22 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) =>
               </span>
             </div>
             <p className="text-xs text-zinc-400 mt-0.5">
-              Live platform metrics • Last synced at {lastRefreshed}
+              Live platform metrics &amp; registered account registry • Last synced at {lastRefreshed}
             </p>
           </div>
         </div>
 
         <div className="flex items-center gap-3">
+          <button
+            onClick={handlePurgeDuplicates}
+            disabled={purging}
+            className="px-3.5 py-2.5 rounded-xl bg-[#FFD700]/10 hover:bg-[#FFD700]/20 text-[#FFD700] text-xs font-bold border border-[#FFD700]/30 transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50 shadow-sm"
+            title="Clean all duplicate accounts and keep 1 unique record per user"
+          >
+            <Sparkles className={`w-3.5 h-3.5 ${purging ? 'animate-spin' : ''}`} />
+            <span>{purging ? 'Cleaning...' : 'Clean Duplicates'}</span>
+          </button>
+
           <button
             onClick={loadData}
             disabled={loading}
@@ -92,7 +208,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) =>
         </div>
       </div>
 
-      {/* 3 CORE OPTIONS ONLY (Total Users, Total Visitors, Total Registered Accounts) */}
+      {/* 3 CORE METRICS CARDS */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         
         {/* OPTION 1: TOTAL APP USERS */}
@@ -104,7 +220,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) =>
               <Users className="w-6 h-6" />
             </div>
             <span className="px-2.5 py-1 rounded-full text-[10px] font-mono font-bold bg-[#FFD700]/10 text-[#FFD700] border border-[#FFD700]/30">
-              USERS
+              UNIQUE
             </span>
           </div>
 
@@ -116,12 +232,12 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) =>
             <span className="text-4xl sm:text-5xl font-black text-white font-mono tracking-tight">
               {loading ? '...' : totalUsers}
             </span>
-            <span className="text-xs text-zinc-500 font-medium">Active Users</span>
+            <span className="text-xs text-zinc-500 font-medium">Unique Accounts</span>
           </div>
 
           <p className="mt-4 pt-4 border-t border-white/5 text-xs text-zinc-400 flex items-center gap-1.5">
             <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
-            <span>All active enterprise users across platform workspaces</span>
+            <span>All verified unique user profiles across tenant workspaces</span>
           </p>
         </div>
 
@@ -164,7 +280,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) =>
               <UserCheck className="w-6 h-6" />
             </div>
             <span className="px-2.5 py-1 rounded-full text-[10px] font-mono font-bold bg-blue-500/10 text-blue-400 border border-blue-500/30">
-              ACCOUNTS
+              VERIFIED
             </span>
           </div>
 
@@ -176,22 +292,206 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) =>
             <span className="text-4xl sm:text-5xl font-black text-blue-400 font-mono tracking-tight">
               {loading ? '...' : totalRegistered}
             </span>
-            <span className="text-xs text-zinc-500 font-medium">Registered Accounts</span>
+            <span className="text-xs text-zinc-500 font-medium">Distinct Registered Accounts</span>
           </div>
 
           <p className="mt-4 pt-4 border-t border-white/5 text-xs text-zinc-400 flex items-center gap-1.5">
             <ShieldCheck className="w-3.5 h-3.5 text-blue-400" />
-            <span>Verified registered accounts with isolated workspaces</span>
+            <span>Strict deduplication enforced • 1 record per registered user</span>
           </p>
         </div>
 
       </div>
 
+      {/* REGISTERED ACCOUNTS DIRECTORY LIST */}
+      <section className="bg-[#121212] border border-white/10 rounded-3xl p-5 sm:p-7 shadow-2xl space-y-5">
+        
+        {/* Section Header with Search Bar and Actions */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-white/5">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-blue-500/10 border border-blue-500/30 flex items-center justify-center text-blue-400">
+              <UserCheck className="w-4 h-4" />
+            </div>
+            <div>
+              <h2 className="text-base font-bold text-white flex items-center gap-2">
+                <span>Registered Accounts Registry</span>
+                <span className="text-xs font-mono px-2.5 py-0.5 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20 font-bold">
+                  {filteredUsers.length} Unique Accounts
+                </span>
+              </h2>
+              <p className="text-xs text-zinc-400">
+                Verified registry of all unique accounts. Duplicates are automatically merged.
+              </p>
+            </div>
+          </div>
+
+          {/* Search Box */}
+          <div className="relative w-full sm:w-72">
+            <Search className="w-4 h-4 text-zinc-500 absolute left-3 top-1/2 -translate-y-1/2" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search by name, email, org..."
+              className="w-full bg-[#181818] border border-white/10 rounded-xl pl-9 pr-3.5 py-2 text-xs text-white placeholder:text-zinc-500 focus:outline-none focus:border-[#FFD700]"
+            />
+          </div>
+        </div>
+
+        {/* Accounts Table */}
+        <div className="overflow-x-auto">
+          {filteredUsers.length === 0 ? (
+            <div className="py-12 text-center text-xs text-zinc-500">
+              <UserCheck className="w-8 h-8 text-zinc-600 mx-auto mb-2 opacity-50" />
+              <p className="font-semibold text-zinc-400">No registered accounts found</p>
+              <p className="mt-1">Accounts will appear here automatically when users sign up.</p>
+            </div>
+          ) : (
+            <table className="w-full text-left text-xs">
+              <thead>
+                <tr className="border-b border-white/5 text-[11px] font-mono uppercase tracking-wider text-zinc-400">
+                  <th className="pb-3 font-semibold">User &amp; Email</th>
+                  <th className="pb-3 font-semibold">Organization / Workspace</th>
+                  <th className="pb-3 font-semibold">Executive Role</th>
+                  <th className="pb-3 font-semibold">Plan Tier</th>
+                  <th className="pb-3 font-semibold">Joined Date</th>
+                  <th className="pb-3 font-semibold">Status</th>
+                  <th className="pb-3 font-semibold text-right">Action</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-white/5">
+                {filteredUsers.map((account) => {
+                  const isMaster = account.isSuperAdmin || account.email === 'adnanakhan245@gmail.com';
+                  const isCurrent = account.email === user?.email;
+                  const isDeleting = deletingEmail === account.email;
+
+                  return (
+                    <tr key={account.uid || account.email} className="hover:bg-white/[0.02] transition-colors group">
+                      
+                      {/* User & Email */}
+                      <td className="py-3.5 pr-4">
+                        <div className="flex items-center gap-3">
+                          <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${
+                            isMaster 
+                              ? 'bg-[#FFD700] text-black shadow-sm font-black' 
+                              : 'bg-white/10 text-white'
+                          }`}>
+                            {account.displayName ? account.displayName.slice(0, 2).toUpperCase() : 'US'}
+                          </div>
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-1.5">
+                              <span className="font-bold text-white truncate">{account.displayName || 'Executive User'}</span>
+                              {isMaster && (
+                                <span className="text-[9px] font-mono px-1.5 py-0.2 rounded bg-[#FFD700]/20 text-[#FFD700] font-bold border border-[#FFD700]/30 shrink-0">
+                                  MASTER ADMIN
+                                </span>
+                              )}
+                              {isCurrent && !isMaster && (
+                                <span className="text-[9px] font-mono px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-400 font-bold border border-emerald-500/30 shrink-0">
+                                  YOU
+                                </span>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-1.5 mt-0.5 text-zinc-400">
+                              <span className="text-[11px] truncate">{account.email}</span>
+                              <button
+                                onClick={() => handleCopyEmail(account.email)}
+                                className="text-zinc-500 hover:text-white transition-colors cursor-pointer shrink-0"
+                                title="Copy Email"
+                              >
+                                {copiedEmail === account.email ? (
+                                  <Check className="w-3 h-3 text-emerald-400" />
+                                ) : (
+                                  <Copy className="w-3 h-3" />
+                                )}
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      </td>
+
+                      {/* Organization / Workspace */}
+                      <td className="py-3.5 pr-4">
+                        <div className="flex items-center gap-2">
+                          <Building2 className="w-3.5 h-3.5 text-zinc-500 shrink-0" />
+                          <div className="truncate">
+                            <span className="text-white font-medium">{account.companyName || 'Enterprise Workspace'}</span>
+                            <span className="block text-[10px] font-mono text-zinc-500 truncate">
+                              ID: {account.companyId || 'comp_isolated'}
+                            </span>
+                          </div>
+                        </div>
+                      </td>
+
+                      {/* Executive Role */}
+                      <td className="py-3.5 pr-4">
+                        <span className="text-zinc-300 font-medium">
+                          {account.role || 'Executive Member'}
+                        </span>
+                      </td>
+
+                      {/* Plan Tier */}
+                      <td className="py-3.5 pr-4">
+                        <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded border ${
+                          account.plan === 'Pro' || account.plan === 'Enterprise'
+                            ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
+                            : 'bg-[#FFD700]/10 text-[#FFD700] border-[#FFD700]/30'
+                        }`}>
+                          {account.plan || '14-Day Pilot'}
+                        </span>
+                      </td>
+
+                      {/* Joined Date */}
+                      <td className="py-3.5 pr-4 text-zinc-400 font-mono text-[11px]">
+                        {account.createdAt ? new Date(account.createdAt).toLocaleDateString(undefined, {
+                          year: 'numeric',
+                          month: 'short',
+                          day: 'numeric'
+                        }) : 'Recent'}
+                      </td>
+
+                      {/* Status */}
+                      <td className="py-3.5">
+                        <span className="inline-flex items-center gap-1.5 text-[11px] text-emerald-400 font-semibold">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                          <span>Active</span>
+                        </span>
+                      </td>
+
+                      {/* Action (Delete / Remove) */}
+                      <td className="py-3.5 text-right">
+                        {isMaster ? (
+                          <span className="text-[10px] font-mono text-zinc-500 uppercase">
+                            Protected
+                          </span>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteAccount(account)}
+                            disabled={isDeleting}
+                            className="p-1.5 rounded-lg text-zinc-500 hover:text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer disabled:opacity-50"
+                            title={`Delete account ${account.email}`}
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        )}
+                      </td>
+
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          )}
+        </div>
+
+      </section>
+
       {/* Clean Status Banner */}
       <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/5 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-zinc-400">
         <div className="flex items-center gap-2">
           <ShieldCheck className="w-4 h-4 text-[#FFD700]" />
-          <span>All telemetry data is synchronized live with the database and updates automatically.</span>
+          <span>All telemetry data is synchronized live with the database and strictly deduplicated.</span>
         </div>
         <div className="font-mono text-[11px] text-zinc-500">
           Admin Session: {user?.email || 'Master Super Admin'}

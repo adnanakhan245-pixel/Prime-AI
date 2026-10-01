@@ -18,7 +18,15 @@ import {
   Smartphone,
   Apple,
   MessageSquarePlus,
-  LayoutDashboard
+  LayoutDashboard,
+  Radar,
+  Inbox,
+  Video,
+  FileText,
+  Brain,
+  TrendingUp,
+  DollarSign,
+  Users
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { fetchAllCompanies } from '../services/db';
@@ -67,6 +75,7 @@ export const Header: React.FC<HeaderProps> = ({
   } = useAuth();
 
   const [companyDropdownOpen, setCompanyDropdownOpen] = useState(false);
+  const [featuresDropdownOpen, setFeaturesDropdownOpen] = useState(false);
   const [companiesList, setCompaniesList] = useState<CompanySummary[]>([]);
   const [mobileInstallModalOpen, setMobileInstallModalOpen] = useState(false);
 
@@ -240,9 +249,9 @@ export const Header: React.FC<HeaderProps> = ({
         {/* Left Side: Brand Logo: PRIME AI */}
         <div className="flex items-center gap-3 min-w-0 shrink-0">
           <div 
-            onClick={() => onNavigate(user ? 'dashboard' : 'landing')} 
+            onClick={() => onNavigate(user ? 'radar' : 'landing')} 
             className="flex items-center gap-2.5 cursor-pointer select-none shrink-0 group"
-            title="PRIME AI"
+            title="PRIME AI — Revenue Radar"
           >
             <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#FFD700] to-[#B8860B] shadow-[0_0_20px_rgba(255,215,0,0.25)] flex items-center justify-center text-black group-hover:scale-105 transition-transform shrink-0">
               <Crown className="w-5 h-5" />
@@ -337,6 +346,269 @@ export const Header: React.FC<HeaderProps> = ({
               <span className="px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400 font-mono font-extrabold text-[10px] border border-emerald-500/30">LIVE PILOT</span>
             </div>
           ) : null}
+
+          {/* All Features Dropdown Menu - Everything Cleanly Organized Under 1 Dropdown */}
+          {(user || isDemoMode) && (
+            <div className="relative">
+              <button
+                onClick={() => setFeaturesDropdownOpen(!featuresDropdownOpen)}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
+                  featuresDropdownOpen 
+                    ? 'bg-[#FFD700] text-black border-[#FFD700] shadow-[0_0_15px_rgba(255,215,0,0.3)]' 
+                    : 'bg-white/5 hover:bg-white/10 border-white/10 text-white'
+                }`}
+                title="All Features Dropdown"
+              >
+                <Layers className="w-3.5 h-3.5 text-[#FFD700]" />
+                <span className="hidden sm:inline">Features</span>
+                <ChevronDown className={`w-3.5 h-3.5 text-white/60 transition-transform duration-200 ${featuresDropdownOpen ? 'rotate-180 text-black' : ''}`} />
+              </button>
+
+              {featuresDropdownOpen && (
+                <div 
+                  className="absolute left-0 sm:left-auto top-full mt-2 w-80 sm:w-96 rounded-2xl bg-[#141414] border border-white/15 p-3 shadow-[0_20px_50px_rgba(0,0,0,0.9)] z-50 animate-fade-in max-h-[80vh] overflow-y-auto"
+                  onMouseLeave={() => setFeaturesDropdownOpen(false)}
+                >
+                  <div className="px-3 py-2 border-b border-white/10 flex items-center justify-between mb-2">
+                    <span className="text-[11px] font-mono uppercase tracking-wider text-white/50 font-bold">
+                      Autonomous C-Suite Modules
+                    </span>
+                    <span className="text-[10px] font-mono text-[#FFD700] font-bold bg-[#FFD700]/10 px-2 py-0.5 rounded-full border border-[#FFD700]/20">
+                      1 Dropdown • Zero Rush
+                    </span>
+                  </div>
+
+                  {/* 1. Primary Flagship Focus */}
+                  <div className="mb-3">
+                    <div className="text-[10px] font-mono text-zinc-500 uppercase tracking-wider px-2 py-1 font-bold">
+                      Flagship CEO Sentry (Active)
+                    </div>
+                    <button
+                      onClick={() => {
+                        onNavigate('radar');
+                        setFeaturesDropdownOpen(false);
+                      }}
+                      className={`w-full flex items-center justify-between p-2.5 rounded-xl transition-all text-left cursor-pointer ${
+                        currentView === 'radar' || currentView === 'dashboard'
+                          ? 'bg-[#FFD700]/15 text-[#FFD700] font-bold border border-[#FFD700]/30'
+                          : 'hover:bg-white/5 text-white'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-7 h-7 rounded-lg bg-rose-500/20 text-rose-400 flex items-center justify-center">
+                          <Radar className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <div className="text-xs font-bold text-white">Revenue Radar &amp; Churn Sentry</div>
+                          <div className="text-[10px] text-white/50">Deal risk, churn prevention, ARR telemetry</div>
+                        </div>
+                      </div>
+                      <span className="text-[9px] px-1.5 py-0.5 rounded bg-rose-500 text-white font-mono font-extrabold animate-pulse">
+                        LIVE
+                      </span>
+                    </button>
+                  </div>
+
+                  {/* 2. Executive Operations */}
+                  <div className="mb-3">
+                    <div className="text-[10px] font-mono text-zinc-500 uppercase tracking-wider px-2 py-1 font-bold">
+                      Executive Operations
+                    </div>
+                    <div className="space-y-1">
+                      <button
+                        onClick={() => {
+                          onNavigate('approvals');
+                          setFeaturesDropdownOpen(false);
+                        }}
+                        className={`w-full flex items-center gap-2.5 p-2 rounded-xl transition-all text-left cursor-pointer ${
+                          currentView === 'approvals' ? 'bg-[#FFD700]/15 text-[#FFD700] font-bold' : 'hover:bg-white/5 text-zinc-300'
+                        }`}
+                      >
+                        <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
+                        <div className="truncate">
+                          <div className="text-xs font-semibold text-white">AI Approvals &amp; Governance Audit</div>
+                          <div className="text-[10px] text-zinc-500">Human authorization &amp; 2-min undo safety</div>
+                        </div>
+                      </button>
+
+                      <button
+                        onClick={() => {
+                          onNavigate('inbox');
+                          setFeaturesDropdownOpen(false);
+                        }}
+                        className={`w-full flex items-center gap-2.5 p-2 rounded-xl transition-all text-left cursor-pointer ${
+                          currentView === 'inbox' ? 'bg-[#FFD700]/15 text-[#FFD700] font-bold' : 'hover:bg-white/5 text-zinc-300'
+                        }`}
+                      >
+                        <Inbox className="w-4 h-4 text-blue-400 shrink-0" />
+                        <div className="truncate">
+                          <div className="text-xs font-semibold text-white">Executive Inbox Triage</div>
+                          <div className="text-[10px] text-zinc-500">Autonomous priority sorting &amp; draft replies</div>
+                        </div>
+                      </button>
+
+                      <button
+                        onClick={() => {
+                          onNavigate('docs');
+                          setFeaturesDropdownOpen(false);
+                        }}
+                        className={`w-full flex items-center gap-2.5 p-2 rounded-xl transition-all text-left cursor-pointer ${
+                          currentView === 'docs' ? 'bg-[#FFD700]/15 text-[#FFD700] font-bold' : 'hover:bg-white/5 text-zinc-300'
+                        }`}
+                      >
+                        <FileText className="w-4 h-4 text-amber-400 shrink-0" />
+                        <div className="truncate">
+                          <div className="text-xs font-semibold text-white">Documents Intel &amp; Contracts</div>
+                          <div className="text-[10px] text-zinc-500">Contract risk audit &amp; clause extraction</div>
+                        </div>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* 3. Autonomous AI C-Suite Modules */}
+                  <div className="mb-3">
+                    <div className="text-[10px] font-mono text-zinc-500 uppercase tracking-wider px-2 py-1 font-bold">
+                      Autonomous C-Suite Intelligence
+                    </div>
+                    <div className="space-y-1">
+                      <button
+                        onClick={() => {
+                          onNavigate('closer');
+                          setFeaturesDropdownOpen(false);
+                        }}
+                        className={`w-full flex items-center gap-2.5 p-2 rounded-xl transition-all text-left cursor-pointer ${
+                          currentView === 'closer' ? 'bg-[#FFD700]/15 text-[#FFD700] font-bold' : 'hover:bg-white/5 text-zinc-300'
+                        }`}
+                      >
+                        <Mic className="w-4 h-4 text-rose-400 shrink-0" />
+                        <div className="truncate">
+                          <div className="text-xs font-semibold text-white">Deal Closer AI</div>
+                          <div className="text-[10px] text-zinc-500">Objection handling &amp; high-stakes closing</div>
+                        </div>
+                      </button>
+
+                      <button
+                        onClick={() => {
+                          onNavigate('twin');
+                          setFeaturesDropdownOpen(false);
+                        }}
+                        className={`w-full flex items-center gap-2.5 p-2 rounded-xl transition-all text-left cursor-pointer ${
+                          currentView === 'twin' ? 'bg-[#FFD700]/15 text-[#FFD700] font-bold' : 'hover:bg-white/5 text-zinc-300'
+                        }`}
+                      >
+                        <Sparkles className="w-4 h-4 text-[#FFD700] shrink-0" />
+                        <div className="truncate">
+                          <div className="text-xs font-semibold text-white">CEO Digital Twin 3.0</div>
+                          <div className="text-[10px] text-zinc-500">Executive voice delegation &amp; decision cloning</div>
+                        </div>
+                      </button>
+
+                      <button
+                        onClick={() => {
+                          onNavigate('brain');
+                          setFeaturesDropdownOpen(false);
+                        }}
+                        className={`w-full flex items-center gap-2.5 p-2 rounded-xl transition-all text-left cursor-pointer ${
+                          currentView === 'brain' ? 'bg-[#FFD700]/15 text-[#FFD700] font-bold' : 'hover:bg-white/5 text-zinc-300'
+                        }`}
+                      >
+                        <Brain className="w-4 h-4 text-purple-400 shrink-0" />
+                        <div className="truncate">
+                          <div className="text-xs font-semibold text-white">Brain 3.0 Neural Core</div>
+                          <div className="text-[10px] text-zinc-500">Institutional memory &amp; semantic search</div>
+                        </div>
+                      </button>
+
+                      <button
+                        onClick={() => {
+                          onNavigate('hiring');
+                          setFeaturesDropdownOpen(false);
+                        }}
+                        className={`w-full flex items-center gap-2.5 p-2 rounded-xl transition-all text-left cursor-pointer ${
+                          currentView === 'hiring' ? 'bg-[#FFD700]/15 text-[#FFD700] font-bold' : 'hover:bg-white/5 text-zinc-300'
+                        }`}
+                      >
+                        <Users className="w-4 h-4 text-emerald-400 shrink-0" />
+                        <div className="truncate">
+                          <div className="text-xs font-semibold text-white">Hiring &amp; Headhunting AI</div>
+                          <div className="text-[10px] text-zinc-500">Candidate ranking &amp; scorecard vetting</div>
+                        </div>
+                      </button>
+
+                      <button
+                        onClick={() => {
+                          onNavigate('meetings');
+                          setFeaturesDropdownOpen(false);
+                        }}
+                        className={`w-full flex items-center gap-2.5 p-2 rounded-xl transition-all text-left cursor-pointer ${
+                          currentView === 'meetings' ? 'bg-[#FFD700]/15 text-[#FFD700] font-bold' : 'hover:bg-white/5 text-zinc-300'
+                        }`}
+                      >
+                        <Video className="w-4 h-4 text-indigo-400 shrink-0" />
+                        <div className="truncate">
+                          <div className="text-xs font-semibold text-white">Meeting AI &amp; Transcripts</div>
+                          <div className="text-[10px] text-zinc-500">Autonomous action item extraction</div>
+                        </div>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* 4. Strategy & Financial Guard */}
+                  <div>
+                    <div className="text-[10px] font-mono text-zinc-500 uppercase tracking-wider px-2 py-1 font-bold">
+                      Strategy &amp; Financial Guard
+                    </div>
+                    <div className="grid grid-cols-2 gap-1">
+                      <button
+                        onClick={() => {
+                          onNavigate('strategy');
+                          setFeaturesDropdownOpen(false);
+                        }}
+                        className="p-2 rounded-lg hover:bg-white/5 text-left text-xs font-medium text-white flex items-center gap-2 cursor-pointer"
+                      >
+                        <TrendingUp className="w-3.5 h-3.5 text-blue-400" />
+                        <span className="truncate">Strategy Board</span>
+                      </button>
+
+                      <button
+                        onClick={() => {
+                          onNavigate('board-pack');
+                          setFeaturesDropdownOpen(false);
+                        }}
+                        className="p-2 rounded-lg hover:bg-white/5 text-left text-xs font-medium text-white flex items-center gap-2 cursor-pointer"
+                      >
+                        <FileText className="w-3.5 h-3.5 text-amber-400" />
+                        <span className="truncate">Board Pack</span>
+                      </button>
+
+                      <button
+                        onClick={() => {
+                          onNavigate('cashflow-guard');
+                          setFeaturesDropdownOpen(false);
+                        }}
+                        className="p-2 rounded-lg hover:bg-white/5 text-left text-xs font-medium text-white flex items-center gap-2 cursor-pointer"
+                      >
+                        <DollarSign className="w-3.5 h-3.5 text-emerald-400" />
+                        <span className="truncate">Cash Flow Guard</span>
+                      </button>
+
+                      <button
+                        onClick={() => {
+                          onNavigate('roi-calculator');
+                          setFeaturesDropdownOpen(false);
+                        }}
+                        className="p-2 rounded-lg hover:bg-white/5 text-left text-xs font-medium text-white flex items-center gap-2 cursor-pointer"
+                      >
+                        <Activity className="w-3.5 h-3.5 text-purple-400" />
+                        <span className="truncate">ROI Calculator</span>
+                      </button>
+                    </div>
+                  </div>
+
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Center Nav for Landing - Removed per requirement for single-feature Radar homepage */}
@@ -415,56 +687,7 @@ export const Header: React.FC<HeaderProps> = ({
                 </button>
               )}
 
-              {/* Quick Command Palette Button */}
-              {onOpenCommandPalette && (
-                <button
-                  onClick={onOpenCommandPalette}
-                  className="hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-white/60 hover:text-white text-xs transition-all cursor-pointer font-mono"
-                  title="Search & Quick Actions (Cmd + K)"
-                >
-                  <Search className="w-3.5 h-3.5 text-[#FFD700]" />
-                  <span>Search</span>
-                  <kbd className="px-1.5 py-0.5 rounded bg-white/10 text-[10px] text-white/50 border border-white/10">⌘K</kbd>
-                </button>
-              )}
-
-              {/* Voice War Room HUD Button */}
-              {onOpenVoiceHUD && (
-                <button
-                  onClick={onOpenVoiceHUD}
-                  className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#FFD700]/10 hover:bg-[#FFD700]/20 border border-[#FFD700]/30 text-[#FFD700] text-xs font-bold transition-all cursor-pointer shadow-[0_0_15px_rgba(255,215,0,0.15)]"
-                  title="Open Hands-Free Voice War Room"
-                >
-                  <Mic className="w-3.5 h-3.5 animate-pulse" />
-                  <span>Voice HUD</span>
-                </button>
-              )}
-
-              {/* Daily 9:00 AM Briefing Button */}
-              {onOpenDailyBriefing && (
-                <button
-                  onClick={onOpenDailyBriefing}
-                  className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-[#FFD700]/15 to-amber-500/20 hover:from-[#FFD700]/30 hover:to-amber-500/30 border border-[#FFD700]/40 text-[#FFD700] text-xs font-extrabold transition-all cursor-pointer shadow-[0_0_15px_rgba(255,215,0,0.2)]"
-                  title="Open Daily 9:00 AM Executive Briefing"
-                >
-                  <Crown className="w-3.5 h-3.5 text-[#FFD700]" />
-                  <span>9:00 AM Briefing</span>
-                </button>
-              )}
-
               <div className="flex items-center gap-1.5 shrink-0">
-                <button
-                  onClick={() => onNavigate('feedback')}
-                  className={`hidden sm:inline-flex p-2 rounded-lg transition-colors cursor-pointer ${
-                    currentView === 'feedback'
-                      ? 'bg-[#FFD700] text-black shadow-sm'
-                      : 'text-white/40 hover:text-[#FFD700] hover:bg-white/5'
-                  }`}
-                  title="Feedback & Roadmap Hub"
-                >
-                  <MessageSquarePlus className="w-4 h-4" />
-                </button>
-
                 <button
                   onClick={onOpenSettings}
                   className="p-2 rounded-lg text-white/40 hover:text-white hover:bg-white/5 transition-colors cursor-pointer"

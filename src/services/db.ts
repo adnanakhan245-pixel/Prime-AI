@@ -392,8 +392,31 @@ export async function fetchAdminDashboardData(): Promise<AdminDashboardData> {
     console.warn('Firestore admin_leads fetch notice:', err);
   }
 
+  // Strict, 100% unique deduplication by normalized email address
+  const uniqueUsersMap = new Map<string, AdminUserRecord>();
+  for (const u of usersList) {
+    if (!u.email) continue;
+    const norm = u.email.trim().toLowerCase();
+    if (!uniqueUsersMap.has(norm)) {
+      uniqueUsersMap.set(norm, {
+        ...u,
+        email: norm
+      });
+    } else {
+      // Prioritize master admin role or richer metadata
+      const existing = uniqueUsersMap.get(norm)!;
+      if (u.isSuperAdmin || (!existing.displayName && u.displayName)) {
+        uniqueUsersMap.set(norm, {
+          ...u,
+          email: norm
+        });
+      }
+    }
+  }
+  const cleanUsersList = Array.from(uniqueUsersMap.values());
+
   const totalMRR = companiesList.reduce((acc, c) => acc + (c.mrr || 0), 0);
-  const totalUsers = usersList.length;
+  const totalUsers = cleanUsersList.length;
   const totalPipelineARR = companiesList.reduce((acc, c) => acc + (c.pipelineValue || 0), 0);
   const totalDeals = companiesList.reduce((acc, c) => acc + (c.dealsCount || 0), 0);
   const activeTrialsCount = companiesList.filter(c => c.status === 'trialing').length;
@@ -402,6 +425,9 @@ export async function fetchAdminDashboardData(): Promise<AdminDashboardData> {
   let visitorStats: VisitorTrafficStats | undefined;
   try {
     visitorStats = await fetchVisitorAnalytics();
+    if (visitorStats) {
+      visitorStats.totalRegisteredAllTime = cleanUsersList.length;
+    }
   } catch (err) {
     console.warn('Failed to load visitor analytics for admin:', err);
   }
@@ -416,7 +442,7 @@ export async function fetchAdminDashboardData(): Promise<AdminDashboardData> {
     activeTrialsCount,
     paidCompaniesCount,
     companies: companiesList,
-    users: usersList,
+    users: cleanUsersList,
     visitorStats
   };
 }
