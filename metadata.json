@@ -1,6 +1,6 @@
 {
   "name": "PRIME AI",
-  "description": "Reclaim 223 Hours/Month. Your AI C-Suite That Actually Does The Work — Autonomous AI COO, Closer AI sales coach, Cash Flow Guard, Executive Inbox Triage, and Strategy Board Generator.",
+  "description": "PRIME Radar connects to your Stripe, finds every dollar lost to churn & failed cards, and auto-recovers it in 1-click while you sleep.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

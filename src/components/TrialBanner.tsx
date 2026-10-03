@@ -62,7 +62,7 @@ export const TrialBanner: React.FC<TrialBannerProps> = ({ onUpgradeClick, compac
         </div>
         <div className="flex items-center gap-2 font-mono text-[11px] text-emerald-400/80">
           <ShieldCheck className="w-3.5 h-3.5" />
-          <span>SOC2 Encrypted Workspace</span>
+          <span>Encrypted Workspace • Bank-Grade Security</span>
         </div>
       </div>
     );
@@ -94,8 +94,8 @@ export const TrialBanner: React.FC<TrialBannerProps> = ({ onUpgradeClick, compac
             onClick={handleUpgrade}
             className="w-full sm:w-auto px-4 py-2 rounded-xl bg-gradient-to-r from-[#FFD700] to-amber-500 text-black font-extrabold text-xs hover:brightness-110 transition-all flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(255,215,0,0.25)] cursor-pointer"
           >
-            <CreditCard className="w-3.5 h-3.5" />
-            <span>Upgrade to Pro with Stripe ($499+)</span>
+            <Sparkles className="w-3.5 h-3.5" />
+            <span>Unlock Full Workspace Access</span>
             <ArrowRight className="w-3.5 h-3.5" />
           </button>
         </div>

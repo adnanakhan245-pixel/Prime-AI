@@ -338,7 +338,7 @@ export const CashFlowGuardView: React.FC<CashFlowGuardViewProps> = ({
     }
   };
 
-  // Generate Reminder Copy with 1-Click Self-Service Payment Link
+  // Generate Reminder Copy without previous payment links
   const reminderText = useMemo(() => {
     if (!reminderInvoice) return '';
     const name = reminderInvoice.clientName || 'Valued Client';
@@ -346,18 +346,17 @@ export const CashFlowGuardView: React.FC<CashFlowGuardViewProps> = ({
     const amt = `${reminderInvoice.currency} ${reminderInvoice.amount.toLocaleString()}`;
     const days = reminderInvoice.daysOverdue;
     const company = companyName;
-    const directPayLink = typeof window !== 'undefined' ? `${window.location.origin}/?payInvoice=${reminderInvoice.id}` : '';
 
     if (reminderTone === 'GENTLE') {
-      return `Hi ${name},\n\nHope you are having a productive week.\n\nThis is a friendly reminder regarding Invoice #${num} for ${amt}, which was due on ${reminderInvoice.dueDate} (${days > 0 ? `${days} days ago` : 'due soon'}).\n\n💳 Pay Instantly Online (Credit Card / Bank Wire - Instant Receipt):\n${directPayLink}\n\nIf the payment is already on its way, please disregard this note. Otherwise, feel free to settle securely using the link above.\n\nBest regards,\nAccounts Receivable | ${company}`;
+      return `Hi ${name},\n\nHope you are having a productive week.\n\nThis is a friendly reminder regarding Invoice #${num} for ${amt}, which was due on ${reminderInvoice.dueDate} (${days > 0 ? `${days} days ago` : 'due soon'}).\n\nPlease verify settlement or confirm with our finance team.\n\nBest regards,\nAccounts Receivable | ${company}`;
     }
 
     if (reminderTone === 'FIRM') {
-      return `Dear ${name},\n\nWe are following up on overdue Invoice #${num} in the amount of ${amt}, which is currently ${days} days past due (Due Date: ${reminderInvoice.dueDate}).\n\n💳 Direct 1-Click Payment Link (Instant Settlement):\n${directPayLink}\n\nTo ensure uninterrupted services and maintain active account standing, please process this payment today using the link above.\n\nThank you for your prompt cooperation.\n\nSincerely,\nExecutive Finance Team | ${company}`;
+      return `Dear ${name},\n\nWe are following up on overdue Invoice #${num} in the amount of ${amt}, which is currently ${days} days past due (Due Date: ${reminderInvoice.dueDate}).\n\nTo ensure uninterrupted services and maintain active account standing, please confirm invoice settlement with our team today.\n\nThank you for your prompt cooperation.\n\nSincerely,\nExecutive Finance Team | ${company}`;
     }
 
     // LEGAL / ESCALATION
-    return `FORMAL NOTICE OF OUTSTANDING ARREARS\n\nAttention: ${name} (${reminderInvoice.clientCompany || 'Finance Dept'})\nInvoice Ref: #${num}\nOutstanding Balance: ${amt}\nDays Overdue: ${days} Days\n\n💳 Immediate Settlement Portal:\n${directPayLink}\n\nDespite previous reminders, the invoice referenced above remains unpaid. Please be advised that continued failure to remit payment within 3 business days may result in immediate suspension of services.\n\nPlease remit the full amount immediately using the secure payment portal link above.\n\nFinance & Legal Compliance Division\n${company}`;
+    return `FORMAL NOTICE OF OUTSTANDING ARREARS\n\nAttention: ${name} (${reminderInvoice.clientCompany || 'Finance Dept'})\nInvoice Ref: #${num}\nOutstanding Balance: ${amt}\nDays Overdue: ${days} Days\n\nDespite previous reminders, the invoice referenced above remains unpaid. Please be advised that continued failure to remit payment within 3 business days may result in service suspension.\n\nPlease contact our finance office to resolve this matter immediately.\n\nFinance & Legal Compliance Division\n${company}`;
   }, [reminderInvoice, reminderTone, companyName]);
 
   const handleCopyReminder = () => {
@@ -809,26 +808,6 @@ export const CashFlowGuardView: React.FC<CashFlowGuardViewProps> = ({
                       {/* Actions */}
                       <td className="py-4 px-4 text-right">
                         <div className="flex items-center justify-end gap-1.5">
-                          {/* 24/7 Client Payment Link & Instant Pay */}
-                          <button
-                            type="button"
-                            title="Copy 1-Click Client Payment Link (Zero Login / Zero Admin Gating)"
-                            onClick={() => handleCopyInvoicePaymentLink(inv)}
-                            className="p-1.5 text-neutral-500 hover:text-amber-500 dark:hover:text-[#FFD700] rounded hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
-                          >
-                            <LinkIcon className="w-4 h-4" />
-                          </button>
-
-                          <button
-                            type="button"
-                            title="Launch Client Payment Checkout (Instant 24/7 Settlement)"
-                            onClick={() => handleOpenClientPayment(inv)}
-                            className="px-2 py-1 text-xs font-semibold bg-neutral-100 dark:bg-neutral-800 hover:bg-[#FFD700] hover:text-black text-neutral-700 dark:text-neutral-300 rounded-lg transition-all flex items-center gap-1 border border-neutral-300 dark:border-neutral-700"
-                          >
-                            <CreditCard className="w-3 h-3" />
-                            Pay Link
-                          </button>
-
                           {inv.status !== 'PAID' && (
                             <>
                               <button

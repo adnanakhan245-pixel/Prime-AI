@@ -189,7 +189,7 @@ export const DocsView: React.FC<DocsViewProps> = ({ onUpgradeToPro }) => {
         await upgradeToPlan('Pro', 'CARD');
       }
       setShowContractPaywall(false);
-      showToast('🎉 Upgraded to Pro ($19/mo)! Unlimited contract checks & PDF export unlocked.');
+      showToast('🎉 Upgraded to Pro! Unlimited contract checks & PDF export unlocked.');
       if (onUpgradeToPro) {
         onUpgradeToPro();
       }

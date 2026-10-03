@@ -3,7 +3,7 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import { Header } from './components/Header';
 import { Sidebar } from './components/Sidebar';
 import { LandingPage } from './components/LandingPage';
-import { DashboardView } from './components/DashboardView';
+import { RescueCenterView } from './components/RescueCenterView';
 import { InboxView } from './components/InboxView';
 import { DocsView } from './components/DocsView';
 import { BrainView } from './components/BrainView';
@@ -25,6 +25,7 @@ import { ApprovalLogView } from './components/ApprovalLogView';
 import { AuthModal } from './components/AuthModal';
 import { SettingsModal } from './components/SettingsModal';
 import { SettingsView } from './components/SettingsView';
+import { FreeChurnAuditModal } from './components/FreeChurnAuditModal';
 import { CommandPalette } from './components/CommandPalette';
 import { VoiceExecutiveModal } from './components/VoiceExecutiveModal';
 import { DailyBriefingModal } from './components/DailyBriefingModal';
@@ -70,7 +71,7 @@ function AppContent() {
     openUpgradeModal,
     loading 
   } = useAuth();
-  const [currentView, setCurrentView] = useState<'landing' | 'dashboard' | 'radar' | 'inbox' | 'approvals' | 'plans' | 'admin' | 'closer' | 'hiring' | 'meetings' | 'growth' | 'strategy' | 'board-pack' | 'docs' | 'brain' | 'twin' | 'ad-spend' | 'cashflow-guard' | 'roi-calculator' | 'feedback' | 'settings'>('landing');
+  const [currentView, setCurrentView] = useState<'landing' | 'dashboard' | 'radar' | 'inbox' | 'approvals' | 'plans' | 'admin' | 'closer' | 'hiring' | 'meetings' | 'growth' | 'strategy' | 'board-pack' | 'docs' | 'brain' | 'twin' | 'ad-spend' | 'cashflow-guard' | 'roi-calculator' | 'feedback' | 'settings' | 'rescue'>('landing');
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [authMode, setAuthMode] = useState<'login' | 'signup' | 'verify-email' | 'forgot-password'>('login');
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -82,21 +83,17 @@ function AppContent() {
   const [pendingEmailsCount, setPendingEmailsCount] = useState(0);
   const [savePromptReason, setSavePromptReason] = useState<string | null>(null);
   const [demoLeadModalOpen, setDemoLeadModalOpen] = useState(false);
+  const [churnAuditModalOpen, setChurnAuditModalOpen] = useState(false);
 
   // 24/7 Client Self-Service Portals (Payment & Email - No Admin Approval Gating)
   const [clientPaymentModalOpen, setClientPaymentModalOpen] = useState(false);
   const [clientContactModalOpen, setClientContactModalOpen] = useState(false);
   const [targetedInvoiceId, setTargetedInvoiceId] = useState<string | null>(null);
 
-  // Check URL query parameters for direct payment links (?payInvoice=...) or contact (?contact=true)
+  // Check URL query parameters for contact (?contact=true)
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
-      const invId = params.get('payInvoice');
-      if (invId) {
-        setTargetedInvoiceId(invId);
-        setClientPaymentModalOpen(true);
-      }
       if (params.get('contact') === 'true') {
         setClientContactModalOpen(true);
       }
@@ -133,7 +130,7 @@ function AppContent() {
       if (user) {
         setIsDemoMode(false);
         if (currentView === 'landing') {
-          setCurrentView('dashboard');
+          setCurrentView('radar');
         }
       } else {
         if (!isDemoMode) {
@@ -146,16 +143,22 @@ function AppContent() {
   // One-time cleanup of legacy sample entries from client localStorage
   useEffect(() => {
     try {
-      const cleaned = localStorage.getItem('prime_sample_data_cleared_v2');
+      const cleaned = localStorage.getItem('prime_real_data_only_enforced_v1');
       if (!cleaned) {
         localStorage.removeItem('strat_demo_init');
         const keys = Object.keys(localStorage);
         for (const k of keys) {
-          if (k.includes('comp_apex_01') || k.includes('comp_demo_') || k.startsWith('prime_crm_records_company_comp_')) {
+          if (
+            k.includes('comp_apex_01') || 
+            k.includes('comp_demo_') || 
+            k.startsWith('prime_crm_records_') ||
+            k.startsWith('prime_dunning_') ||
+            k.startsWith('prime_inactivity_')
+          ) {
             localStorage.removeItem(k);
           }
         }
-        localStorage.setItem('prime_sample_data_cleared_v2', 'true');
+        localStorage.setItem('prime_real_data_only_enforced_v1', 'true');
       }
     } catch {}
   }, []);
@@ -212,7 +215,7 @@ function AppContent() {
       setCurrentView('radar');
       return;
     }
-    if (['inbox', 'approvals', 'plans', 'admin', 'closer', 'hiring', 'meetings', 'growth', 'strategy', 'board-pack', 'docs', 'brain', 'twin', 'ad-spend', 'cashflow-guard', 'roi-calculator', 'feedback', 'settings'].includes(view)) {
+    if (['inbox', 'approvals', 'plans', 'admin', 'closer', 'hiring', 'meetings', 'growth', 'strategy', 'board-pack', 'docs', 'brain', 'twin', 'ad-spend', 'cashflow-guard', 'roi-calculator', 'feedback', 'settings', 'rescue'].includes(view)) {
       setCurrentView(view as any);
     } else {
       setCurrentView('radar');
@@ -254,6 +257,7 @@ function AppContent() {
           setIsDemoMode(true);
           setCurrentView('radar');
         }}
+        onOpenChurnAudit={() => setChurnAuditModalOpen(true)}
       />
 
       {/* Unverified Email Warning Banner */}
@@ -322,6 +326,7 @@ function AppContent() {
             setClientPaymentModalOpen(true);
           }}
           onOpenClientContact={() => setClientContactModalOpen(true)}
+          onOpenChurnAudit={() => setChurnAuditModalOpen(true)}
         />
       ) : (
         <div className="flex-1 flex flex-col md:flex-row w-full min-h-[calc(100vh-5rem)]">
@@ -345,14 +350,15 @@ function AppContent() {
           <main className="flex-1 p-6 sm:p-8 lg:p-10 overflow-y-auto pb-24 md:pb-10 max-w-7xl">
             {(currentView === 'dashboard' || currentView === 'radar') && (
               <FeaturePaywallOverlay 
-                featureName="Revenue Radar & Churn Sentry" 
+                featureName="PRIME REVENUE & SAAS RADAR" 
                 featureDescription="Real-time multi-tenant deal risk monitoring, executive rescue scripts, and autonomous revenue pipeline telemetry."
                 isDemoMode={isDemoMode && !user}
                 onOpenAuth={handleOpenAuth}
               >
-                <RevenueRadarView />
+                <RevenueRadarView onNavigate={handleNavigate} />
               </FeaturePaywallOverlay>
             )}
+            {currentView === 'rescue' && <RescueCenterView onNavigate={handleNavigate} />}
             {currentView === 'inbox' && <InboxView />}
             {currentView === 'approvals' && <ApprovalLogView />}
             {currentView === 'plans' && <PlansView onNavigate={handleNavigate} />}
@@ -431,7 +437,7 @@ function AppContent() {
             {currentView === 'roi-calculator' && (
               <ROICalculatorView 
                 currentCompany={company} 
-                onNavigatePlans={() => handleNavigate('plans')} 
+                onNavigatePlans={() => handleNavigate('settings')} 
               />
             )}
             {currentView === 'feedback' && <FeedbackHubView />}
@@ -439,6 +445,11 @@ function AppContent() {
               <SettingsView 
                 onNavigate={handleNavigate} 
                 onOpenAuth={handleOpenAuth} 
+              />
+            )}
+            {currentView === 'rescue' && (
+              <RescueCenterView 
+                onNavigate={handleNavigate} 
               />
             )}
           </main>
@@ -472,7 +483,7 @@ function AppContent() {
             <button
               onClick={() => handleNavigate('plans')}
               className={`flex flex-col items-center justify-center gap-1 text-[10px] font-bold ${
-                currentView === 'plans' ? 'text-[#FFD700]' : 'text-white/40'
+                currentView === 'plans' ? 'text-[#FFD700]' : 'text-white/40 hover:text-white'
               }`}
             >
               <CreditCard className="w-4 h-4" />
@@ -594,6 +605,16 @@ function AppContent() {
           setDemoLeadModalOpen(false);
           setIsDemoMode(true);
           setCurrentView('radar');
+        }}
+      />
+
+      {/* Global Free 30-Day Churn Audit Diagnostic Modal */}
+      <FreeChurnAuditModal
+        isOpen={churnAuditModalOpen}
+        onClose={() => setChurnAuditModalOpen(false)}
+        onStartPro={() => {
+          setChurnAuditModalOpen(false);
+          handleNavigate('settings');
         }}
       />
     </div>

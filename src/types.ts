@@ -161,6 +161,7 @@ export interface DunningRecoveryItem {
   companyId: string;
   customerName: string;
   customerEmail: string;
+  customerPhone?: string;
   planName: string;
   failedAmount: number; // USD
   currency: string;
@@ -169,8 +170,34 @@ export interface DunningRecoveryItem {
   status: 'PENDING' | 'RECOVERED' | 'UNCOLLECTIBLE';
   recoveryEmailSubject?: string;
   recoveryEmailBody?: string;
+  day1EmailSent?: boolean;
+  day1EmailText?: string;
+  day3WhatsAppSent?: boolean;
+  day3WhatsAppText?: string;
+  day3WhatsAppScheduledDate?: string;
+  supabaseSynced?: boolean;
+  supabaseStatusText?: string;
   paymentUpdateUrl?: string;
   recoveredAt?: string;
+}
+
+export interface InactivityRiskItem {
+  id: string;
+  companyId: string;
+  customerName: string;
+  customerEmail: string;
+  customerPhone?: string;
+  mrr: number;
+  arr: number;
+  daysSilent: number;
+  alertTitle: string; // "یہ کسٹمر جانے والا ہے"
+  aiAdvice: string; // "اس کو بیس فیصد رعایت دو"
+  discountConcessionPercentage: number; // 20
+  discountCode: string; // "SAVE20NOW"
+  status: 'AT_RISK' | 'CONCESSION_APPLIED' | 'RESCUED' | 'LOST';
+  suggestedMessage: string;
+  detectedAt: string;
+  supabaseSynced?: boolean;
 }
 
 export interface InAppEvent {
@@ -934,6 +961,45 @@ export interface AnalyticsStats {
   lastUpdated: string;
   recentVisitors: VisitorRecord[];
   leads: LeadRecord[];
+}
+
+export interface ChurnAuditAccount {
+  id: string;
+  customerName: string;
+  customerEmail: string;
+  planName: string;
+  arrLost: number;
+  mrrLost: number;
+  riskType: 'FAILED_PAYMENT' | 'SUBSCRIPTION_CANCELED' | 'INACTIVE_7_DAYS' | 'CARD_EXPIRING_SOON';
+  riskLabel: string;
+  daysSilent: number;
+  recoveryProbability: number;
+  suggestedAction: string;
+  rescueSnippet: string;
+  recovered?: boolean;
+}
+
+export interface ChurnAuditResult {
+  id: string;
+  companyId: string;
+  auditedAt: string;
+  stripeConnected: boolean;
+  currency: string;
+  totalDollarsLost30Days: number;
+  totalRecoverableDollars: number;
+  recoveryPercentage: number;
+  failedPaymentsCount: number;
+  failedPaymentsAmount: number;
+  failedInvoicesCount: number;
+  failedInvoicesAmount: number;
+  voluntaryChurnCount: number;
+  voluntaryChurnArr: number;
+  atRiskExpiringCardsCount: number;
+  atRiskExpiringCardsArr: number;
+  inactiveAccountsCount: number;
+  inactiveAccountsArr: number;
+  topRecoverableAccounts: ChurnAuditAccount[];
+  allAccounts: ChurnAuditAccount[];
 }
 
 

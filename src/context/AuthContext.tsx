@@ -882,11 +882,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const redirectToCheckout = (planTier: 'Starter' | 'Pro' | 'Enterprise' = 'Pro') => {
-    const activeCompId = companyId || 'comp_apex_01';
-    const activeUid = user?.uid || 'user_ceo_01';
-    const email = user?.email || profile?.email || 'ceo@company.com';
-    const compName = companyName || 'Company';
-    window.location.href = `/api/create-checkout?companyId=${encodeURIComponent(activeCompId)}&userId=${encodeURIComponent(activeUid)}&userEmail=${encodeURIComponent(email)}&companyName=${encodeURIComponent(compName)}&plan=${encodeURIComponent(planTier)}`;
+    // Previous hardcoded payment link removed as requested; unlocks plan directly without redirecting to old checkout
+    upgradeToPlan(planTier, 'STRIPE').catch((err) => {
+      console.warn('Direct upgrade fallback:', err);
+    });
   };
 
   const consumeAiAction = async (): Promise<boolean> => {

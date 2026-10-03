@@ -12,7 +12,6 @@ export interface PlanConfig {
   tagline: string;
   badge?: string;
   popular?: boolean;
-  payoneerUrl?: string;
   features: string[];
   limits: {
     pipelineLimit: string;
@@ -30,7 +29,6 @@ export const SAAS_PLANS: Record<'Starter' | 'Pro' | 'Enterprise', PlanConfig> = 
     period: '/month',
     tagline: 'Essential AI Chief of Operations',
     description: 'For boutique firms, funded founders, and agencies in the US, UK, EU & Canada needing high-leverage email triage and ARR protection.',
-    payoneerUrl: 'https://link.payoneer.com/Token?t=5458C90B22F3430F88E7A1FBDC6C5FDB&src=pl',
     features: [
       'Autonomous Email Triage & 1-Click Approval Queue',
       'Revenue Radar pipeline tracking up to $1M ARR',
@@ -53,10 +51,9 @@ export const SAAS_PLANS: Record<'Starter' | 'Pro' | 'Enterprise', PlanConfig> = 
     price: 1499,
     period: '/month',
     popular: true,
-    badge: 'MOST POPULAR • EXECUTIVE FAVORITE',
+    badge: 'MOST POPULAR',
     tagline: '24/7 Full Autonomous AI Chief of Operations',
     description: 'Replaces $250k/year C-suite overhead with unlimited 24/7 strategic velocity, CEO Digital Twin 3.0, Closer AI, and real-time revenue radar.',
-    payoneerUrl: 'https://link.payoneer.com/Token?t=8333923BB69649B697D2831CEAF91E38&src=pl',
     features: [
       'Unlimited 24/7 Autonomous AI Chief of Operations (COO)',
       'CEO Digital Twin 3.0: High-Fidelity Voice & Decision Clone',
@@ -83,7 +80,6 @@ export const SAAS_PLANS: Record<'Starter' | 'Pro' | 'Enterprise', PlanConfig> = 
     badge: 'MAXIMUM VELOCITY & SCALE',
     tagline: 'Multi-Entity Strategic Command Center',
     description: 'For US/UK/EU enterprise scale-ups, venture portfolios, and private equity holding companies requiring multi-entity operations and custom SLAs.',
-    payoneerUrl: 'https://link.payoneer.com/Token?t=F64460ABB669438DA92734B97AB9AF70&src=pl',
     features: [
       'Multi-Entity Holding Company Rollup & Consolidated View',
       'Custom Fine-Tuned Domain Models for your specific industry',

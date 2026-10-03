@@ -31,7 +31,12 @@ import {
   ShieldCheck,
   ShieldAlert,
   Database,
-  Settings
+  Settings,
+  CreditCard,
+  Mail,
+  MessageSquare,
+  UserCheck,
+  UserX
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { getApprovalActions } from '../services/approvals';
@@ -46,7 +51,16 @@ import {
   fetchUserDocuments, 
   fetchUserEmails 
 } from '../services/db';
-import { ActivityItem, KPISummary, CRMRecord } from '../types';
+import { ActivityItem, KPISummary, CRMRecord, DunningRecoveryItem, InactivityRiskItem } from '../types';
+import { 
+  getDunningRescueItems, 
+  getInactivityRiskItems, 
+  triggerDay1Email, 
+  triggerDay3WhatsApp, 
+  markCustomerStatus, 
+  simulateStripeFailedPayment, 
+  applyInactivity20PercentConcession 
+} from '../services/dunningRescue';
 import { 
   fetchCRMRecords, 
   filterAtRiskClients, 
@@ -101,6 +115,58 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigate, onOpen
   const [activeTab, setActiveTab] = useState<'overview' | 'executive-suite' | 'profit-suite' | 'swarms' | 'all-tools'>('overview');
   const [pendingApprovalsCount, setPendingApprovalsCount] = useState<number>(0);
   const [auditLogsCount, setAuditLogsCount] = useState<number>(0);
+  const [dunningRescueItems, setDunningRescueItems] = useState<DunningRecoveryItem[]>([]);
+  const [inactivityRiskItems, setInactivityRiskItems] = useState<InactivityRiskItem[]>([]);
+  const [rescueToast, setRescueToast] = useState<string | null>(null);
+
+  const showRescueToast = (msg: string) => {
+    setRescueToast(msg);
+    setTimeout(() => setRescueToast(null), 4000);
+  };
+
+  const handleApply20PercentConcession = async (id: string) => {
+    const effectiveCompId = companyId || 'comp_apex_01';
+    const updated = await applyInactivity20PercentConcession(effectiveCompId, id);
+    setInactivityRiskItems(updated);
+    showRescueToast('✓ AI مشورہ نافذ: 20% رعایت اور ری-انگیجمنٹ میسج سپا بیس میں سنک ہو گیا!');
+  };
+
+  const handleSendDay1Email = async (id: string) => {
+    const effectiveCompId = companyId || 'comp_apex_01';
+    const updated = await triggerDay1Email(effectiveCompId, id);
+    setDunningRescueItems(updated);
+    showRescueToast('✓ Day 1 Email Sent: "آپ کی ادائیگی ناکام ہو گئی، ایک کلک میں ٹھیک کریں"');
+  };
+
+  const handleSendDay3WhatsApp = async (item: DunningRecoveryItem) => {
+    const effectiveCompId = companyId || 'comp_apex_01';
+    const updated = await triggerDay3WhatsApp(effectiveCompId, item.id);
+    setDunningRescueItems(updated);
+    const phone = item.customerPhone ? item.customerPhone.replace(/[^0-9]/g, '') : '';
+    const text = encodeURIComponent(`آپ کا اکاؤنٹ دو دن میں بند ہو جائے گا۔ سروس بحال رکھنے کے لیے براہ کرم فوری رابطہ یا تصدیق کریں۔`);
+    if (phone) {
+      window.open(`https://wa.me/${phone}?text=${text}`, '_blank');
+    }
+    showRescueToast('✓ Day 3 WhatsApp Dispatched: "آپ کا اکاؤنٹ دو دن میں بند ہو جائے گا"');
+  };
+
+  const handleCustomerStatusChange = async (id: string, status: 'RECOVERED' | 'CHURNED') => {
+    const effectiveCompId = companyId || 'comp_apex_01';
+    const updated = await markCustomerStatus(effectiveCompId, id, status);
+    setDunningRescueItems(updated);
+    if (status === 'RECOVERED') {
+      showRescueToast('✓ سپا بیس میں اپڈیٹ: کسٹمر واپس آ گیا (Customer Returned)');
+    } else {
+      showRescueToast('⚠️ سپا بیس میں اپڈیٹ: کسٹمر چلا گیا (Customer Left / Churned)');
+    }
+  };
+
+  const handleSimulatePaymentFailed = async () => {
+    const effectiveCompId = companyId || 'comp_apex_01';
+    const updated = await simulateStripeFailedPayment(effectiveCompId);
+    setDunningRescueItems(updated);
+    showRescueToast('⚡ Stripe Webhook Event Simulated: invoice.payment_failed (Day 1 Email Auto-Sent)');
+  };
 
   const loadDashboardData = async () => {
     const effectiveUid = user?.uid || 'guest_demo_user';
@@ -137,6 +203,12 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigate, onOpen
       setAtRiskCount(atRisk.length);
       setHotLeadsCount(hot.length);
       setAtRiskValue(totalRiskVal);
+
+      // Load 2 Rescue Engines: Stripe Dunning & 7-Day Inactivity
+      const dunning = getDunningRescueItems(effectiveCompId);
+      const inact = getInactivityRiskItems(effectiveCompId);
+      setDunningRescueItems(dunning);
+      setInactivityRiskItems(inact);
     } catch (err) {
       console.error('Error loading dashboard data:', err);
     } finally {
@@ -282,7 +354,15 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigate, onOpen
   };
 
   return (
-    <div className="flex-1 flex flex-col space-y-6 sm:space-y-8 min-h-0">
+    <div className="flex-1 flex flex-col space-y-6 sm:space-y-8 min-h-0 relative">
+      {/* Toast Notification for Rescue Actions */}
+      {rescueToast && (
+        <div className="fixed top-5 right-5 z-50 px-4 py-2.5 rounded-xl bg-emerald-500 text-black font-extrabold text-xs shadow-2xl flex items-center gap-2 animate-bounce">
+          <CheckCircle2 className="w-4 h-4 text-black" />
+          <span>{rescueToast}</span>
+        </div>
+      )}
+
       {/* Top Action Bar & Quick Status (Previous order, 100% English, neatly spaced with zero overlapping) */}
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 pb-4 border-b border-white/5">
         <div>
@@ -349,6 +429,19 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigate, onOpen
           >
             <Radar className="w-3.5 h-3.5 text-amber-400" />
             <span>Revenue Radar</span>
+          </button>
+
+          {/* 4.5 Rescue Center (2 Engines: Stripe + Supabase) */}
+          <button
+            onClick={() => onNavigate('rescue')}
+            className="px-3 py-2 rounded-xl bg-gradient-to-r from-rose-500/20 to-red-500/10 hover:from-rose-500/30 hover:to-red-500/20 text-rose-300 border border-rose-500/40 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap shrink-0 shadow-sm"
+            title="Rescue Center: 1. فیل پیمنٹ واپسی 2. جانے والے کسٹمر کی خبر"
+          >
+            <AlertTriangle className="w-3.5 h-3.5 text-rose-400" />
+            <span>Rescue Center</span>
+            <span className="px-1.5 py-0.2 rounded-full bg-rose-500/30 text-rose-200 text-[9px] font-mono font-black">
+              2 ENGINES
+            </span>
           </button>
 
           {/* 5. Daily Briefing */}
@@ -600,6 +693,237 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigate, onOpen
             <span>Audit Trail ({auditLogsCount})</span>
           </button>
         </div>
+      </section>
+
+      {/* ========================================================================= */}
+      {/* PRIME 2 RESCUE ENGINES: فیل پیمنٹ واپسی + جانے والے کسٹمر کی خبر */}
+      {/* ========================================================================= */}
+      <section className="space-y-4">
+        
+        {/* 2. جانے والے کسٹمر کی خبر (7-DAY INACTIVITY RED ALERT + 20% CONCESSION ADVICE) */}
+        {inactivityRiskItems.some(i => i.status === 'AT_RISK') && (
+          <div className="p-5 sm:p-6 rounded-3xl bg-gradient-to-br from-rose-950/40 via-[#181111] to-black border-2 border-rose-500/70 shadow-[0_0_40px_rgba(244,63,94,0.2)] space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-rose-500/20 pb-3">
+              <div className="flex items-center gap-3">
+                <span className="w-3.5 h-3.5 rounded-full bg-rose-500 animate-ping shrink-0" />
+                <div>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-xs font-mono font-bold uppercase tracking-wider text-rose-400">
+                      🚨 خطرے کی گھنٹی • 7-Day Inactivity Sentry
+                    </span>
+                    <span className="px-2.5 py-0.5 rounded-full bg-rose-500 text-white font-black text-[11px] animate-pulse shadow-sm">
+                      یہ کسٹمر جانے والا ہے
+                    </span>
+                  </div>
+                  <h3 className="text-base sm:text-lg font-black text-white mt-0.5">
+                    جانے والے کسٹمر کی خبر: سات دن سے غیر حاضر صارفین (Inactivity Alert)
+                  </h3>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <span className="text-[11px] font-mono text-zinc-400">
+                  Supabase CRM Sync Active
+                </span>
+                <button
+                  onClick={() => onNavigate('rescue')}
+                  className="text-xs px-3 py-1.5 rounded-xl bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 font-bold border border-rose-500/30 cursor-pointer transition-colors"
+                >
+                  اوپن ریسکیو سینٹر →
+                </button>
+              </div>
+            </div>
+
+            {/* Inactive Accounts Alert Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {inactivityRiskItems.map((item) => (
+                <div 
+                  key={item.id}
+                  className={`p-4 rounded-2xl border transition-all space-y-3.5 ${
+                    item.status === 'CONCESSION_APPLIED'
+                      ? 'bg-emerald-950/20 border-emerald-500/40'
+                      : 'bg-black/60 border border-rose-500/40 shadow-lg'
+                  }`}
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-sm font-bold text-white">{item.customerName}</span>
+                        <span className="text-[10px] font-mono font-bold text-rose-400 bg-rose-500/20 px-2 py-0.5 rounded border border-rose-500/30">
+                          {item.daysSilent} دن سے لاگ ان نہیں
+                        </span>
+                      </div>
+                      <p className="text-xs text-zinc-400 mt-0.5">{item.customerEmail}</p>
+                    </div>
+                    <div className="text-right shrink-0">
+                      <span className="text-xs font-mono font-bold text-[#FFD700] block">${item.mrr.toLocaleString()} / mo</span>
+                      <span className="text-[10px] text-zinc-500 font-mono">${item.arr.toLocaleString()} ARR</span>
+                    </div>
+                  </div>
+
+                  {/* AI Advice Box: "اس کو بیس فیصد رعایت دو" */}
+                  <div className="p-3.5 rounded-xl bg-gradient-to-r from-amber-500/15 via-[#FFD700]/10 to-amber-500/15 border border-[#FFD700]/40 space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[11px] font-extrabold text-[#FFD700] flex items-center gap-1.5 uppercase font-mono">
+                        <Sparkles className="w-3.5 h-3.5 text-[#FFD700]" />
+                        <span>AI مشورہ (AI Recommendation):</span>
+                      </span>
+                      <span className="text-[9px] font-mono px-2 py-0.5 rounded bg-[#FFD700]/20 text-[#FFD700] font-black border border-[#FFD700]/30">
+                        20% CODE: {item.discountCode}
+                      </span>
+                    </div>
+                    <p className="text-sm font-black text-white">
+                      "{item.aiAdvice}" (Give 20% Retention Concession)
+                    </p>
+                    <p className="text-[11px] text-zinc-300 leading-relaxed italic">
+                      "{item.suggestedMessage}"
+                    </p>
+                  </div>
+
+                  <div className="flex items-center justify-between pt-1">
+                    <span className="text-[10px] text-zinc-500 font-mono">
+                      Stripe + Supabase Connected
+                    </span>
+
+                    {item.status === 'CONCESSION_APPLIED' ? (
+                      <span className="px-3 py-1.5 rounded-xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-xs font-bold flex items-center gap-1 font-mono">
+                        <CheckCircle2 className="w-3.5 h-3.5" /> 20% رعایت لاگو ہو گئی (RESCUED)
+                      </span>
+                    ) : (
+                      <button
+                        onClick={() => handleApply20PercentConcession(item.id)}
+                        className="px-4 py-2 rounded-xl bg-gradient-to-r from-[#FFD700] via-amber-400 to-[#FFD700] hover:brightness-110 text-black font-black text-xs shadow-md cursor-pointer transition-all flex items-center gap-1.5 active:scale-95"
+                      >
+                        <Zap className="w-3.5 h-3.5 text-black" />
+                        <span>20% رعایت اور ری-انگیجمنٹ میسج بھیجیں</span>
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* 1. فیل پیمنٹ واپسی (STRIPE MULTI-CHANNEL DUNNING: EMAIL & WHATSAPP) */}
+        <div className="p-5 sm:p-6 rounded-3xl bg-[#121212] border border-white/10 space-y-4 shadow-xl">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/5 pb-3">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-rose-500/15 border border-rose-500/30 flex items-center justify-center text-rose-400 shrink-0">
+                <CreditCard className="w-5 h-5" />
+              </div>
+              <div>
+                <h4 className="text-sm sm:text-base font-bold text-white flex items-center gap-2">
+                  <span>1. فیل پیمنٹ واپسی (Stripe Multi-Channel Dunning)</span>
+                  <span className="text-[9px] font-mono px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                    Day 1 Email + Day 3 WhatsApp
+                  </span>
+                </h4>
+                <p className="text-xs text-zinc-400">
+                  سٹرائپ میں ادائیگی فیل ہونے پر خودکار ایکشن: پہلے دن ایمیل، تیسرے دن واٹس ایپ، اور سپا بیس میں کسٹمر کی واپسی/روانگی کا اندراج۔
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 flex-wrap">
+              <button
+                onClick={handleSimulatePaymentFailed}
+                className="px-3.5 py-1.5 rounded-xl bg-rose-500/20 hover:bg-rose-500/30 border border-rose-500/30 text-rose-300 font-bold text-xs transition-all cursor-pointer flex items-center gap-1.5 active:scale-95"
+                title="Simulate Stripe invoice.payment_failed webhook event"
+              >
+                <Zap className="w-3.5 h-3.5" />
+                <span>Simulate Stripe Webhook</span>
+              </button>
+              <button
+                onClick={() => onNavigate('rescue')}
+                className="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/15 text-white font-bold text-xs transition-all cursor-pointer"
+              >
+                مکمل تفصیلات →
+              </button>
+            </div>
+          </div>
+
+          {/* Dunning Records Stream */}
+          <div className="space-y-3">
+            {dunningRescueItems.map((item) => (
+              <div 
+                key={item.id}
+                className={`p-4 rounded-2xl border transition-all flex flex-col md:flex-row md:items-center justify-between gap-4 ${
+                  item.status === 'RECOVERED'
+                    ? 'bg-emerald-950/20 border-emerald-500/40'
+                    : item.status === 'UNCOLLECTIBLE'
+                    ? 'bg-rose-950/20 border-rose-500/40 opacity-70'
+                    : 'bg-[#181818] border-white/5 hover:border-white/15'
+                }`}
+              >
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-sm font-bold text-white">{item.customerName}</span>
+                    <span className="text-xs font-mono font-bold text-rose-400 bg-rose-500/10 px-2.5 py-0.5 rounded-lg border border-rose-500/20">
+                      ${item.failedAmount} فیل شدہ رقم
+                    </span>
+                    <span className="text-zinc-500 text-xs font-mono">({item.customerEmail})</span>
+                  </div>
+
+                  {/* Day 1 and Day 3 Status Indicators */}
+                  <div className="flex items-center gap-3 text-xs text-zinc-300 flex-wrap">
+                    <span className={`px-2 py-0.5 rounded font-mono text-[10px] font-bold flex items-center gap-1 ${
+                      item.day1EmailSent ? 'bg-blue-500/20 text-blue-300' : 'bg-zinc-800 text-zinc-400'
+                    }`}>
+                      <Mail className="w-3 h-3" /> Day 1 Email: {item.day1EmailSent ? '✓ بھیجی گئی ("آپ کی ادائیگی ناکام ہو گئی")' : 'Pending'}
+                    </span>
+
+                    <span className={`px-2 py-0.5 rounded font-mono text-[10px] font-bold flex items-center gap-1 ${
+                      item.day3WhatsAppSent ? 'bg-emerald-500/20 text-emerald-300' : 'bg-amber-500/20 text-amber-300'
+                    }`}>
+                      <MessageSquare className="w-3 h-3" /> Day 3 WhatsApp: {item.day3WhatsAppSent ? '✓ بھیجی گئی ("اکاؤنٹ دو دن میں بند ہو جائے گا")' : 'Scheduled'}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Supabase Action Buttons: کسٹمر واپس آیا یا چلا گیا */}
+                <div className="flex items-center gap-2 shrink-0 self-end md:self-auto">
+                  {item.status === 'PENDING' ? (
+                    <>
+                      {!item.day3WhatsAppSent && (
+                        <button
+                          onClick={() => handleSendDay3WhatsApp(item)}
+                          className="px-2.5 py-1.5 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 font-bold border border-emerald-500/30 text-xs cursor-pointer flex items-center gap-1"
+                        >
+                          <MessageSquare className="w-3 h-3" />
+                          <span>واٹس ایپ بھیجیں</span>
+                        </button>
+                      )}
+                      <button
+                        onClick={() => handleCustomerStatusChange(item.id, 'RECOVERED')}
+                        className="px-3 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-black font-extrabold text-xs transition-all cursor-pointer flex items-center gap-1 shadow-sm active:scale-95"
+                      >
+                        <UserCheck className="w-3.5 h-3.5" />
+                        <span>کسٹمر واپس آیا (Mark Returned)</span>
+                      </button>
+                      <button
+                        onClick={() => handleCustomerStatusChange(item.id, 'CHURNED')}
+                        className="px-3 py-1.5 rounded-xl bg-rose-500/20 hover:bg-rose-500/30 border border-rose-500/30 text-rose-300 font-bold text-xs transition-all cursor-pointer flex items-center gap-1 active:scale-95"
+                      >
+                        <UserX className="w-3.5 h-3.5" />
+                        <span>کسٹمر چلا گیا (Mark Left)</span>
+                      </button>
+                    </>
+                  ) : item.status === 'RECOVERED' ? (
+                    <span className="px-3 py-1.5 rounded-xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-bold text-xs flex items-center gap-1.5 font-mono">
+                      <UserCheck className="w-3.5 h-3.5" /> سپا بیس: کسٹمر واپس آ گیا (RECOVERED)
+                    </span>
+                  ) : (
+                    <span className="px-3 py-1.5 rounded-xl bg-rose-500/20 text-rose-400 border border-rose-500/30 font-bold text-xs flex items-center gap-1.5 font-mono">
+                      <UserX className="w-3.5 h-3.5" /> سپا بیس: کسٹمر چلا گیا (CHURNED)
+                    </span>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
       </section>
 
       {/* CORE REQUIRED SLEEK METRICS GRID (4 CARDS) */}

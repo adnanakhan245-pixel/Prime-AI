@@ -74,14 +74,14 @@ export const ContractPaywallModal: React.FC<ContractPaywallModalProps> = ({
 
         {/* Action Buttons as requested */}
         <div className="mt-6 space-y-3">
-          {/* Button 2: Upgrade to Pro - $19/month */}
+          {/* Button 2: Upgrade to Pro */}
           <button
             type="button"
             onClick={onUpgradePro}
             className="w-full py-3.5 rounded-xl bg-gradient-to-r from-[#FFD700] via-yellow-400 to-[#FFD700] hover:brightness-110 text-black text-sm font-black flex items-center justify-center gap-2 shadow-[0_0_25px_rgba(255,215,0,0.35)] transition-all cursor-pointer active:scale-95"
           >
             <Sparkles className="w-4 h-4" />
-            <span>Upgrade to Pro - $19/month</span>
+            <span>Upgrade to Pro</span>
             <ArrowRight className="w-4 h-4" />
           </button>
 

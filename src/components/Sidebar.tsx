@@ -22,7 +22,8 @@ import {
   TrendingUp,
   DollarSign,
   Activity,
-  Layers
+  Layers,
+  AlertTriangle
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
@@ -58,27 +59,20 @@ export const Sidebar: React.FC<SidebarProps> = ({
     signOut
   } = useAuth();
 
-  // Core Hero Features - Clean, Razor-Sharp, Zero Rush for CEOs
+  // Core Hero Features - Clean, Razor-Sharp, Zero Rush for CEOs: ONLY Revenue Radar
   const primaryNavItems = [
     {
       id: 'radar',
-      label: 'Revenue Radar',
+      label: 'Revenue & SaaS Radar',
       icon: Radar,
-      badge: 'LIVE SENTRY',
-      badgeClass: 'bg-rose-500 text-white animate-pulse font-extrabold shadow-sm',
-    },
-    {
-      id: 'approvals',
-      label: 'AI Approvals & Audit',
-      icon: ShieldCheck,
-      badge: pendingEmailsCount > 0 ? `${pendingEmailsCount} PENDING` : 'ACTIVE',
-      badgeClass: pendingEmailsCount > 0 ? 'bg-amber-400 text-black font-black' : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-mono',
+      badge: '100% REAL DATA',
+      badgeClass: 'bg-emerald-500 text-black font-extrabold shadow-sm',
     },
     {
       id: 'plans',
-      label: 'Plan & Billing',
+      label: 'Plans & Payment',
       icon: CreditCard,
-      badge: isPro ? 'PRO' : 'PILOT',
+      badge: 'PRO',
       badgeClass: 'bg-[#FFD700]/20 text-[#FFD700] border border-[#FFD700]/30 font-bold',
     },
     {
@@ -97,8 +91,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
     }] : [])
   ];
 
-  // Secondary Power Modules (Showcased clearly with active value tags)
+  // Secondary Power Modules (Hidden in Dropdown so CEOs have zero confusion)
   const secondaryNavItems = [
+    { id: 'rescue', label: 'Rescue Center', sublabel: '2 Automated Recovery Engines', tag: 'RESCUE', icon: AlertTriangle, color: 'text-amber-400' },
+    { id: 'approvals', label: 'AI Approvals & Audit', sublabel: 'Human Governance & Undo', tag: 'AUDIT', icon: ShieldCheck, color: 'text-emerald-400' },
     { id: 'cashflow-guard', label: 'Cash Flow Guard', sublabel: 'Runway Defense & Invoices', tag: 'FINANCE', icon: DollarSign, color: 'text-emerald-400' },
     { id: 'roi-calculator', label: 'ROI Calculator', sublabel: 'Measure Value Realization', tag: 'ROI', icon: Activity, color: 'text-emerald-400' },
     { id: 'ad-spend', label: 'Ad Spend Optimizer', sublabel: 'Cut Wasted CAC & ROAS', tag: 'MARKETING', icon: TrendingUp, color: 'text-amber-400' },
@@ -208,13 +204,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   <div className="text-xs font-bold text-white flex items-center gap-1.5">
                     <span>Executive AI Modules</span>
                   </div>
-                  <div className="text-[10px] text-zinc-400 font-normal">12 Live Working Tools</div>
+                  <div className="text-[10px] text-zinc-400 font-normal">{secondaryNavItems.length} Other Tools (Dropdown)</div>
                 </div>
               </div>
 
               <div className="flex items-center gap-1.5 shrink-0">
                 <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-[#FFD700]/20 text-[#FFD700] font-mono font-extrabold border border-[#FFD700]/30">
-                  12 ACTIVE
+                  DROPDOWN
                 </span>
                 {isAddonsOpen ? (
                   <ChevronDown className="w-3.5 h-3.5 text-[#FFD700]" />
@@ -297,7 +293,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           </div>
         ) : isPro ? (
           <div 
-            onClick={() => onNavigate('plans')}
+            onClick={() => onNavigate('settings')}
             className="mb-3 p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-bold flex items-center justify-between cursor-pointer hover:bg-emerald-500/20 transition-all"
           >
             <span className="flex items-center gap-1.5">
@@ -385,7 +381,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         <div className="flex items-center justify-between text-[9px] text-white/40 pt-2 border-t border-white/5 uppercase tracking-widest font-mono">
           <span>Tenant Isolated</span>
           <span className="flex items-center gap-1 text-emerald-400 font-mono">
-            <Shield className="w-2.5 h-2.5" /> SOC-2 Ready
+            <Shield className="w-2.5 h-2.5" /> Bank-Grade
           </span>
         </div>
       </div>

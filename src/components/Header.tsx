@@ -26,7 +26,8 @@ import {
   Brain,
   TrendingUp,
   DollarSign,
-  Users
+  Users,
+  AlertTriangle
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { fetchAllCompanies } from '../services/db';
@@ -44,6 +45,7 @@ interface HeaderProps {
   isDemoMode?: boolean;
   onExitDemo?: () => void;
   onEnterDemo?: () => void;
+  onOpenChurnAudit?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -57,6 +59,7 @@ export const Header: React.FC<HeaderProps> = ({
   isDemoMode = false,
   onExitDemo,
   onEnterDemo,
+  onOpenChurnAudit,
 }) => {
   const { 
     user, 
@@ -90,16 +93,10 @@ export const Header: React.FC<HeaderProps> = ({
   const getViewTitle = () => {
     switch (currentView) {
       case 'dashboard':
-        return (
-          <h2 className="text-sm sm:text-base md:text-xl font-light tracking-tight text-white leading-tight">
-            <span className="block sm:inline">PRIME </span>
-            <span className="text-[#FFD700] font-semibold block sm:inline">Command Center</span>
-          </h2>
-        );
       case 'radar':
         return (
-          <h2 className="text-sm sm:text-base md:text-xl font-light tracking-tight text-white leading-tight">
-            PRIME <span className="text-[#FFD700] font-semibold">Revenue Radar</span>
+          <h2 className="text-sm sm:text-base md:text-xl font-light tracking-tight text-white leading-tight uppercase font-mono">
+            PRIME <span className="text-[#FFD700] font-semibold">REVENUE &amp; SAAS RADAR</span>
           </h2>
         );
       case 'inbox':
@@ -347,6 +344,22 @@ export const Header: React.FC<HeaderProps> = ({
             </div>
           ) : null}
 
+          {/* Free 30-Day Churn Audit Diagnostic Button */}
+          {onOpenChurnAudit && (
+            <button
+              onClick={onOpenChurnAudit}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-rose-500/20 to-red-500/10 hover:from-rose-500/30 hover:to-red-500/20 border border-rose-500/40 text-rose-300 text-xs font-bold transition-all cursor-pointer shadow-[0_0_15px_rgba(244,63,94,0.15)] hover:scale-105 active:scale-95 group"
+              title="Free 30-Day Stripe Churn Audit (Discover leaked ARR)"
+            >
+              <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse" />
+              <span className="hidden sm:inline font-bold">Free Churn Audit</span>
+              <span className="sm:hidden font-bold">Audit</span>
+              <span className="text-[9px] px-1.5 py-0.2 rounded-full bg-rose-500/20 text-rose-200 font-mono font-extrabold border border-rose-500/30">
+                30D
+              </span>
+            </button>
+          )}
+
           {/* All Features Dropdown Menu - Everything Cleanly Organized Under 1 Dropdown */}
           {(user || isDemoMode) && (
             <div className="relative">
@@ -403,11 +416,38 @@ export const Header: React.FC<HeaderProps> = ({
                         </div>
                         <div>
                           <div className="text-xs font-bold text-white">Revenue Radar &amp; Churn Sentry</div>
-                          <div className="text-[10px] text-white/50">Deal risk, churn prevention, ARR telemetry</div>
+                          <div className="text-[10px] text-white/50">Deal risk, churn prevention, ARR metrics</div>
                         </div>
                       </div>
                       <span className="text-[9px] px-1.5 py-0.5 rounded bg-rose-500 text-white font-mono font-extrabold animate-pulse">
                         LIVE
+                      </span>
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        onNavigate('rescue');
+                        setFeaturesDropdownOpen(false);
+                      }}
+                      className={`w-full flex items-center justify-between p-2.5 rounded-xl transition-all text-left cursor-pointer mt-1.5 ${
+                        currentView === 'rescue'
+                          ? 'bg-rose-500/20 text-rose-300 font-bold border border-rose-500/30'
+                          : 'hover:bg-white/5 text-white'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-7 h-7 rounded-lg bg-rose-500/20 text-rose-400 flex items-center justify-center">
+                          <AlertTriangle className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <div className="text-xs font-bold text-white flex items-center gap-1.5">
+                            <span>Rescue Center: 2 Engines</span>
+                          </div>
+                          <div className="text-[10px] text-zinc-400">فیل پیمنٹ (ایمیل/واٹس ایپ) اور 7 دن خاموش الرٹ</div>
+                        </div>
+                      </div>
+                      <span className="text-[9px] px-1.5 py-0.5 rounded bg-rose-500/20 text-rose-300 border border-rose-500/30 font-mono font-bold">
+                        STRIPE+SUPA
                       </span>
                     </button>
                   </div>
@@ -614,7 +654,15 @@ export const Header: React.FC<HeaderProps> = ({
           )}
         </div>
 
-        {/* Center Nav for Landing - Removed per requirement for single-feature Radar homepage */}
+        {/* Center Title Display: PRIME REVENUE & SAAS RADAR */}
+        <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/[0.04] border border-[#FFD700]/30 shadow-[0_0_20px_rgba(255,215,0,0.12)]">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
+            <span className="text-xs sm:text-sm font-black tracking-widest text-white uppercase font-mono">
+              PRIME <span className="text-[#FFD700]">REVENUE &amp; SAAS RADAR</span>
+            </span>
+          </div>
+        </div>
 
         {/* Right CTA / Status Stack */}
         <div className="flex items-center gap-2 sm:gap-4 shrink-0">
@@ -654,24 +702,18 @@ export const Header: React.FC<HeaderProps> = ({
                 <span className="text-[9px] px-1 py-0.2 rounded bg-emerald-500/20 text-emerald-400 font-mono font-bold">iOS/APK</span>
               </button>
 
-              {/* Plans Navigation Button (Hidden on small mobile to give Prime Command Center full breathing room) */}
+              {/* Plans & Client Payment Portal Button */}
               <button
                 onClick={() => onNavigate('plans')}
-                className={`hidden sm:flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
+                className={`hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
                   currentView === 'plans'
                     ? 'bg-[#FFD700] text-black border-[#FFD700]'
                     : 'bg-[#FFD700]/10 hover:bg-[#FFD700]/20 text-[#FFD700] border-[#FFD700]/30'
                 }`}
-                title={isPro ? `Active ${subscription?.planTier || company?.plan || 'Pro'} Plan (${daysRemaining} days remaining)` : `Free Trial (${trialDaysRemaining} days remaining)`}
+                title="Plans & Client Payment Portal"
               >
                 <CreditCard className="w-3.5 h-3.5" />
                 <span>Plans</span>
-                <span className="hidden md:inline text-[10px] px-1.5 py-0.2 rounded-full bg-white/20 font-mono font-bold">
-                  {subscription?.planTier || company?.plan || 'Pro'} ({daysRemaining > 0 ? `${daysRemaining}d` : 'Expired'})
-                </span>
-                <span className="md:hidden text-[10px] font-mono font-bold">
-                  {daysRemaining > 0 ? `${daysRemaining}d` : 'Plan'}
-                </span>
               </button>
 
               {/* Super Admin Dashboard Button (Master Owner Only) */}
@@ -683,7 +725,7 @@ export const Header: React.FC<HeaderProps> = ({
                       ? 'bg-emerald-500 text-black border-emerald-500'
                       : 'bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
                   }`}
-                  title="Super Admin Workspace Telemetry"
+                  title="Super Admin Workspace Overview"
                 >
                   <ShieldCheck className="w-3.5 h-3.5" />
                   <span>Admin</span>
@@ -724,15 +766,6 @@ export const Header: React.FC<HeaderProps> = ({
                   <span>Voice HUD</span>
                 </button>
               )}
-
-              {/* Plans Navigation Button */}
-              <button
-                onClick={() => onNavigate('plans')}
-                className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-bold transition-all cursor-pointer bg-[#FFD700]/10 hover:bg-[#FFD700]/20 text-[#FFD700] border-[#FFD700]/30"
-              >
-                <CreditCard className="w-3.5 h-3.5" />
-                <span>Plans</span>
-              </button>
 
               <button
                 onClick={() => onOpenAuth('signup')}

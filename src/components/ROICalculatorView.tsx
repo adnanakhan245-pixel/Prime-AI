@@ -835,20 +835,24 @@ export const ROICalculatorView: React.FC<ROICalculatorViewProps> = ({
                 </div>
 
                 <div className="grid grid-cols-3 gap-2">
-                  {(['Starter', 'Pro', 'Enterprise'] as PlanTier[]).map(plan => {
-                    const cost = billingCycle === 'annual' ? planCosts[plan].annual : planCosts[plan].monthly;
-                    const isSelected = selectedPlan === plan;
+                  {[
+                    { tier: 'Starter' as PlanTier, label: 'Standard' },
+                    { tier: 'Pro' as PlanTier, label: 'Executive' },
+                    { tier: 'Enterprise' as PlanTier, label: 'Advanced' }
+                  ].map(({ tier, label }) => {
+                    const cost = billingCycle === 'annual' ? planCosts[tier].annual : planCosts[tier].monthly;
+                    const isSelected = selectedPlan === tier;
                     return (
                       <button
-                        key={plan}
-                        onClick={() => setSelectedPlan(plan)}
+                        key={tier}
+                        onClick={() => setSelectedPlan(tier)}
                         className={`p-3 rounded-xl border text-center transition-all ${
                           isSelected 
                             ? 'bg-gradient-to-b from-[#1E231F] to-[#121815] border-[#FFD700] text-white shadow-lg' 
                             : 'bg-black/40 border-white/10 text-white/60 hover:border-white/30'
                         }`}
                       >
-                        <div className="text-xs font-bold">{plan}</div>
+                        <div className="text-xs font-bold">{label}</div>
                         <div className={`text-sm font-black mt-0.5 ${isSelected ? 'text-[#FFD700]' : 'text-white/80'}`}>
                           ${cost}
                         </div>

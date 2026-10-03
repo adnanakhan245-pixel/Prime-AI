@@ -1,120 +1,43 @@
 import React, { useState } from 'react';
 import { 
   X, 
+  Crown, 
   Sparkles, 
   Check, 
-  Crown, 
-  CreditCard, 
-  ShieldCheck, 
   ArrowRight, 
+  ShieldCheck, 
   Zap, 
-  Building2, 
-  CheckCircle2,
   Lock,
-  ExternalLink,
-  ChevronRight
+  Building2,
+  CheckCircle2,
+  Activity,
+  Cpu
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { SAAS_PLANS } from '../services/subscription';
-import { PlanTier } from '../types';
 
 export const UpgradePaywallModal: React.FC = () => {
   const { 
     upgradeModalOpen, 
     setUpgradeModalOpen, 
-    selectedUpgradePlan, 
     companyName, 
-    companyId,
-    trialDaysRemaining,
     isTrialExpired,
-    upgradeToPlan,
-    activateInstantPaidAccess,
-    redirectToCheckout 
+    trialDaysRemaining,
+    activateInstantPaidAccess
   } = useAuth();
 
-  const [activePlan, setActivePlan] = useState<'Starter' | 'Pro' | 'Enterprise'>(selectedUpgradePlan || 'Pro');
-  const [billingInterval, setBillingInterval] = useState<'monthly' | 'annual'>('monthly');
   const [loadingCheckout, setLoadingCheckout] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   if (!upgradeModalOpen) return null;
 
-  const plans = [
-    {
-      tier: 'Starter' as PlanTier,
-      name: 'Starter',
-      price: billingInterval === 'annual' ? 399 : 499,
-      tagline: 'Growing SaaS Leadership',
-      description: 'Autonomous email triage, document analyzer, and baseline operational metrics.',
-      features: [
-        'Up to 5 Executive Seats',
-        '250 AI Actions / month',
-        'Email Triage & Draft Generator',
-        'Company Isolated Supabase DB',
-        'Standard Email Support'
-      ],
-      popular: false
-    },
-    {
-      tier: 'Pro' as PlanTier,
-      name: 'Pro (Most Popular)',
-      price: billingInterval === 'annual' ? 1199 : 1499,
-      tagline: 'Autonomous AI Chief of Operations',
-      description: 'Full-scale strategic executive intelligence, deal closing automation, and real-time revenue telemetry.',
-      features: [
-        'Unlimited AI Operations',
-        'Brain 3.0 CEO Digital Twin',
-        'Revenue Radar & Churn Sentry',
-        'Deal Rescue Closer Agent',
-        '9:00 AM Automated Executive Briefing',
-        'Multi-Tenant Company Isolation',
-        '24/7 Priority Concierge SLA'
-      ],
-      popular: true
-    },
-    {
-      tier: 'Enterprise' as PlanTier,
-      name: 'Enterprise',
-      price: billingInterval === 'annual' ? 2499 : 2999,
-      tagline: 'Custom Dedicated Infrastructure',
-      description: 'Private model instances, custom ERP/CRM data warehouse connectors, and bespoke AI tuning.',
-      features: [
-        'Unlimited Everything & Custom Models',
-        'Dedicated Private Gemini Engine',
-        'Custom Data Warehouse Sync (Snowflake/BigQuery)',
-        'Custom SSO & SOC2 Type II SLA',
-        'Dedicated Solutions Architect',
-        'Custom Integrations & Migration'
-      ],
-      popular: false
-    }
-  ];
-
-  const handleStripeCheckout = async () => {
-    setLoadingCheckout(true);
-    setSuccessMessage(null);
-    try {
-      redirectToCheckout(activePlan);
-    } catch (err: any) {
-      console.warn('Checkout fallback to simulated activation:', err);
-      await upgradeToPlan(activePlan, 'CARD');
-      setSuccessMessage(`Successfully upgraded ${companyName} to PRIME AI ${activePlan}!`);
-      setTimeout(() => {
-        setUpgradeModalOpen(false);
-      }, 2000);
-    } finally {
-      setLoadingCheckout(false);
-    }
-  };
-
-  const handleInstantTestUpgrade = async () => {
+  const handleInstantUnlock = async () => {
     setLoadingCheckout(true);
     try {
-      await activateInstantPaidAccess(activePlan, 'CARD');
-      setSuccessMessage(`Activated 30-day ${activePlan} plan for ${companyName}! All premium features unlocked.`);
+      await activateInstantPaidAccess('Pro', 'CARD');
+      setSuccessMessage(`Activated full executive access for ${companyName || 'your workspace'}! All features unlocked.`);
       setTimeout(() => {
         setUpgradeModalOpen(false);
-      }, 2000);
+      }, 1800);
     } catch (e) {
       console.error(e);
     } finally {
@@ -123,54 +46,33 @@ export const UpgradePaywallModal: React.FC = () => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md overflow-y-auto animate-fade-in">
-      <div className="relative w-full max-w-4xl bg-gradient-to-b from-[#161616] via-[#121212] to-[#0A0A0A] border border-[#FFD700]/30 rounded-3xl p-6 sm:p-8 shadow-[0_25px_70px_rgba(0,0,0,0.9)] my-8">
-        
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in overflow-y-auto">
+      <div className="relative w-full max-w-2xl rounded-3xl bg-[#141414] border border-[#FFD700]/40 p-6 sm:p-8 shadow-[0_0_60px_rgba(255,215,0,0.18)] my-8">
         {/* Close Button */}
         <button
           onClick={() => setUpgradeModalOpen(false)}
-          className="absolute top-5 right-5 p-2 rounded-xl text-white/50 hover:text-white hover:bg-white/10 transition-all cursor-pointer"
+          className="absolute top-5 right-5 p-2 rounded-xl text-white/40 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+          aria-label="Close"
         >
           <X className="w-5 h-5" />
         </button>
 
         {/* Modal Header */}
-        <div className="text-center max-w-2xl mx-auto space-y-3 mb-8">
+        <div className="text-center space-y-2 mb-6">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#FFD700]/10 border border-[#FFD700]/30 text-[#FFD700] text-xs font-mono font-bold">
             <Sparkles className="w-3.5 h-3.5" />
-            <span>EXECUTIVE UPGRADE PORTAL</span>
+            <span>FULL OPERATIONAL ACCESS</span>
           </div>
 
-          <h2 className="text-2xl sm:text-4xl font-light text-white tracking-tight">
-            Upgrade <span className="font-semibold text-[#FFD700]">{companyName}</span> to Pro
+          <h2 className="text-2xl sm:text-3xl font-light tracking-tight text-white">
+            Unlock Full <span className="font-semibold text-[#FFD700]">AI Chief of Operations</span>
           </h2>
 
-          <p className="text-xs sm:text-sm text-white/60">
+          <p className="text-xs sm:text-sm text-white/60 max-w-lg mx-auto">
             {isTrialExpired 
-              ? 'Your 14-day free trial has expired. Upgrade your workspace to unlock Brain 3.0, Revenue Radar, and continuous 24/7 AI execution.'
-              : `Full access active for ${trialDaysRemaining} days. Lock in early founder pricing with uninterrupted access.`}
+              ? 'Your trial has ended. Re-activate uninterrupted 24/7 autonomous COO execution for your workspace.'
+              : `Full access active for ${trialDaysRemaining} days. Unlock permanent executive leverage with 1 click.`}
           </p>
-
-          {/* Billing Switcher */}
-          <div className="inline-flex items-center p-1 rounded-xl bg-[#0D0D0D] border border-white/10 text-xs mt-2">
-            <button
-              onClick={() => setBillingInterval('monthly')}
-              className={`px-3 py-1.5 rounded-lg font-medium transition-all cursor-pointer ${
-                billingInterval === 'monthly' ? 'bg-[#FFD700] text-black font-bold' : 'text-white/60 hover:text-white'
-              }`}
-            >
-              Monthly Billing
-            </button>
-            <button
-              onClick={() => setBillingInterval('annual')}
-              className={`px-3 py-1.5 rounded-lg font-medium transition-all cursor-pointer flex items-center gap-1 ${
-                billingInterval === 'annual' ? 'bg-[#FFD700] text-black font-bold' : 'text-white/60 hover:text-white'
-              }`}
-            >
-              <span>Annual (Save 20%)</span>
-              <span className="text-[10px] px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-300 font-mono">20% OFF</span>
-            </button>
-          </div>
         </div>
 
         {/* Success Message Banner */}
@@ -181,91 +83,81 @@ export const UpgradePaywallModal: React.FC = () => {
           </div>
         )}
 
-        {/* Plans Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-          {plans.map((p) => {
-            const isSelected = activePlan === p.tier;
-            return (
-              <div
-                key={p.tier}
-                onClick={() => setActivePlan(p.tier as any)}
-                className={`relative rounded-2xl p-5 border transition-all cursor-pointer flex flex-col justify-between ${
-                  isSelected
-                    ? 'bg-gradient-to-b from-[#1C1A14] to-[#121212] border-[#FFD700] shadow-[0_0_30px_rgba(255,215,0,0.15)] ring-1 ring-[#FFD700]/50'
-                    : 'bg-[#121212] border-white/10 hover:border-white/20'
-                }`}
-              >
-                {p.popular && (
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-0.5 rounded-full bg-gradient-to-r from-[#FFD700] to-amber-500 text-black text-[10px] font-extrabold tracking-wide uppercase shadow-md">
-                    Recommended
-                  </div>
-                )}
-
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="font-bold text-white text-base">{p.name}</span>
-                    <div className={`w-5 h-5 rounded-full border flex items-center justify-center ${
-                      isSelected ? 'border-[#FFD700] bg-[#FFD700] text-black' : 'border-white/20'
-                    }`}>
-                      {isSelected && <Check className="w-3 h-3 stroke-[3]" />}
-                    </div>
-                  </div>
-
-                  <div className="flex items-baseline gap-1">
-                    <span className="text-3xl font-extrabold text-white font-mono">${p.price}</span>
-                    <span className="text-xs text-white/50">/month</span>
-                  </div>
-
-                  <p className="text-xs text-white/60 leading-relaxed min-h-[36px]">
-                    {p.description}
-                  </p>
-
-                  <div className="border-t border-white/5 pt-3 space-y-2 text-xs text-white/80">
-                    {p.features.map((feat, idx) => (
-                      <div key={idx} className="flex items-start gap-2">
-                        <Check className="w-3.5 h-3.5 text-[#FFD700] shrink-0 mt-0.5" />
-                        <span className="text-[11px]">{feat}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
+        {/* Unified Executive License Card */}
+        <div className="p-6 rounded-2xl bg-gradient-to-b from-[#1C1A14] to-[#121212] border border-[#FFD700] shadow-[0_0_30px_rgba(255,215,0,0.15)] mb-6 space-y-4">
+          <div className="flex items-center justify-between pb-3 border-b border-white/10">
+            <div>
+              <div className="text-base font-bold text-white flex items-center gap-2">
+                <span>PRIME AI Executive License</span>
+                <span className="px-2 py-0.5 rounded-full bg-[#FFD700] text-black text-[10px] font-extrabold uppercase">UNLIMITED</span>
               </div>
-            );
-          })}
+              <p className="text-xs text-white/50 mt-0.5">Complete multi-tenant autonomous operations suite</p>
+            </div>
+            <div className="text-right">
+              <span className="text-2xl font-black text-[#FFD700]">Active</span>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs text-white/80">
+            <div className="flex items-center gap-2">
+              <Check className="w-4 h-4 text-[#FFD700] shrink-0" />
+              <span>Unlimited Autonomous AI Operations</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Check className="w-4 h-4 text-[#FFD700] shrink-0" />
+              <span>Brain 3.0 &amp; CEO Digital Twin</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Check className="w-4 h-4 text-[#FFD700] shrink-0" />
+              <span>Revenue Radar &amp; Churn Defense</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Check className="w-4 h-4 text-[#FFD700] shrink-0" />
+              <span>Deal Closer Coaching &amp; Sales HUD</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Check className="w-4 h-4 text-[#FFD700] shrink-0" />
+              <span>Daily 9:00 AM Automated Briefing</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Check className="w-4 h-4 text-[#FFD700] shrink-0" />
+              <span>Dedicated Multi-Tenant Encryption</span>
+            </div>
+          </div>
         </div>
 
         {/* Action Bottom Bar */}
         <div className="rounded-2xl bg-[#0D0D0D] border border-white/10 p-5 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-3 text-xs">
             <div className="w-10 h-10 rounded-xl bg-[#FFD700]/10 border border-[#FFD700]/30 flex items-center justify-center text-[#FFD700]">
-              <CreditCard className="w-5 h-5" />
+              <Sparkles className="w-5 h-5" />
             </div>
             <div>
-              <div className="font-bold text-white">Stripe Instant Checkout</div>
+              <div className="font-bold text-white">Full Workspace Unlock</div>
               <div className="text-[11px] text-white/50">
-                Selected: <strong className="text-[#FFD700]">{activePlan} Plan</strong> • 30-Day Active Guarantee
+                Workspace: <strong className="text-[#FFD700]">{companyName || 'Apex Enterprises'}</strong>
               </div>
             </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2.5 w-full sm:w-auto justify-end">
-            <button
-              onClick={handleInstantTestUpgrade}
-              disabled={loadingCheckout}
-              className="px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/15 text-white/80 hover:text-white font-medium text-xs border border-white/10 transition-all cursor-pointer"
-              title="Instantly test the unlocked Pro plan without actual credit card charges"
+          <div className="flex flex-col sm:flex-row items-center gap-2.5 w-full sm:w-auto">
+            <a
+              href="https://link.payoneer.com/Token?t=FD68511E57C241E098B3DE26AF829EF2&src=pl"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full sm:w-auto px-6 py-3 rounded-xl bg-gradient-to-r from-amber-400 via-[#FFD700] to-yellow-500 text-black font-black text-xs hover:brightness-110 transition-all flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(255,215,0,0.4)] cursor-pointer border border-yellow-200 active:scale-95"
             >
-              1-Click Demo Upgrade
-            </button>
+              <Zap className="w-4 h-4 text-black" />
+              <span>Buy with Payoneer — $29</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </a>
 
             <button
-              onClick={handleStripeCheckout}
+              onClick={handleInstantUnlock}
               disabled={loadingCheckout}
-              className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-[#FFD700] via-amber-400 to-amber-500 text-black font-extrabold text-xs hover:brightness-110 transition-all flex items-center gap-2 shadow-[0_0_20px_rgba(255,215,0,0.3)] cursor-pointer"
+              className="w-full sm:w-auto px-4 py-3 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer border border-white/10 disabled:opacity-50"
             >
-              <CreditCard className="w-4 h-4" />
-              <span>{loadingCheckout ? 'Connecting to Stripe...' : `Checkout ${activePlan} with Stripe`}</span>
-              <ArrowRight className="w-3.5 h-3.5" />
+              <span>{loadingCheckout ? 'Activating...' : 'Activate Instant Access'}</span>
             </button>
           </div>
         </div>
@@ -277,11 +169,10 @@ export const UpgradePaywallModal: React.FC = () => {
             <span>256-Bit SSL Encrypted</span>
           </span>
           <span>•</span>
-          <span>SOC2 Type II Isolation</span>
+          <span>Bank-Grade Security</span>
           <span>•</span>
-          <span>Cancel Online in 1 Click</span>
+          <span>Instant Activation</span>
         </div>
-
       </div>
     </div>
   );

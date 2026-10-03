@@ -642,16 +642,18 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                       Your complimentary 14-day trial includes 50 free autonomous operations, full Revenue Radar telemetry, and contract risk audits. Upgrade to unlock unlimited AI action volume and dedicated COO speed.
                     </p>
 
-                    <a
-                      href="https://link.payoneer.com/Token?t=8333923BB69649B697D2831CEAF91E38&src=pl"
-                      target="_blank"
-                      rel="noopener noreferrer"
+                    <button
+                      type="button"
+                      onClick={() => {
+                        upgradeToPro();
+                        onClose();
+                      }}
                       className="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-[#FFD700] to-amber-500 text-black font-black text-xs transition-all shadow-[0_0_25px_rgba(255,215,0,0.3)] flex items-center justify-center gap-2 cursor-pointer hover:brightness-110 active:scale-95 text-center"
                     >
                       <Sparkles className="w-4 h-4 text-black" />
-                      <span>Upgrade to Pro ($1,499/mo via Payoneer)</span>
+                      <span>Unlock Unlimited Operations</span>
                       <ArrowRight className="w-3.5 h-3.5 text-black" />
-                    </a>
+                    </button>
                   </div>
                 ) : (
                   <div className="pt-2 border-t border-white/5 text-xs text-zinc-300 space-y-1">

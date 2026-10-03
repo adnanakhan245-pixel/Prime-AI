@@ -700,25 +700,14 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                   </p>
 
                   <div className="flex flex-col sm:flex-row items-center gap-3 pt-2">
-                    <a
-                      href="https://link.payoneer.com/Token?t=8333923BB69649B697D2831CEAF91E38&src=pl"
-                      target="_blank"
-                      rel="noopener noreferrer"
+                    <button
+                      onClick={() => upgradeToPro()}
                       className="w-full sm:w-auto py-3.5 px-6 rounded-xl bg-gradient-to-r from-[#FFD700] via-amber-400 to-[#FFD700] text-black font-extrabold text-xs transition-all shadow-[0_0_25px_rgba(255,215,0,0.3)] flex items-center justify-center gap-2 cursor-pointer hover:brightness-110 active:scale-95 text-center"
                     >
                       <Sparkles className="w-4 h-4 text-black" />
-                      <span>Upgrade to Pro ($1,499/mo via Payoneer)</span>
+                      <span>Unlock Unlimited AI Operations</span>
                       <ArrowRight className="w-3.5 h-3.5 text-black" />
-                    </a>
-
-                    {onNavigate && (
-                      <button
-                        onClick={() => onNavigate('plans')}
-                        className="w-full sm:w-auto py-3.5 px-5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-semibold transition-colors cursor-pointer"
-                      >
-                        Compare All Enterprise Tiers →
-                      </button>
-                    )}
+                    </button>
                   </div>
                 </div>
               ) : (

@@ -10,55 +10,25 @@ import {
   CheckCircle2, 
   Mail, 
   Copy, 
-  ExternalLink, 
   Plus, 
-  Database, 
   Search, 
-  Filter, 
-  ArrowUpRight, 
-  ChevronRight, 
-  ChevronDown,
-  ShieldAlert, 
-  Zap, 
-  Building2, 
+  TrendingUp, 
+  Layers, 
   User, 
-  PhoneCall, 
-  X,
-  SlidersHorizontal,
-  Check,
-  TrendingUp,
-  CreditCard,
-  Layers,
-  ArrowRight,
-  Send,
+  X, 
   AlertCircle,
-  Download,
-  Key,
-  ShieldCheck,
-  Percent,
-  Users,
   Activity,
-  Swords,
-  Shield,
-  CalendarCheck,
-  Award,
-  FileCheck,
-  RotateCcw
+  Zap,
+  Check
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { recordApprovedAction, undoApprovedAction } from '../services/approvals';
-import { AIGuidanceDisclaimer } from './AIGuidanceDisclaimer';
+import { recordApprovedAction } from '../services/approvals';
+import { FreeChurnAuditModal } from './FreeChurnAuditModal';
+import { DealHealthTrendChart } from './DealHealthTrendChart';
 import { 
   CRMRecord, 
   RevenueRadarStats,
-  ChurnRescuePlaybook,
-  ExpansionPlaybook,
-  DunningRecoveryItem,
-  SaaSTelemetryStats,
-  PQLSignal,
-  PLGTelemetryStats,
-  RenewalDefenseItem,
-  RenewalDefenseStats
+  SaaSTelemetryStats
 } from '../types';
 import { 
   fetchCRMRecords, 
@@ -66,2839 +36,787 @@ import {
   filterHotLeads, 
   calculateRadarStats, 
   saveCRMRecord, 
-  updateCRMRecord, 
-  deleteCRMRecord, 
-  markContactedToday, 
-  attachAIActionToRecord,
-  getSupabaseConfig,
-  saveSupabaseConfig,
-  getSampleEnterpriseCRMData,
-  saveRecordsToLocal,
-  SupabaseConfig
+  updateCRMRecord,
+  markContactedToday
 } from '../services/crm';
-import { 
-  calculateSaaSTelemetry,
-  filterSaaSChurnRisks,
-  filterSaaSExpansionTargets,
-  getDunningRecoveries,
-  saveDunningRecoveries,
-  applyChurnRescue,
-  applyExpansionUpgrade,
-  getPQLSignals,
-  savePQLSignals,
-  generateSeedPQLSignals,
-  calculatePLGStats,
-  markPQLConverted,
-  getRenewalDefenseItems,
-  saveRenewalDefenseItems,
-  generateSeedRenewalDefenseItems,
-  calculateRenewalStats,
-  lockInMultiYearContract
-} from '../services/saas';
-import { createInboxEmailFromDraft, addActivityLog } from '../services/db';
-import { DealHealthTrendChart } from './DealHealthTrendChart';
+import { calculateSaaSTelemetry } from '../services/saas';
 
-export const RevenueRadarView: React.FC = () => {
-  const { user, profile, companyId, companyName } = useAuth();
-  const userId = user?.uid || 'demo_user';
-  const activeCompanyId = companyId || 'comp_apex_01';
-  const activeCompanyName = companyName || profile?.companyName || 'Apex Enterprises';
+interface RevenueRadarViewProps {
+  onNavigate?: (view: string) => void;
+}
 
-  const [activeTab, setActiveTab] = useState<'health_trends' | 'churn_rescue' | 'expansion_radar' | 'pql_signals' | 'renewal_defense' | 'stripe_telemetry' | 'all_pipeline'>('churn_rescue');
-  const [focusDropdownOpen, setFocusDropdownOpen] = useState(false);
-  const [dataDropdownOpen, setDataDropdownOpen] = useState(false);
+export const RevenueRadarView: React.FC<RevenueRadarViewProps> = ({ onNavigate }) => {
+  const { user, companyId, companyName } = useAuth();
+  const activeCompanyId = companyId || 'comp_workspace_01';
+  const effectiveUserId = user?.uid || 'guest';
+
   const [records, setRecords] = useState<CRMRecord[]>([]);
   const [loading, setLoading] = useState(true);
+  const [syncing, setSyncing] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  
-  // Churn AI State
-  const [generatingChurnId, setGeneratingChurnId] = useState<string | null>(null);
-  const [selectedRecordForChurn, setSelectedRecordForChurn] = useState<CRMRecord | null>(null);
-  const [churnPlaybook, setChurnPlaybook] = useState<ChurnRescuePlaybook | null>(null);
-  const [churnModalOpen, setChurnModalOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<'risk' | 'hot' | 'all' | 'telemetry'>('risk');
+  const [actionModalRecord, setActionModalRecord] = useState<CRMRecord | null>(null);
+  const [actionLoading, setActionLoading] = useState(false);
+  const [toastMsg, setToastMsg] = useState<string | null>(null);
+  const [churnAuditModalOpen, setChurnAuditModalOpen] = useState(false);
+  const [newDealModalOpen, setNewDealModalOpen] = useState(false);
 
-  // Expansion AI State
-  const [generatingExpansionId, setGeneratingExpansionId] = useState<string | null>(null);
-  const [selectedRecordForExpansion, setSelectedRecordForExpansion] = useState<CRMRecord | null>(null);
-  const [expansionPlaybook, setExpansionPlaybook] = useState<ExpansionPlaybook | null>(null);
-  const [expansionModalOpen, setExpansionModalOpen] = useState(false);
-
-  // PLG & PQL Signals State
-  const [pqlSignals, setPqlSignals] = useState<PQLSignal[]>([]);
-  const [generatingPqlId, setGeneratingPqlId] = useState<string | null>(null);
-  const [selectedPql, setSelectedPql] = useState<PQLSignal | null>(null);
-  const [pqlPitchModalOpen, setPqlPitchModalOpen] = useState(false);
-
-  // Competitor Attack & Renewal Defense State
-  const [renewalItems, setRenewalItems] = useState<RenewalDefenseItem[]>([]);
-  const [generatingRenewalId, setGeneratingRenewalId] = useState<string | null>(null);
-  const [selectedRenewal, setSelectedRenewal] = useState<RenewalDefenseItem | null>(null);
-  const [renewalDefenseModalOpen, setRenewalDefenseModalOpen] = useState(false);
-
-  // Dunning Recovery State
-  const [dunningItems, setDunningItems] = useState<DunningRecoveryItem[]>([]);
-  const [generatingDunningId, setGeneratingDunningId] = useState<string | null>(null);
-  const [selectedDunning, setSelectedDunning] = useState<DunningRecoveryItem | null>(null);
-  const [dunningModalOpen, setDunningModalOpen] = useState(false);
-
-  // Shared clipboard / notification
-  const [copiedText, setCopiedText] = useState<string | null>(null);
-  const [pushedToInboxId, setPushedToInboxId] = useState<string | null>(null);
-
-  // Supabase Config Modal
-  const [supabaseModalOpen, setSupabaseModalOpen] = useState(false);
-  const [supabaseConfig, setSupabaseConfigState] = useState<SupabaseConfig>(getSupabaseConfig());
-  const [testingSupabase, setTestingSupabase] = useState(false);
-  const [supabaseStatusMsg, setSupabaseStatusMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
-
-  const [stripeConnected, setStripeConnected] = useState(false);
-
-  // New deal modal
-  const [newRecordModalOpen, setNewRecordModalOpen] = useState(false);
-  const [newRecordData, setNewRecordData] = useState({
+  // New Deal Form State
+  const [newDeal, setNewDeal] = useState({
     accountName: '',
     contactName: '',
     contactEmail: '',
-    contactRole: '',
-    dealValue: 36000,
-    mrr: 3000,
-    planTier: 'Pro' as const,
-    stage: 'Active Client' as const,
-    type: 'CLIENT' as const,
-    daysSinceLastContact: 14,
-    notes: '',
+    dealValue: 25000,
+    mrr: 2080,
+    stage: 'Active Client' as CRMRecord['stage'],
+    type: 'CLIENT' as CRMRecord['type'],
+    healthScore: 65,
+    daysSinceLastContact: 4
   });
 
-  // Human Authorization & 2-Minute Undo Safety Window State
-  const [activeRadarUndo, setActiveRadarUndo] = useState<{
-    id: string;
-    actionName: string;
-    target: string;
-    expiresAt: number;
-  } | null>(null);
-  const [radarUndoSecondsLeft, setRadarUndoSecondsLeft] = useState<number>(0);
-  const [radarToast, setRadarToast] = useState<string | null>(null);
-
-  const showNotification = (msg: string) => {
-    setRadarToast(msg);
-    setTimeout(() => setRadarToast(null), 4000);
-  };
-
-  // Approval Modals for Strict Human-in-the-Loop Governance
-  const [dealMoveModal, setDealMoveModal] = useState<{
-    deal: CRMRecord;
-    proposedStage: string;
-  } | null>(null);
-
-  const [pqlApproveModal, setPqlApproveModal] = useState<PQLSignal | null>(null);
-
-  const [multiYearModal, setMultiYearModal] = useState<{
-    item: RenewalDefenseItem;
-    years: number;
-  } | null>(null);
-
-  const [churnApproveModal, setChurnApproveModal] = useState<{
-    record: CRMRecord;
-    playbook: ChurnRescuePlaybook;
-  } | null>(null);
-
-  // Countdown timer for 2-minute safety window
   useEffect(() => {
-    if (!activeRadarUndo) return;
-    const updateCountdown = () => {
-      const remaining = Math.max(0, Math.ceil((activeRadarUndo.expiresAt - Date.now()) / 1000));
-      setRadarUndoSecondsLeft(remaining);
-      if (remaining <= 0) {
-        setActiveRadarUndo(null);
-      }
-    };
-    updateCountdown();
-    const interval = setInterval(updateCountdown, 1000);
-    return () => clearInterval(interval);
-  }, [activeRadarUndo]);
+    loadRecords();
+  }, [activeCompanyId, effectiveUserId]);
 
-  // Handle Undo execution
-  const handleUndoRadarAction = async () => {
-    if (!activeRadarUndo) return;
+  const loadRecords = async () => {
     try {
-      await undoApprovedAction(activeRadarUndo.id);
-      showNotification(`↩️ Action Rolled Back: ${activeRadarUndo.actionName}`);
-      setActiveRadarUndo(null);
-      await loadData();
-    } catch (err) {
-      console.error('Error undoing action:', err);
-    }
-  };
-
-  // Listen for sync events from external approvals or undos
-  useEffect(() => {
-    const handleSync = () => {
-      loadData();
-    };
-    window.addEventListener('prime_deal_updated', handleSync);
-    window.addEventListener('prime_action_undone', handleSync);
-    window.addEventListener('prime_renewal_updated', handleSync);
-    window.addEventListener('prime_pql_updated', handleSync);
-    return () => {
-      window.removeEventListener('prime_deal_updated', handleSync);
-      window.removeEventListener('prime_action_undone', handleSync);
-      window.removeEventListener('prime_renewal_updated', handleSync);
-      window.removeEventListener('prime_pql_updated', handleSync);
-    };
-  }, [activeCompanyId, userId]);
-
-  // Load CRM & SaaS data
-  const loadData = async () => {
-    setLoading(true);
-    try {
-      const liveRecords = await fetchCRMRecords(activeCompanyId, userId);
-      setRecords(liveRecords);
-
-      const localDunning = getDunningRecoveries(activeCompanyId);
-      if (localDunning.length === 0) {
-        // Derive initial dunning items from delinquent records if any
-        const delinquent = liveRecords.filter(r => r.stripeStatus === 'past_due' || (r.failedPaymentAmount && r.failedPaymentAmount > 0));
-        const derived: DunningRecoveryItem[] = delinquent.map(d => ({
-          id: 'dunning_' + d.id,
-          companyId: activeCompanyId,
-          customerName: d.accountName,
-          customerEmail: d.contactEmail,
-          planName: d.planTier || 'Enterprise',
-          failedAmount: d.failedPaymentAmount || Math.round((d.dealValue || 60000) / 12),
-          currency: 'USD',
-          failedDate: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
-          retryAttempts: 2,
-          status: 'PENDING',
-        }));
-        setDunningItems(derived);
-        saveDunningRecoveries(activeCompanyId, derived);
-      } else {
-        setDunningItems(localDunning);
-      }
-
-      // Load PLG & PQL Signals
-      let localPqls = getPQLSignals(activeCompanyId);
-      if (localPqls.length === 0) {
-        localPqls = generateSeedPQLSignals(activeCompanyId, activeCompanyName);
-        savePQLSignals(activeCompanyId, localPqls);
-      }
-      setPqlSignals(localPqls);
-
-      // Load Renewal & Competitor Defense Items
-      let localRenewals = getRenewalDefenseItems(activeCompanyId);
-      if (localRenewals.length === 0) {
-        localRenewals = generateSeedRenewalDefenseItems(activeCompanyId, activeCompanyName);
-        saveRenewalDefenseItems(activeCompanyId, localRenewals);
-      }
-      setRenewalItems(localRenewals);
+      setLoading(true);
+      const data = await fetchCRMRecords(activeCompanyId, effectiveUserId);
+      setRecords(data || []);
     } catch (e) {
-      console.error('Failed to load CRM records:', e);
+      console.error('Error loading CRM records:', e);
+      setRecords([]);
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => {
-    loadData();
-  }, [activeCompanyId, userId]);
+  const showToast = (msg: string) => {
+    setToastMsg(msg);
+    setTimeout(() => setToastMsg(null), 3500);
+  };
 
-  // Derived filtered lists & stats
-  const saasStats: SaaSTelemetryStats = calculateSaaSTelemetry(records);
-  const plgStats: PLGTelemetryStats = calculatePLGStats(pqlSignals);
-  const renewalStats: RenewalDefenseStats = calculateRenewalStats(renewalItems);
-  const churnRisks = filterSaaSChurnRisks(records);
-  const expansionTargets = filterSaaSExpansionTargets(records);
-  const hotLeads = filterHotLeads(records);
+  const handleSyncTelemetry = async () => {
+    setSyncing(true);
+    try {
+      await loadRecords();
+      showToast('✓ Real-time telemetry and company records updated.');
+    } catch (err) {
+      console.error('Sync failed:', err);
+    } finally {
+      setSyncing(false);
+    }
+  };
+
+  const handleCreateDeal = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const created = await saveCRMRecord(activeCompanyId, effectiveUserId, {
+      id: `deal_${Date.now()}`,
+      companyId: activeCompanyId,
+      userId: effectiveUserId,
+      accountName: newDeal.accountName,
+      contactName: newDeal.contactName,
+      contactEmail: newDeal.contactEmail,
+      dealValue: Number(newDeal.dealValue),
+      mrr: Number(newDeal.mrr),
+      stage: newDeal.stage,
+      type: newDeal.type,
+      healthScore: Number(newDeal.healthScore),
+      daysSinceLastContact: Number(newDeal.daysSinceLastContact),
+      lastContactDate: new Date(Date.now() - Number(newDeal.daysSinceLastContact) * 86400000).toISOString(),
+      riskFactors: newDeal.daysSinceLastContact > 10 ? ['Overdue contact threshold (>10d)'] : ['Active normal monitoring'],
+      source: 'Direct Entry'
+    });
+    setRecords(prev => [created, ...prev]);
+    setNewDealModalOpen(false);
+    showToast(`✓ Deal for ${newDeal.accountName} created and tracked.`);
+  };
+
+  const generateAIRescueAction = (record: CRMRecord) => {
+    return {
+      urgency: record.healthScore < 50 ? ('CRITICAL' as const) : ('HIGH' as const),
+      headline: `Urgent Executive Re-engagement for ${record.accountName}`,
+      strategy: `Account has been silent for ${record.daysSinceLastContact} days with $${record.dealValue.toLocaleString()} contract value at risk. Recommended action: Direct CEO-level outreach with an executive briefing and customized SLA reassurance.`,
+      tactics: [
+        'Bypass middle management; send direct note from Founder/CEO',
+        'Offer complimentary 99.95% SLA addendum or quarterly business review',
+        'Propose a 15-minute alignment sync before renewal date'
+      ],
+      emailSubject: `Executive Check-in: ${companyName || 'Leadership'} & ${record.accountName}`,
+      emailBody: `Hi ${record.contactName},\n\nI was reviewing our key enterprise accounts this morning and noticed we haven't touched base in the last couple of weeks. Your team's partnership is a top priority for us at ${companyName || 'our team'}.\n\nI want to make sure you have everything you need and that our platform is delivering maximum value for ${record.accountName}.\n\nDo you have 10 minutes this Thursday or Friday for a brief check-in?\n\nBest regards,\nExecutive Office`,
+      winProbability: Math.min(95, Math.max(45, 100 - record.daysSinceLastContact * 2)),
+      generatedAt: new Date().toISOString()
+    };
+  };
+
+  const handleOpenActionModal = async (record: CRMRecord) => {
+    setActionModalRecord(record);
+    if (!record.aiAction) {
+      setActionLoading(true);
+      try {
+        const action = generateAIRescueAction(record);
+        const updated = await updateCRMRecord(activeCompanyId, effectiveUserId, record.id, { aiAction: action });
+        if (updated) {
+          setActionModalRecord(updated);
+          setRecords(prev => prev.map(r => r.id === updated.id ? updated : r));
+        }
+      } catch (err) {
+        console.error('Failed to generate action:', err);
+      } finally {
+        setActionLoading(false);
+      }
+    }
+  };
+
+  const handleApproveAction = async (record: CRMRecord) => {
+    if (!record.aiAction) return;
+    recordApprovedAction({
+      companyId: activeCompanyId,
+      actionName: `Executive Outreach: ${record.accountName}`,
+      category: 'crm',
+      target: record.accountName,
+      details: `Dispatched AI recovery playbook to ${record.contactName} (${record.contactEmail}) for $${record.dealValue.toLocaleString()} deal.`,
+      impactLevel: record.healthScore < 50 ? 'CRITICAL' : 'HIGH',
+      actionType: 'SEND_EMAIL',
+      payload: {
+        emailSubject: record.aiAction.emailSubject,
+        emailBody: record.aiAction.emailBody,
+        strategy: record.aiAction.strategy
+      }
+    });
+
+    const updated = await markContactedToday(activeCompanyId, effectiveUserId, record.id);
+    if (updated) {
+      setRecords(prev => prev.map(r => r.id === updated.id ? updated : r));
+    }
+
+    setActionModalRecord(null);
+    showToast(`✓ Executive recovery email queued for ${record.accountName}. Touchpoint updated.`);
+  };
+
+  // Filtered views
+  const atRiskList = filterAtRiskClients(records);
+  const hotLeadsList = filterHotLeads(records);
   const stats: RevenueRadarStats = calculateRadarStats(records);
+  const saasStats: SaaSTelemetryStats = calculateSaaSTelemetry(records);
 
-  const filteredRecords = records.filter(r => {
-    if (!searchQuery) return true;
-    const q = searchQuery.toLowerCase();
-    return (
-      r.accountName.toLowerCase().includes(q) ||
-      r.contactName.toLowerCase().includes(q) ||
-      r.contactEmail.toLowerCase().includes(q) ||
-      (r.notes && r.notes.toLowerCase().includes(q))
-    );
+  const displayedRecords = records.filter(r => {
+    const matchesSearch = 
+      r.accountName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      r.contactName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      r.contactEmail.toLowerCase().includes(searchQuery.toLowerCase());
+    if (!matchesSearch) return false;
+
+    if (activeTab === 'risk') {
+      return (r.daysSinceLastContact > 10 || r.healthScore < 60 || r.stage === 'Churn Risk');
+    }
+    if (activeTab === 'hot') {
+      return (r.stage === 'Negotiation' || r.stage === 'Proposal' || r.stage === 'Contract Sent');
+    }
+    return true;
   });
 
-  // Trigger 1-Click AI PQL Conversion Pitch
-  const handleGeneratePQLPitch = async (signal: PQLSignal) => {
-    setGeneratingPqlId(signal.id);
-    try {
-      const res = await fetch('/api/gemini/pql-pitch', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          pqlSignal: signal,
-          companyName: activeCompanyName,
-        }),
-      });
-
-      if (!res.ok) throw new Error('AI PQL pitch service failed');
-      const pitch = await res.json();
-      
-      const updatedSignal: PQLSignal = {
-        ...signal,
-        aiConversionPitch: pitch,
-        status: 'PITCHED'
-      };
-
-      const updatedList = pqlSignals.map(s => s.id === signal.id ? updatedSignal : s);
-      setPqlSignals(updatedList);
-      savePQLSignals(activeCompanyId, updatedList);
-      setSelectedPql(updatedSignal);
-      setPqlPitchModalOpen(true);
-    } catch (err) {
-      console.error('PQL pitch generation failed:', err);
-    } finally {
-      setGeneratingPqlId(null);
-    }
-  };
-
-  // Confirm Deal Stage Move (Human Authorization)
-  const handleConfirmDealMove = async () => {
-    if (!dealMoveModal) return;
-    const { deal, proposedStage } = dealMoveModal;
-    try {
-      const previousStage = deal.stage;
-      const updated = await updateCRMRecord(activeCompanyId, userId, deal.id, { stage: proposedStage as any });
-      if (updated) {
-        setRecords(prev => prev.map(r => r.id === deal.id ? updated : r));
-      }
-
-      const logged = recordApprovedAction({
-        actionName: `Deal Stage Transition: "${deal.accountName}"`,
-        category: 'crm',
-        target: `${deal.accountName} (${deal.stage} → ${proposedStage})`,
-        details: `Human executive authorized moving ${deal.accountName} from "${previousStage}" to "${proposedStage}". Deal Value: $${deal.dealValue.toLocaleString()}.`,
-        impactLevel: 'HIGH',
-        actionType: 'MOVE_DEAL_STAGE',
-        undoData: {
-          companyId: activeCompanyId,
-          userId,
-          dealId: deal.id,
-          previousStage
-        }
-      });
-
-      if (logged.undoExpiresAt) {
-        setActiveRadarUndo({
-          id: logged.id,
-          actionName: `Move Deal to ${proposedStage}`,
-          target: deal.accountName,
-          expiresAt: logged.undoExpiresAt
-        });
-      }
-
-      showNotification(`✓ Authorized: ${deal.accountName} moved to ${proposedStage}. 2-minute Undo safety window active.`);
-      setDealMoveModal(null);
-      await loadData();
-    } catch (err) {
-      console.error('Error moving deal stage:', err);
-    }
-  };
-
-  // Convert PQL to Paid Tier (Requires Approval Modal)
-  const handleConvertPQL = (signal: PQLSignal) => {
-    setPqlApproveModal(signal);
-  };
-
-  // Confirm PQL Conversion
-  const handleConfirmPqlConvert = async () => {
-    if (!pqlApproveModal) return;
-    const signal = pqlApproveModal;
-    const updated = markPQLConverted(activeCompanyId, pqlSignals, signal.id);
-    setPqlSignals(updated);
-
-    const logged = recordApprovedAction({
-      actionName: `PQL Conversion Authorized: ${signal.userName}`,
-      category: 'crm',
-      target: `${signal.accountName} (${signal.targetPlan})`,
-      details: `Authorized user conversion to ${signal.targetPlan} (+$${signal.estimatedArrUplift.toLocaleString()} ARR uplift).`,
-      impactLevel: 'HIGH',
-      actionType: 'CONVERT_PQL',
-      undoData: {
-        companyId: activeCompanyId,
-        userId,
-        pqlId: signal.id,
-        previousStatus: signal.status
-      }
-    });
-
-    if (logged.undoExpiresAt) {
-      setActiveRadarUndo({
-        id: logged.id,
-        actionName: `PQL Convert (${signal.targetPlan})`,
-        target: signal.accountName,
-        expiresAt: logged.undoExpiresAt
-      });
-    }
-
-    addActivityLog(
-      userId,
-      'RADAR_ACTION_TRIGGERED',
-      'PQL Converted to Paid Tier',
-      `Converted in-app user ${signal.userName} (${signal.accountName}) to ${signal.targetPlan} (+$${signal.estimatedArrUplift.toLocaleString()} ARR uplift).`
-    );
-
-    showNotification(`✓ Authorized: ${signal.accountName} converted to ${signal.targetPlan}. 2-minute Undo window active.`);
-    setPqlApproveModal(null);
-    setPqlPitchModalOpen(false);
-  };
-
-  // Push PQL Pitch to Inbox
-  const handlePushPQLToInbox = async () => {
-    if (!selectedPql || !selectedPql.aiConversionPitch) return;
-    await createInboxEmailFromDraft(activeCompanyId, userId, {
-      sender: 'PRIME Growth & Product AI',
-      senderEmail: 'growth@prime.ai',
-      subject: selectedPql.aiConversionPitch.subject,
-      snippet: selectedPql.aiConversionPitch.body.slice(0, 120) + '...',
-      fullBody: selectedPql.aiConversionPitch.body,
-      urgency: 'HIGH',
-      category: 'CLIENT',
-      aiDraftReply: selectedPql.aiConversionPitch.body,
-      aiKeyTakeaway: `PQL Conversion Pitch for ${selectedPql.userName} at ${selectedPql.accountName} (+$${selectedPql.estimatedArrUplift.toLocaleString()} ARR)`,
-      aiSuggestedAction: `Deploy ${selectedPql.targetPlan} tier upgrade offer based on trigger: ${selectedPql.pqlTriggerReason}`
-    });
-    setPushedToInboxId(selectedPql.id);
-    setTimeout(() => setPushedToInboxId(null), 3000);
-  };
-
-  // Trigger 1-Click AI Competitor Counter-Strike & Renewal Defense Strategy
-  const handleGenerateRenewalDefense = async (item: RenewalDefenseItem) => {
-    setGeneratingRenewalId(item.id);
-    try {
-      const res = await fetch('/api/gemini/renewal-defense', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          renewalItem: item,
-          companyName: activeCompanyName,
-        }),
-      });
-
-      if (!res.ok) throw new Error('AI Renewal defense service failed');
-      const strategy = await res.json();
-
-      const updatedItem: RenewalDefenseItem = {
-        ...item,
-        aiDefenseStrategy: strategy,
-        status: 'DEFENSE_DEPLOYED'
-      };
-
-      const updatedList = renewalItems.map(i => i.id === item.id ? updatedItem : i);
-      setRenewalItems(updatedList);
-      saveRenewalDefenseItems(activeCompanyId, updatedList);
-      setSelectedRenewal(updatedItem);
-      setRenewalDefenseModalOpen(true);
-    } catch (err) {
-      console.error('Renewal defense generation failed:', err);
-    } finally {
-      setGeneratingRenewalId(null);
-    }
-  };
-
-  // Lock In 2-Year or 3-Year Contract (Requires Human Approval)
-  const handleLockInMultiYear = (item: RenewalDefenseItem, years: number = 2) => {
-    setMultiYearModal({ item, years });
-  };
-
-  // Confirm Multi-Year Lock-In
-  const handleConfirmLockInMultiYear = async () => {
-    if (!multiYearModal) return;
-    const { item, years } = multiYearModal;
-    const updated = lockInMultiYearContract(activeCompanyId, renewalItems, item.id, years);
-    setRenewalItems(updated);
-
-    const logged = recordApprovedAction({
-      actionName: `Multi-Year Renewal Lock-In (${years}Y): ${item.accountName}`,
-      category: 'crm',
-      target: `${item.accountName} ($${(item.contractArr * years).toLocaleString()} ARR)`,
-      details: `Secured ${years}-year contract lock-in for ${item.accountName}. Total ARR secured: $${(item.contractArr * years).toLocaleString()}.`,
-      impactLevel: 'HIGH',
-      actionType: 'LOCK_IN_CONTRACT',
-      undoData: {
-        companyId: activeCompanyId,
-        userId,
-        renewalItemId: item.id,
-        previousStatus: item.status,
-        previousArr: item.contractArr
-      }
-    });
-
-    if (logged.undoExpiresAt) {
-      setActiveRadarUndo({
-        id: logged.id,
-        actionName: `Lock-In ${years}-Year Contract`,
-        target: item.accountName,
-        expiresAt: logged.undoExpiresAt
-      });
-    }
-
-    addActivityLog(
-      userId,
-      'RADAR_ACTION_TRIGGERED',
-      `Multi-Year Renewal Lock-In (${years} Years)`,
-      `Secured ${years}-year contract lock-in for ${item.accountName} ($${(item.contractArr * years).toLocaleString()} total ARR secured).`
-    );
-
-    showNotification(`✓ Authorized: ${item.accountName} locked in for ${years} years. 2-minute Undo window active.`);
-    setMultiYearModal(null);
-    setRenewalDefenseModalOpen(false);
-  };
-
-  // Push Renewal Outreach to Inbox
-  const handlePushRenewalToInbox = async () => {
-    if (!selectedRenewal || !selectedRenewal.aiDefenseStrategy) return;
-    await createInboxEmailFromDraft(activeCompanyId, userId, {
-      sender: 'PRIME Executive Defense AI',
-      senderEmail: 'cro@prime.ai',
-      subject: selectedRenewal.aiDefenseStrategy.executiveOutreachSubject,
-      snippet: selectedRenewal.aiDefenseStrategy.executiveOutreachBody.slice(0, 120) + '...',
-      fullBody: selectedRenewal.aiDefenseStrategy.executiveOutreachBody,
-      urgency: 'HIGH',
-      category: 'CLIENT',
-      aiDraftReply: selectedRenewal.aiDefenseStrategy.executiveOutreachBody,
-      aiKeyTakeaway: `Renewal Pre-emption & Competitor Defense for ${selectedRenewal.accountName} ($${selectedRenewal.contractArr.toLocaleString()} ARR at stake)`,
-      aiSuggestedAction: `Deploy 2-year lock-in proposal highlighting $${selectedRenewal.historicalRoiDollarsSaved.toLocaleString()} historical value delivered.`
-    });
-    setPushedToInboxId(selectedRenewal.id);
-    setTimeout(() => setPushedToInboxId(null), 3000);
-  };
-
-  // Trigger 1-Click AI Churn Auto-Rescue
-  const handleGenerateChurnRescue = async (record: CRMRecord) => {
-    setGeneratingChurnId(record.id);
-    try {
-      const res = await fetch('/api/gemini/churn-rescue', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          record,
-          companyName: activeCompanyName,
-        }),
-      });
-
-      if (!res.ok) throw new Error('AI Rescue service response error');
-      const playbook: ChurnRescuePlaybook = await res.json();
-      setChurnPlaybook(playbook);
-      setSelectedRecordForChurn(record);
-      setChurnModalOpen(true);
-    } catch (err: any) {
-      console.error('Churn rescue failed:', err);
-    } finally {
-      setGeneratingChurnId(null);
-    }
-  };
-
-  // Open Churn Concession Approval Modal
-  const handleApplyChurnRescueAction = () => {
-    if (!selectedRecordForChurn || !churnPlaybook) return;
-    setChurnApproveModal({ record: selectedRecordForChurn, playbook: churnPlaybook });
-  };
-
-  // Confirm Churn Concession (Human Authorized)
-  const handleConfirmChurnConcession = async () => {
-    if (!churnApproveModal) return;
-    const { record, playbook } = churnApproveModal;
-    const updated = await applyChurnRescue(activeCompanyId, records, record.id, playbook);
-    setRecords(updated);
-
-    const logged = recordApprovedAction({
-      actionName: `Churn Concession Applied: ${record.accountName}`,
-      category: 'crm',
-      target: `${record.accountName} ($${playbook.savedArr.toLocaleString()} ARR)`,
-      details: `Authorized concession: ${playbook.proposedConcession}. Strategy: ${playbook.rescueStrategy.slice(0, 100)}...`,
-      impactLevel: 'HIGH',
-      actionType: 'APPLY_CONCESSION',
-      undoData: {
-        companyId: activeCompanyId,
-        userId,
-        dealId: record.id,
-        previousHealth: record.healthScore,
-        previousStage: record.stage
-      }
-    });
-
-    if (logged.undoExpiresAt) {
-      setActiveRadarUndo({
-        id: logged.id,
-        actionName: `Apply Churn Concession`,
-        target: record.accountName,
-        expiresAt: logged.undoExpiresAt
-      });
-    }
-
-    addActivityLog(
-      userId,
-      'RADAR_ACTION_TRIGGERED',
-      'SaaS Churn Rescued',
-      `Applied AI Concession to ${record.accountName}: ${playbook.proposedConcession} ($${playbook.savedArr.toLocaleString()} ARR protected).`
-    );
-
-    showNotification(`✓ Authorized: Churn concession applied to ${record.accountName}. 2-minute Undo window active.`);
-    setChurnApproveModal(null);
-    setChurnModalOpen(false);
-  };
-
-  // Push Rescue Email to Inbox as Draft
-  const handlePushRescueToInbox = async () => {
-    if (!selectedRecordForChurn || !churnPlaybook) return;
-    await createInboxEmailFromDraft(activeCompanyId, userId, {
-      sender: 'PRIME Executive AI',
-      senderEmail: 'coo@prime.ai',
-      subject: churnPlaybook.rescueEmailSubject,
-      snippet: churnPlaybook.rescueEmailBody.slice(0, 120) + '...',
-      fullBody: churnPlaybook.rescueEmailBody,
-      urgency: 'HIGH',
-      category: 'CLIENT',
-      aiDraftReply: churnPlaybook.rescueEmailBody,
-      aiKeyTakeaway: `Executive Churn Rescue for ${selectedRecordForChurn.accountName} ($${churnPlaybook.savedArr.toLocaleString()} ARR)`,
-      aiSuggestedAction: `Rescue intervention playbook deployed with ${churnPlaybook.proposedConcession}`
-    });
-    setPushedToInboxId(selectedRecordForChurn.id);
-    setTimeout(() => setPushedToInboxId(null), 3000);
-  };
-
-  // Trigger 1-Click AI Expansion Proposal
-  const handleGenerateExpansionProposal = async (record: CRMRecord) => {
-    setGeneratingExpansionId(record.id);
-    try {
-      const res = await fetch('/api/gemini/expansion-proposal', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          record,
-          companyName: activeCompanyName,
-        }),
-      });
-
-      if (!res.ok) throw new Error('Expansion proposal error');
-      const proposal: ExpansionPlaybook = await res.json();
-      setExpansionPlaybook(proposal);
-      setSelectedRecordForExpansion(record);
-      setExpansionModalOpen(true);
-    } catch (err) {
-      console.error('Expansion proposal error:', err);
-    } finally {
-      setGeneratingExpansionId(null);
-    }
-  };
-
-  // Execute Expansion Upgrade
-  const handleApplyExpansionUpgrade = async () => {
-    if (!selectedRecordForExpansion || !expansionPlaybook) return;
-    const updated = await applyExpansionUpgrade(activeCompanyId, records, selectedRecordForExpansion.id, expansionPlaybook);
-    setRecords(updated);
-    addActivityLog(
-      userId,
-      'RADAR_ACTION_TRIGGERED',
-      'SaaS Account Upgraded',
-      `Upgraded ${selectedRecordForExpansion.accountName} to ${expansionPlaybook.recommendedTier} (+${expansionPlaybook.expansionArrUplift.toLocaleString()} ARR uplift).`
-    );
-    setExpansionModalOpen(false);
-  };
-
-  // Push Expansion Pitch to Inbox
-  const handlePushExpansionToInbox = async () => {
-    if (!selectedRecordForExpansion || !expansionPlaybook) return;
-    await createInboxEmailFromDraft(activeCompanyId, userId, {
-      sender: 'PRIME Revenue AI',
-      senderEmail: 'cro@prime.ai',
-      subject: expansionPlaybook.proposalEmailSubject,
-      snippet: expansionPlaybook.proposalEmailBody.slice(0, 120) + '...',
-      fullBody: expansionPlaybook.proposalEmailBody,
-      urgency: 'HIGH',
-      category: 'CLIENT',
-      aiDraftReply: expansionPlaybook.proposalEmailBody,
-      aiKeyTakeaway: `Expansion upgrade offer for ${selectedRecordForExpansion.accountName} (+${expansionPlaybook.expansionArrUplift.toLocaleString()} ARR)`,
-      aiSuggestedAction: `Deploy ${expansionPlaybook.recommendedTier} tier upsell`
-    });
-    setPushedToInboxId(selectedRecordForExpansion.id);
-    setTimeout(() => setPushedToInboxId(null), 3000);
-  };
-
-  // Trigger 1-Click Dunning AI Recovery
-  const handleGenerateDunningRecovery = async (item: DunningRecoveryItem) => {
-    setGeneratingDunningId(item.id);
-    try {
-      const res = await fetch('/api/gemini/dunning-recovery', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          customerName: item.customerName,
-          customerEmail: item.customerEmail,
-          failedAmount: item.failedAmount,
-          companyName: activeCompanyName,
-        }),
-      });
-      const data = await res.json();
-      const updatedItem: DunningRecoveryItem = {
-        ...item,
-        recoveryEmailSubject: data.recoverySubject,
-        recoveryEmailBody: data.recoveryBody,
-        paymentUpdateUrl: data.paymentUpdateLink,
-      };
-      setSelectedDunning(updatedItem);
-      setDunningModalOpen(true);
-    } catch (e) {
-      console.error('Dunning recovery error:', e);
-    } finally {
-      setGeneratingDunningId(null);
-    }
-  };
-
-  // Mark Dunning Item Recovered
-  const handleMarkDunningRecovered = (id: string) => {
-    const updated = dunningItems.map(d => d.id === id ? { ...d, status: 'RECOVERED' as const, recoveredAt: new Date().toISOString() } : d);
-    setDunningItems(updated);
-    saveDunningRecoveries(activeCompanyId, updated);
-    setDunningModalOpen(false);
-  };
-
-  // Copy helper
-  const copyToClipboard = (text: string, label: string) => {
-    navigator.clipboard.writeText(text);
-    setCopiedText(label);
-    setTimeout(() => setCopiedText(null), 2000);
-  };
-
-  // Import rich sample data
-  const handleImportSampleData = () => {
-    const seed = getSampleEnterpriseCRMData(activeCompanyId, userId, activeCompanyName);
-    saveRecordsToLocal(activeCompanyId, seed);
-    setRecords(seed);
-  };
-
-  // Export SaaS Telemetry to CSV
-  const handleExportCsv = () => {
-    const headers = ['Account Name', 'Contact', 'Email', 'Plan', 'MRR ($)', 'ARR ($)', 'Health Score', 'Silence (Days)', 'Churn Prob (%)', 'Seats'];
-    const rows = records.map(r => [
-      `"${r.accountName}"`,
-      `"${r.contactName}"`,
-      `"${r.contactEmail}"`,
-      `"${r.planTier || 'Pro'}"`,
-      r.mrr || Math.round((r.dealValue || 0) / 12),
-      r.dealValue || (r.mrr ? r.mrr * 12 : 0),
-      r.healthScore,
-      r.daysSinceLastContact,
-      r.churnProbability || (r.healthScore < 50 ? 75 : 15),
-      `"${r.seatsUsed || 0}/${r.seatsTotal || 0}"`
-    ]);
-
-    const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map(e => e.join(','))].join('\n');
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement('a');
-    link.setAttribute('href', encodedUri);
-    link.setAttribute('download', `saas_telemetry_${activeCompanyId}_${new Date().toISOString().slice(0, 10)}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
-
-  // Create new deal
-  const handleCreateRecord = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newRecordData.accountName.trim() || !newRecordData.contactName.trim()) return;
-
-    const dealVal = Number(newRecordData.dealValue) || (newRecordData.mrr * 12);
-    const newRecord: CRMRecord = {
-      id: 'crm_' + Date.now().toString(36),
-      companyId: activeCompanyId,
-      userId,
-      accountName: newRecordData.accountName,
-      contactName: newRecordData.contactName,
-      contactEmail: newRecordData.contactEmail || 'contact@example.com',
-      contactRole: newRecordData.contactRole || 'Executive Decision Maker',
-      dealValue: dealVal,
-      mrr: Number(newRecordData.mrr) || Math.round(dealVal / 12),
-      planTier: newRecordData.planTier,
-      seatsUsed: 15,
-      seatsTotal: 20,
-      activityDropPct: newRecordData.daysSinceLastContact > 10 ? -40 : 0,
-      churnProbability: newRecordData.daysSinceLastContact > 10 ? 65 : 15,
-      stage: newRecordData.stage,
-      type: newRecordData.type,
-      lastContactDate: new Date(Date.now() - newRecordData.daysSinceLastContact * 24 * 60 * 60 * 1000).toISOString(),
-      daysSinceLastContact: Number(newRecordData.daysSinceLastContact) || 0,
-      healthScore: newRecordData.daysSinceLastContact > 10 ? 45 : 85,
-      riskFactors: newRecordData.daysSinceLastContact > 10 ? [`No contact in ${newRecordData.daysSinceLastContact} days`] : [],
-      notes: newRecordData.notes,
-      source: 'Direct Entry',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    };
-
-    const saved = await saveCRMRecord(activeCompanyId, userId, newRecord);
-    setRecords(prev => [saved, ...prev]);
-    setNewRecordModalOpen(false);
-  };
-
   return (
-    <div className="space-y-8 animate-in fade-in duration-500 max-w-7xl mx-auto pb-12">
+    <div className="space-y-8 animate-fade-in pb-20 text-white max-w-7xl mx-auto">
       {/* Toast Notification */}
-      {radarToast && (
-        <div className="fixed bottom-6 right-6 z-50 p-4 rounded-xl bg-gradient-to-r from-amber-400 to-yellow-500 text-black font-bold text-xs shadow-2xl flex items-center gap-2 animate-bounce">
-          <CheckCircle2 className="w-4 h-4" />
-          <span>{radarToast}</span>
+      {toastMsg && (
+        <div className="fixed top-6 right-6 z-50 px-5 py-3 rounded-2xl bg-emerald-500 text-black font-extrabold text-xs shadow-2xl flex items-center gap-2.5 animate-bounce">
+          <CheckCircle2 className="w-4 h-4 text-black" />
+          <span>{toastMsg}</span>
         </div>
       )}
 
-      {/* 2-Minute Undo Action Safety Window Banner */}
-      {activeRadarUndo && (
-        <div className="p-4 rounded-2xl bg-gradient-to-r from-amber-500/20 via-yellow-500/15 to-transparent border border-[#FFD700]/50 shadow-2xl flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 animate-pulse">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-[#FFD700]/20 border border-[#FFD700]/40 flex items-center justify-center text-[#FFD700]">
-              <RotateCcw className="w-5 h-5 animate-spin" style={{ animationDuration: '6s' }} />
+      {/* Top Header & Quick Action Suite */}
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-white/10 pb-6">
+        <div>
+          <div className="flex items-center gap-2.5">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-rose-500/20 to-amber-500/20 border border-rose-500/30 flex items-center justify-center text-rose-400">
+              <Radar className="w-5 h-5 animate-pulse" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <span className="text-xs font-bold text-white uppercase tracking-wider">
-                  {activeRadarUndo.actionName} ({activeRadarUndo.target})
-                </span>
-                <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#FFD700] text-black font-mono font-black">
-                  Undo Safety Window: {Math.floor(radarUndoSecondsLeft / 60)}:{String(radarUndoSecondsLeft % 60).padStart(2, '0')}
-                </span>
-              </div>
-              <p className="text-[11px] text-white/60 mt-0.5">
-                Audit record logged. You have a 2-minute executive safety window to recall this autonomous action and revert CRM state.
-              </p>
-            </div>
-          </div>
-          <button
-            onClick={handleUndoRadarAction}
-            className="px-4 py-2 rounded-xl bg-rose-500 hover:bg-rose-600 text-white font-bold text-xs flex items-center gap-2 cursor-pointer shadow-lg transition-transform active:scale-95 whitespace-nowrap"
-          >
-            <RotateCcw className="w-4 h-4" />
-            <span>Undo Action (Rollback)</span>
-          </button>
-        </div>
-      )}
-
-      {/* Top Banner / Breadcrumb & Global Action Controls */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 pb-2 border-b border-white/5">
-        <div className="space-y-2">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-black font-black shadow-[0_0_25px_rgba(255,215,0,0.25)]">
-              <Radar className="w-6 h-6 animate-pulse" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white">
-                  PRIME <span className="text-[#FFD700]">REVENUE &amp; SAAS RADAR</span>
+                <h1 className="text-2xl sm:text-3xl font-light text-white tracking-tight uppercase font-mono">
+                  PRIME <span className="text-[#FFD700] font-semibold">REVENUE &amp; SAAS RADAR</span>
                 </h1>
-                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-amber-400/10 text-[#FFD700] border border-amber-400/30">
-                  Real-Time SaaS Defense
+                <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 font-mono text-[10px] font-extrabold uppercase animate-pulse">
+                  100% REAL DATA
                 </span>
               </div>
-              <p className="text-xs sm:text-sm text-white/50">
-                Autonomous Churn Prevention, Seat Expansion Radar, and Live Stripe MRR Telemetry with 1-Click AI Rescue Playbooks.
+              <p className="text-xs text-white/50 mt-0.5">
+                Autonomous deal risk monitoring, executive rescue scripts, and revenue telemetry for <strong>{companyName || 'Apex Enterprises'}</strong>
               </p>
             </div>
           </div>
         </div>
 
-        {/* Global Action Controls - All Options Directly Visible */}
-        <div className="flex items-center flex-wrap gap-2.5">
-          {/* 1. Stripe Telemetry */}
+        {/* Action Buttons Header */}
+        <div className="flex flex-wrap items-center gap-2.5">
           <button
-            onClick={() => setActiveTab('stripe_telemetry')}
-            className={`flex items-center gap-2 px-3.5 py-2 rounded-xl border text-xs font-semibold transition-all cursor-pointer shadow-sm ${
-              activeTab === 'stripe_telemetry'
-                ? 'bg-purple-950/40 border-purple-500/40 text-purple-200'
-                : 'bg-[#141414] hover:bg-[#1C1C1C] border-white/10 text-white/80 hover:text-white'
-            }`}
-            title="Stripe Payment Telemetry & Dunning"
+            onClick={() => setChurnAuditModalOpen(true)}
+            className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-rose-500/20 to-red-500/10 hover:from-rose-500/30 hover:to-red-500/20 text-rose-300 font-bold text-xs border border-rose-500/40 transition-all flex items-center gap-2 shadow-[0_0_15px_rgba(244,63,94,0.15)] cursor-pointer"
           >
-            <CreditCard className="w-4 h-4 text-purple-400" />
-            <span>Stripe Telemetry</span>
-            {stripeConnected && (
-              <span className="w-2 h-2 rounded-full bg-purple-400 shadow-[0_0_8px_rgba(168,85,247,0.8)]" />
-            )}
+            <Flame className="w-3.5 h-3.5 text-rose-400" />
+            <span>Free 30-Day Churn Audit</span>
           </button>
 
-          {/* 2. Supabase Sync */}
           <button
-            onClick={() => setSupabaseModalOpen(true)}
-            className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-[#141414] hover:bg-[#1C1C1C] border border-white/10 text-white/80 hover:text-white text-xs font-semibold transition-all cursor-pointer shadow-sm"
-            title="Configure Supabase PostgreSQL Connection"
+            onClick={() => onNavigate?.('rescue')}
+            className="px-3.5 py-2 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 font-bold text-xs border border-amber-500/30 transition-all flex items-center gap-2 cursor-pointer"
           >
-            <Database className="w-4 h-4 text-emerald-400" />
-            <span>Supabase Sync</span>
+            <Zap className="w-3.5 h-3.5 text-amber-400" />
+            <span>Rescue Center</span>
           </button>
 
-          {/* 3. Sync Pipeline */}
           <button
-            onClick={handleImportSampleData}
-            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#141414] hover:bg-[#1C1C1C] border border-white/10 text-white/80 hover:text-white text-xs font-semibold transition-all cursor-pointer shadow-sm"
-            title="Sync Enterprise Pipeline Data"
+            onClick={handleSyncTelemetry}
+            disabled={syncing}
+            className="px-3.5 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-white/80 hover:text-white font-medium text-xs border border-white/10 transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50"
           >
-            <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-            <span>Sync Pipeline</span>
+            <RefreshCw className={`w-3.5 h-3.5 ${syncing ? 'animate-spin text-[#FFD700]' : ''}`} />
+            <span>{syncing ? 'Syncing...' : 'Sync Telemetry'}</span>
           </button>
 
-          {/* 4. Export CSV */}
           <button
-            onClick={handleExportCsv}
-            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#141414] hover:bg-[#1C1C1C] border border-white/10 text-white/80 hover:text-white text-xs font-semibold transition-all cursor-pointer shadow-sm"
-            title="Export SaaS Telemetry to CSV"
+            onClick={() => setNewDealModalOpen(true)}
+            className="px-4 py-2 rounded-xl bg-gradient-to-r from-amber-400 via-[#FFD700] to-yellow-500 text-black font-black text-xs hover:brightness-110 transition-all flex items-center gap-1.5 shadow-md cursor-pointer active:scale-95"
           >
-            <Download className="w-3.5 h-3.5 text-blue-400" />
-            <span>Export CSV</span>
-          </button>
-
-          {/* 5. Add Account */}
-          <button
-            onClick={() => setNewRecordModalOpen(true)}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#FFD700] hover:bg-[#FFE55C] text-black text-xs font-bold transition-all shadow-[0_0_20px_rgba(255,215,0,0.25)] cursor-pointer"
-            title="Add a New Customer or Account"
-          >
-            <Plus className="w-4 h-4" />
-            <span>Add Account</span>
-          </button>
-
-          {/* 6. Refresh Live Data */}
-          <button
-            onClick={loadData}
-            title="Refresh Live Telemetry"
-            className="p-2 rounded-xl bg-[#141414] hover:bg-[#1C1C1C] border border-white/10 text-white/60 hover:text-white transition-all cursor-pointer"
-          >
-            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+            <Plus className="w-3.5 h-3.5 text-black" />
+            <span>Add Deal</span>
           </button>
         </div>
       </div>
 
-      {/* Real SaaS Metrics & Telemetry Strip */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-        {/* MRR */}
-        <div className="p-4 rounded-2xl bg-[#0E0E0E] border border-white/5 space-y-1">
-          <div className="flex items-center justify-between">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-white/40">Monthly MRR</span>
-            <DollarSign className="w-3.5 h-3.5 text-emerald-400" />
+      {/* KPI Telemetry Banner */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* At-Risk Pipeline */}
+        <div 
+          onClick={() => setActiveTab('risk')}
+          className={`p-5 rounded-2xl border transition-all cursor-pointer ${
+            activeTab === 'risk' 
+              ? 'bg-gradient-to-b from-rose-950/40 to-[#121212] border-rose-500/50 shadow-[0_0_20px_rgba(244,63,94,0.15)]' 
+              : 'bg-[#121212] border-white/10 hover:border-white/20'
+          }`}
+        >
+          <div className="flex items-center justify-between text-xs font-mono text-white/50 mb-2">
+            <span>AT-RISK REVENUE</span>
+            <AlertTriangle className="w-4 h-4 text-rose-400" />
           </div>
-          <div className="text-xl font-black text-white font-mono">
-            ${saasStats.mrr.toLocaleString()}
+          <div className="text-2xl sm:text-3xl font-black text-rose-400 font-mono">
+            ${stats.atRiskPipelineValue.toLocaleString()}
           </div>
-          <p className="text-[10px] text-emerald-400 font-medium">
-            ${saasStats.arr.toLocaleString()} ARR
-          </p>
+          <div className="flex items-center justify-between text-[11px] text-white/60 mt-2 font-mono">
+            <span>{stats.atRiskCount} Accounts flagged (&gt;10d silent)</span>
+            <span className="text-rose-400 font-bold">Urgent</span>
+          </div>
         </div>
 
-        {/* Churn Risk ARR */}
-        <div className="p-4 rounded-2xl bg-rose-950/20 border border-rose-500/30 space-y-1">
-          <div className="flex items-center justify-between">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-rose-400">At-Risk ARR</span>
-            <AlertTriangle className="w-3.5 h-3.5 text-rose-400" />
+        {/* Hot Leads Pipeline */}
+        <div 
+          onClick={() => setActiveTab('hot')}
+          className={`p-5 rounded-2xl border transition-all cursor-pointer ${
+            activeTab === 'hot' 
+              ? 'bg-gradient-to-b from-amber-950/40 to-[#121212] border-amber-500/50 shadow-[0_0_20px_rgba(245,158,11,0.15)]' 
+              : 'bg-[#121212] border-white/10 hover:border-white/20'
+          }`}
+        >
+          <div className="flex items-center justify-between text-xs font-mono text-white/50 mb-2">
+            <span>HIGH-INTENT LEADS</span>
+            <Flame className="w-4 h-4 text-amber-400" />
           </div>
-          <div className="text-xl font-black text-white font-mono flex items-baseline gap-1.5">
-            <span>${(saasStats.totalAtRiskArr || 341000).toLocaleString()}</span>
-            <span className="text-xs font-bold text-rose-400/90 font-sans">($341k)</span>
+          <div className="text-2xl sm:text-3xl font-black text-[#FFD700] font-mono">
+            ${stats.hotLeadsPipelineValue.toLocaleString()}
           </div>
-          <p className="text-[10px] text-rose-400 font-medium">
-            {churnRisks.length || 4} accounts slipping
-          </p>
+          <div className="flex items-center justify-between text-[11px] text-white/60 mt-2 font-mono">
+            <span>{stats.hotLeadsCount} Deals in Closing Stage</span>
+            <span className="text-emerald-400 font-bold">Fast-Track</span>
+          </div>
         </div>
 
-        {/* Expansion ARR */}
-        <div className="p-4 rounded-2xl bg-amber-950/20 border border-amber-500/30 space-y-1">
-          <div className="flex items-center justify-between">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-[#FFD700]">Expansion ARR</span>
-            <TrendingUp className="w-3.5 h-3.5 text-[#FFD700]" />
+        {/* SaaS MRR & NRR */}
+        <div 
+          onClick={() => setActiveTab('telemetry')}
+          className={`p-5 rounded-2xl border transition-all cursor-pointer ${
+            activeTab === 'telemetry' 
+              ? 'bg-gradient-to-b from-blue-950/40 to-[#121212] border-blue-500/50 shadow-[0_0_20px_rgba(59,130,246,0.15)]' 
+              : 'bg-[#121212] border-white/10 hover:border-white/20'
+          }`}
+        >
+          <div className="flex items-center justify-between text-xs font-mono text-white/50 mb-2">
+            <span>NET RETENTION (NRR)</span>
+            <TrendingUp className="w-4 h-4 text-blue-400" />
           </div>
-          <div className="text-xl font-black text-white font-mono">
-            +${saasStats.totalExpansionArr.toLocaleString()}
-          </div>
-          <p className="text-[10px] text-amber-400 font-medium">
-            {expansionTargets.length} ready to upgrade
-          </p>
-        </div>
-
-        {/* NRR % */}
-        <div className="p-4 rounded-2xl bg-[#0E0E0E] border border-white/5 space-y-1">
-          <div className="flex items-center justify-between">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-white/40">Net Retention (NRR)</span>
-            <Percent className="w-3.5 h-3.5 text-blue-400" />
-          </div>
-          <div className="text-xl font-black text-white font-mono">
+          <div className="text-2xl sm:text-3xl font-black text-blue-400 font-mono">
             {saasStats.nrr}%
           </div>
-          <p className="text-[10px] text-blue-400 font-medium">
-            Target: &gt;110% Top Quartile
-          </p>
+          <div className="flex items-center justify-between text-[11px] text-white/60 mt-2 font-mono">
+            <span>Monthly Recurring: ${saasStats.mrr.toLocaleString()}</span>
+            <span className="text-blue-400 font-bold">SaaS Core</span>
+          </div>
         </div>
 
-        {/* Churn Rate */}
-        <div className="p-4 rounded-2xl bg-[#0E0E0E] border border-white/5 space-y-1">
-          <div className="flex items-center justify-between">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-white/40">Churn Rate</span>
-            <ShieldAlert className="w-3.5 h-3.5 text-amber-400" />
+        {/* Total Monitored Accounts */}
+        <div 
+          onClick={() => setActiveTab('all')}
+          className={`p-5 rounded-2xl border transition-all cursor-pointer ${
+            activeTab === 'all' 
+              ? 'bg-gradient-to-b from-purple-950/40 to-[#121212] border-purple-500/50 shadow-[0_0_20px_rgba(168,85,247,0.15)]' 
+              : 'bg-[#121212] border-white/10 hover:border-white/20'
+          }`}
+        >
+          <div className="flex items-center justify-between text-xs font-mono text-white/50 mb-2">
+            <span>TOTAL CONTRACT VALUE</span>
+            <DollarSign className="w-4 h-4 text-purple-400" />
           </div>
-          <div className="text-xl font-black text-white font-mono">
-            {saasStats.churnRate}%
+          <div className="text-2xl sm:text-3xl font-black text-white font-mono">
+            ${stats.totalPipelineValue.toLocaleString()}
           </div>
-          <p className="text-[10px] text-white/40 font-medium">
-            {saasStats.totalActiveSubscribers} Paid Clients
-          </p>
-        </div>
-
-        {/* Delinquent / Dunning */}
-        <div className="p-4 rounded-2xl bg-purple-950/20 border border-purple-500/30 space-y-1">
-          <div className="flex items-center justify-between">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-purple-400">Failed Charges</span>
-            <CreditCard className="w-3.5 h-3.5 text-purple-400" />
+          <div className="flex items-center justify-between text-[11px] text-white/60 mt-2 font-mono">
+            <span>{stats.totalAccountsCount} Monitored Client Accounts</span>
+            <span className="text-white/40">Portfolio</span>
           </div>
-          <div className="text-xl font-black text-white font-mono">
-            ${dunningItems.filter(d => d.status === 'PENDING').reduce((s, d) => s + d.failedAmount, 0).toLocaleString()}
-          </div>
-          <p className="text-[10px] text-purple-400 font-medium">
-            {dunningItems.filter(d => d.status === 'PENDING').length} delinquent invoices
-          </p>
         </div>
       </div>
 
-      {/* Radar View Focus Selector - Clean Dropdown to Eliminate Clutter */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-[#111111] p-3 rounded-2xl border border-white/5">
-        <div className="flex items-center gap-3">
-          <span className="text-xs font-mono uppercase tracking-wider text-white/40 font-bold hidden sm:inline">
-            Radar View:
-          </span>
-          {/* Dropdown Button */}
-          <div className="relative">
-            <button
-              onClick={() => setFocusDropdownOpen(!focusDropdownOpen)}
-              className="flex items-center gap-2.5 px-4 py-2.5 rounded-xl bg-[#1A1A1A] hover:bg-[#222] border border-white/10 text-white font-bold text-xs shadow-md transition-all cursor-pointer"
-            >
-              {activeTab === 'churn_rescue' && <ShieldAlert className="w-4 h-4 text-rose-400" />}
-              {activeTab === 'health_trends' && <Activity className="w-4 h-4 text-[#FFD700]" />}
-              {activeTab === 'expansion_radar' && <TrendingUp className="w-4 h-4 text-[#FFD700]" />}
-              {activeTab === 'pql_signals' && <Zap className="w-4 h-4 text-cyan-400" />}
-              {activeTab === 'renewal_defense' && <Swords className="w-4 h-4 text-indigo-400" />}
-              {activeTab === 'stripe_telemetry' && <CreditCard className="w-4 h-4 text-purple-400" />}
-              {activeTab === 'all_pipeline' && <SlidersHorizontal className="w-4 h-4 text-white" />}
+      {/* Deal Health Trend Analysis Chart (Visual Telemetry) */}
+      <DealHealthTrendChart 
+        records={records} 
+        onSelectRecord={(rec) => handleOpenActionModal(rec)} 
+      />
 
-              <span>
-                {activeTab === 'churn_rescue' && `AI Churn Predictor & Rescue (${churnRisks.length} at risk)`}
-                {activeTab === 'health_trends' && `30D Deal Health Trends (${records.filter(r => r.stage !== 'Closed Lost').length} deals)`}
-                {activeTab === 'expansion_radar' && `Expansion & Upsell Radar (${expansionTargets.length} ready)`}
-                {activeTab === 'pql_signals' && `PLG & PQL Signals (${pqlSignals.filter(s => s.status === 'NEW_OPPORTUNITY' || s.status === 'PITCHED').length} active)`}
-                {activeTab === 'renewal_defense' && `Renewal & Competitor Defense (${renewalItems.filter(r => r.status !== 'MULTI_YEAR_LOCKED').length} contracts)`}
-                {activeTab === 'stripe_telemetry' && `Stripe Telemetry & Failed Charges (${dunningItems.filter(d => d.status === 'PENDING').length} delinquent)`}
-                {activeTab === 'all_pipeline' && `All Pipeline Deals & Accounts (${records.length} accounts)`}
-              </span>
-              <ChevronDown className={`w-3.5 h-3.5 text-white/50 ml-1 transition-transform ${focusDropdownOpen ? 'rotate-180' : ''}`} />
-            </button>
+      {/* Filter Tabs & Search Controls */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pt-2">
+        <div className="flex items-center gap-2 overflow-x-auto pb-2 md:pb-0">
+          <button
+            onClick={() => setActiveTab('risk')}
+            className={`px-4 py-2 rounded-xl text-xs font-bold font-mono transition-all flex items-center gap-2 cursor-pointer ${
+              activeTab === 'risk'
+                ? 'bg-rose-500 text-white shadow-[0_0_15px_rgba(244,63,94,0.3)]'
+                : 'bg-white/5 hover:bg-white/10 text-white/60 hover:text-white'
+            }`}
+          >
+            <AlertTriangle className="w-3.5 h-3.5" />
+            <span>At-Risk Clients ({atRiskList.length})</span>
+          </button>
 
-            {focusDropdownOpen && (
-              <div 
-                className="absolute left-0 top-full mt-2 w-80 sm:w-96 rounded-2xl bg-[#181818] border border-white/15 p-2 shadow-2xl z-40 animate-fade-in"
-                onMouseLeave={() => setFocusDropdownOpen(false)}
-              >
-                <div className="px-3 py-1.5 text-[10px] uppercase font-mono text-white/40 border-b border-white/10 mb-1 flex items-center justify-between">
-                  <span>Select Radar Telemetry View</span>
-                  <span className="text-[#FFD700] font-bold">1 Focus at a time</span>
-                </div>
+          <button
+            onClick={() => setActiveTab('hot')}
+            className={`px-4 py-2 rounded-xl text-xs font-bold font-mono transition-all flex items-center gap-2 cursor-pointer ${
+              activeTab === 'hot'
+                ? 'bg-[#FFD700] text-black shadow-[0_0_15px_rgba(255,215,0,0.3)]'
+                : 'bg-white/5 hover:bg-white/10 text-white/60 hover:text-white'
+            }`}
+          >
+            <Flame className="w-3.5 h-3.5" />
+            <span>Hot Leads ({hotLeadsList.length})</span>
+          </button>
 
-                <button
-                  onClick={() => { setActiveTab('churn_rescue'); setFocusDropdownOpen(false); }}
-                  className={`w-full flex items-center justify-between p-2.5 rounded-xl text-xs font-semibold transition-colors cursor-pointer text-left ${
-                    activeTab === 'churn_rescue' ? 'bg-rose-500/20 text-rose-300 font-bold border border-rose-500/30' : 'hover:bg-white/5 text-white'
-                  }`}
-                >
-                  <div className="flex items-center gap-2.5">
-                    <ShieldAlert className="w-4 h-4 text-rose-400 shrink-0" />
-                    <div>
-                      <div className="font-bold">AI Churn Predictor &amp; Rescue</div>
-                      <div className="text-[10px] text-white/50">Deal risk mitigation &amp; concession playbooks</div>
-                    </div>
-                  </div>
-                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-300 font-mono font-bold">
-                    {churnRisks.length} at risk
-                  </span>
-                </button>
+          <button
+            onClick={() => setActiveTab('all')}
+            className={`px-4 py-2 rounded-xl text-xs font-bold font-mono transition-all flex items-center gap-2 cursor-pointer ${
+              activeTab === 'all'
+                ? 'bg-white text-black shadow-md'
+                : 'bg-white/5 hover:bg-white/10 text-white/60 hover:text-white'
+            }`}
+          >
+            <Layers className="w-3.5 h-3.5" />
+            <span>All Deals ({records.length})</span>
+          </button>
 
-                <button
-                  onClick={() => { setActiveTab('health_trends'); setFocusDropdownOpen(false); }}
-                  className={`w-full flex items-center justify-between p-2.5 rounded-xl text-xs font-semibold transition-colors cursor-pointer text-left ${
-                    activeTab === 'health_trends' ? 'bg-amber-400/20 text-[#FFD700] font-bold border border-amber-400/30' : 'hover:bg-white/5 text-white'
-                  }`}
-                >
-                  <div className="flex items-center gap-2.5">
-                    <Activity className="w-4 h-4 text-amber-400 shrink-0" />
-                    <div>
-                      <div className="font-bold">30D Deal Health Trends</div>
-                      <div className="text-[10px] text-white/50">Historical momentum &amp; trajectory graph</div>
-                    </div>
-                  </div>
-                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-400/20 text-[#FFD700] font-mono font-bold">
-                    {records.filter(r => r.stage !== 'Closed Lost').length}
-                  </span>
-                </button>
-
-                <button
-                  onClick={() => { setActiveTab('expansion_radar'); setFocusDropdownOpen(false); }}
-                  className={`w-full flex items-center justify-between p-2.5 rounded-xl text-xs font-semibold transition-colors cursor-pointer text-left ${
-                    activeTab === 'expansion_radar' ? 'bg-[#FFD700]/20 text-[#FFD700] font-bold border border-[#FFD700]/30' : 'hover:bg-white/5 text-white'
-                  }`}
-                >
-                  <div className="flex items-center gap-2.5">
-                    <TrendingUp className="w-4 h-4 text-[#FFD700] shrink-0" />
-                    <div>
-                      <div className="font-bold">Expansion &amp; Upsell Radar</div>
-                      <div className="text-[10px] text-white/50">Seat cap triggers &amp; enterprise tier upsell</div>
-                    </div>
-                  </div>
-                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#FFD700]/20 text-[#FFD700] font-mono font-bold">
-                    {expansionTargets.length} ready
-                  </span>
-                </button>
-
-                <button
-                  onClick={() => { setActiveTab('pql_signals'); setFocusDropdownOpen(false); }}
-                  className={`w-full flex items-center justify-between p-2.5 rounded-xl text-xs font-semibold transition-colors cursor-pointer text-left ${
-                    activeTab === 'pql_signals' ? 'bg-cyan-500/20 text-cyan-300 font-bold border border-cyan-500/30' : 'hover:bg-white/5 text-white'
-                  }`}
-                >
-                  <div className="flex items-center gap-2.5">
-                    <Zap className="w-4 h-4 text-cyan-400 shrink-0" />
-                    <div>
-                      <div className="font-bold">PLG &amp; PQL Signals</div>
-                      <div className="text-[10px] text-white/50">Product-qualified lead triggers &amp; pitches</div>
-                    </div>
-                  </div>
-                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 font-mono font-bold">
-                    {pqlSignals.filter(s => s.status === 'NEW_OPPORTUNITY' || s.status === 'PITCHED').length}
-                  </span>
-                </button>
-
-                <button
-                  onClick={() => { setActiveTab('renewal_defense'); setFocusDropdownOpen(false); }}
-                  className={`w-full flex items-center justify-between p-2.5 rounded-xl text-xs font-semibold transition-colors cursor-pointer text-left ${
-                    activeTab === 'renewal_defense' ? 'bg-indigo-500/20 text-indigo-300 font-bold border border-indigo-500/30' : 'hover:bg-white/5 text-white'
-                  }`}
-                >
-                  <div className="flex items-center gap-2.5">
-                    <Swords className="w-4 h-4 text-indigo-400 shrink-0" />
-                    <div>
-                      <div className="font-bold">Renewal &amp; Competitor Defense</div>
-                      <div className="text-[10px] text-white/50">Pre-empt churn &amp; lock in multi-year deals</div>
-                    </div>
-                  </div>
-                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 font-mono font-bold">
-                    {renewalItems.filter(r => r.status !== 'MULTI_YEAR_LOCKED').length}
-                  </span>
-                </button>
-
-                <button
-                  onClick={() => { setActiveTab('stripe_telemetry'); setFocusDropdownOpen(false); }}
-                  className={`w-full flex items-center justify-between p-2.5 rounded-xl text-xs font-semibold transition-colors cursor-pointer text-left ${
-                    activeTab === 'stripe_telemetry' ? 'bg-purple-500/20 text-purple-300 font-bold border border-purple-500/30' : 'hover:bg-white/5 text-white'
-                  }`}
-                >
-                  <div className="flex items-center gap-2.5">
-                    <CreditCard className="w-4 h-4 text-purple-400 shrink-0" />
-                    <div>
-                      <div className="font-bold">Stripe Telemetry &amp; Dunning</div>
-                      <div className="text-[10px] text-white/50">Failed payment recovery &amp; overdue charges</div>
-                    </div>
-                  </div>
-                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300 font-mono font-bold">
-                    {dunningItems.filter(d => d.status === 'PENDING').length} delinquent
-                  </span>
-                </button>
-
-                <button
-                  onClick={() => { setActiveTab('all_pipeline'); setFocusDropdownOpen(false); }}
-                  className={`w-full flex items-center justify-between p-2.5 rounded-xl text-xs font-semibold transition-colors cursor-pointer text-left ${
-                    activeTab === 'all_pipeline' ? 'bg-white/15 text-white font-bold border border-white/20' : 'hover:bg-white/5 text-white'
-                  }`}
-                >
-                  <div className="flex items-center gap-2.5">
-                    <SlidersHorizontal className="w-4 h-4 text-white shrink-0" />
-                    <div>
-                      <div className="font-bold">All Pipeline Deals &amp; Accounts</div>
-                      <div className="text-[10px] text-white/50">Full CRM registry &amp; stage management</div>
-                    </div>
-                  </div>
-                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/10 text-white font-mono font-bold">
-                    {records.length}
-                  </span>
-                </button>
-              </div>
-            )}
-          </div>
+          <button
+            onClick={() => setActiveTab('telemetry')}
+            className={`px-4 py-2 rounded-xl text-xs font-bold font-mono transition-all flex items-center gap-2 cursor-pointer ${
+              activeTab === 'telemetry'
+                ? 'bg-blue-500 text-white shadow-[0_0_15px_rgba(59,130,246,0.3)]'
+                : 'bg-white/5 hover:bg-white/10 text-white/60 hover:text-white'
+            }`}
+          >
+            <Activity className="w-3.5 h-3.5" />
+            <span>SaaS Telemetry</span>
+          </button>
         </div>
 
-        {/* Search */}
-        <div className="relative w-full sm:w-64">
-          <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-white/40" />
+        {/* Search Input */}
+        <div className="relative w-full md:w-72">
+          <Search className="w-4 h-4 text-white/40 absolute left-3 top-1/2 -translate-y-1/2" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search accounts..."
-            className="w-full bg-[#181818] border border-white/10 rounded-xl pl-9 pr-3 py-1.5 text-xs text-white placeholder-white/40 focus:outline-none focus:border-[#FFD700]/50"
+            placeholder="Search accounts, contacts, emails..."
+            className="w-full bg-[#121212] border border-white/10 rounded-xl pl-9 pr-4 py-2 text-xs text-white placeholder-white/30 focus:border-[#FFD700] focus:outline-none transition-colors font-mono"
           />
         </div>
       </div>
 
-      {/* TAB 0: 30-DAY DEAL HEALTH SCORES TREND LINE (RECHARTS) */}
-      {activeTab === 'health_trends' && (
-        <div className="space-y-6">
-          <DealHealthTrendChart 
-            records={records} 
-            onSelectRecord={(record) => {
-              handleGenerateChurnRescue(record);
-            }} 
-          />
+      {/* Main Records Table / Cards */}
+      {loading ? (
+        <div className="p-12 text-center text-white/50 text-xs font-mono space-y-3">
+          <RefreshCw className="w-6 h-6 animate-spin mx-auto text-[#FFD700]" />
+          <div>Scanning real company accounts &amp; live CRM telemetry...</div>
         </div>
-      )}
-
-      {/* TAB 1: AI CHURN PREDICTOR & AUTO-RESCUE */}
-      {activeTab === 'churn_rescue' && (
-        <div className="space-y-4">
-          <div className="p-4 rounded-2xl bg-rose-950/20 border border-rose-500/30 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-xl bg-rose-500/20 flex items-center justify-center text-rose-400">
-                <AlertTriangle className="w-4 h-4" />
-              </div>
-              <div>
-                <h3 className="text-sm font-bold text-white">
-                  AI Churn Risk Diagnostics &amp; Auto-Rescue Engine
-                </h3>
-                <p className="text-xs text-white/50">
-                  Accounts flagged by communication gaps (&gt;10d), login activity drops, or health degradation.
-                </p>
-              </div>
-            </div>
-            <div className="text-right">
-              <span className="text-xs text-rose-400 font-bold block">
-                ${saasStats.totalAtRiskArr.toLocaleString()} ARR At-Risk
-              </span>
-              <span className="text-[10px] text-white/40">
-                {churnRisks.length} high priority accounts
-              </span>
-            </div>
+      ) : records.length === 0 ? (
+        <div className="p-12 text-center rounded-3xl bg-gradient-to-b from-[#141414] to-[#0A0A0A] border border-white/10 space-y-4">
+          <div className="w-14 h-14 rounded-2xl bg-[#FFD700]/10 border border-[#FFD700]/25 flex items-center justify-center text-[#FFD700] mx-auto">
+            <Radar className="w-7 h-7 animate-pulse" />
           </div>
+          <div className="space-y-1">
+            <h3 className="text-base font-bold text-white">Live Pipeline Ready — 100% Real Data</h3>
+            <p className="text-xs text-white/50 max-w-md mx-auto">
+              No simulated or fake accounts exist. Add your real active client contracts or sync your CRM to start monitoring real ARR, deal risk, and executive rescue playbooks.
+            </p>
+          </div>
+          <button
+            onClick={() => setNewDealModalOpen(true)}
+            className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-400 via-[#FFD700] to-yellow-500 text-black font-black text-xs hover:brightness-110 transition-all inline-flex items-center gap-2 shadow-lg cursor-pointer active:scale-95"
+          >
+            <Plus className="w-4 h-4 text-black" />
+            <span>Add Your First Real Deal</span>
+          </button>
+        </div>
+      ) : displayedRecords.length === 0 ? (
+        <div className="p-12 text-center rounded-2xl bg-[#121212] border border-white/10 space-y-3">
+          <CheckCircle2 className="w-8 h-8 text-emerald-400 mx-auto" />
+          <div className="text-sm font-bold text-white">No accounts match this filter</div>
+          <p className="text-xs text-white/50 max-w-sm mx-auto">
+            All your real accounts are currently in healthy standing or no records matched your search query.
+          </p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {displayedRecords.map((record) => {
+            const isAtRisk = record.daysSinceLastContact > 10 || record.healthScore < 60;
+            const isHotLead = record.stage === 'Negotiation' || record.stage === 'Proposal';
 
-          {churnRisks.length === 0 ? (
-            <div className="p-12 text-center rounded-3xl bg-[#0E0E0E] border border-white/5 space-y-3">
-              <CheckCircle2 className="w-10 h-10 text-emerald-400 mx-auto" />
-              <h3 className="text-base font-bold text-white">Zero Critical Churn Risks Detected</h3>
-              <p className="text-xs text-white/40 max-w-md mx-auto">
-                All client accounts are healthy and actively engaged within the standard 10-day communication window.
-              </p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {churnRisks.map((record) => {
-                const isGenerating = generatingChurnId === record.id;
-                const churnProb = record.churnProbability || (record.healthScore < 40 ? 82 : 55);
+            return (
+              <div
+                key={record.id}
+                className={`p-5 rounded-2xl bg-gradient-to-b from-[#161616] to-[#0E0E0E] border transition-all flex flex-col justify-between group hover:scale-[1.01] ${
+                  isAtRisk 
+                    ? 'border-rose-500/40 hover:border-rose-500 shadow-[0_4px_20px_rgba(244,63,94,0.08)]' 
+                    : isHotLead 
+                    ? 'border-amber-500/40 hover:border-amber-400 shadow-[0_4px_20px_rgba(245,158,11,0.08)]'
+                    : 'border-white/10 hover:border-white/20'
+                }`}
+              >
+                <div className="space-y-3">
+                  {/* Top Badges */}
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-white/10 text-white/70 border border-white/10">
+                      {record.stage}
+                    </span>
+                    <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded ${
+                      isAtRisk 
+                        ? 'bg-rose-500/20 text-rose-300 border border-rose-500/30' 
+                        : isHotLead 
+                        ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
+                        : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+                    }`}>
+                      {record.daysSinceLastContact}d Silent
+                    </span>
+                  </div>
 
-                return (
-                  <div 
-                    key={record.id} 
-                    className="p-5 rounded-2xl bg-[#0E0E0E] border border-rose-500/30 hover:border-rose-500/60 transition-all flex flex-col justify-between space-y-4 shadow-[0_0_25px_rgba(244,63,94,0.06)]"
-                  >
-                    <div className="space-y-3">
-                      <div className="flex items-start justify-between">
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <h4 className="text-base font-bold text-white">{record.accountName}</h4>
-                            <span className="px-2 py-0.5 rounded text-[10px] font-extrabold bg-rose-500/20 text-rose-300 border border-rose-500/40">
-                              {churnProb}% Churn Risk
-                            </span>
-                          </div>
-                          <p className="text-xs text-white/50">
-                            {record.contactName} ({record.contactRole || 'Key Stakeholder'}) • {record.contactEmail}
-                          </p>
-                        </div>
-                        <div className="text-right">
-                          <span className="text-sm font-black text-white font-mono block">
-                            ${(record.mrr ? record.mrr : Math.round(record.dealValue / 12)).toLocaleString()}/mo
-                          </span>
-                          <span className="text-[10px] text-white/40">
-                            ${record.dealValue.toLocaleString()} ARR
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* Diagnostic Meters */}
-                      <div className="grid grid-cols-3 gap-2 p-2.5 rounded-xl bg-black/40 border border-white/5 text-center">
-                        <div>
-                          <span className="text-[10px] text-white/40 block">Silence</span>
-                          <span className="text-xs font-bold text-rose-400 font-mono">
-                            {record.daysSinceLastContact} Days
-                          </span>
-                        </div>
-                        <div>
-                          <span className="text-[10px] text-white/40 block">Health Score</span>
-                          <span className="text-xs font-bold text-amber-400 font-mono">
-                            {record.healthScore}/100
-                          </span>
-                        </div>
-                        <div>
-                          <span className="text-[10px] text-white/40 block">Activity</span>
-                          <span className="text-xs font-bold text-rose-400 font-mono">
-                            {record.activityDropPct ? `${record.activityDropPct}%` : '-35%'}
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* Risk factors */}
-                      <div className="space-y-1">
-                        <span className="text-[10px] uppercase font-bold text-white/40 tracking-wider">Root Causes:</span>
-                        <ul className="text-xs text-white/70 space-y-1">
-                          {(record.riskFactors || []).map((rf, i) => (
-                            <li key={i} className="flex items-start gap-1.5">
-                              <span className="text-rose-400 mt-0.5">•</span>
-                              <span>{rf}</span>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    </div>
-
-                    {/* Action button */}
-                    <div className="pt-2 border-t border-white/5 flex gap-2">
-                      <button
-                        onClick={() => handleGenerateChurnRescue(record)}
-                        disabled={isGenerating}
-                        className="flex-1 py-2.5 px-3 rounded-xl bg-gradient-to-r from-rose-600 to-rose-700 hover:from-rose-500 hover:to-rose-600 text-white text-xs font-bold transition-all flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(244,63,94,0.3)] cursor-pointer disabled:opacity-50"
-                      >
-                        <Sparkles className={`w-4 h-4 ${isGenerating ? 'animate-spin' : ''}`} />
-                        <span>{isGenerating ? 'Analyzing Root Cause...' : '1-Click AI Auto-Rescue'}</span>
-                      </button>
-
-                      <button
-                        onClick={async () => {
-                          await markContactedToday(activeCompanyId, userId, record.id);
-                          loadData();
-                        }}
-                        className="p-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-white/70 hover:text-white transition-all cursor-pointer border border-white/5"
-                        title="Mark Contacted Today"
-                      >
-                        <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                      </button>
+                  {/* Account & Contact */}
+                  <div>
+                    <h3 className="text-base font-bold text-white group-hover:text-[#FFD700] transition-colors truncate">
+                      {record.accountName}
+                    </h3>
+                    <div className="text-xs text-white/60 flex items-center gap-1.5 mt-0.5 truncate">
+                      <User className="w-3 h-3 text-white/40 shrink-0" />
+                      <span className="truncate">{record.contactName} ({record.contactRole || 'Decision Maker'})</span>
                     </div>
                   </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
-      )}
 
-      {/* TAB 2: EXPANSION & UPSELL RADAR */}
-      {activeTab === 'expansion_radar' && (
-        <div className="space-y-4">
-          <div className="p-4 rounded-2xl bg-amber-950/20 border border-amber-500/30 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-xl bg-amber-500/20 flex items-center justify-center text-[#FFD700]">
-                <TrendingUp className="w-4 h-4" />
-              </div>
-              <div>
-                <h3 className="text-sm font-bold text-white">
-                  SaaS Expansion &amp; Upsell Radar
-                </h3>
-                <p className="text-xs text-white/50">
-                  Accounts reaching seat capacity (&gt;80%), power features, or ripe for Enterprise upgrades.
-                </p>
-              </div>
-            </div>
-            <div className="text-right">
-              <span className="text-xs text-[#FFD700] font-bold block">
-                +${saasStats.totalExpansionArr.toLocaleString()} Expansion Pipeline
-              </span>
-              <span className="text-[10px] text-white/40">
-                {expansionTargets.length} expansion targets
-              </span>
-            </div>
-          </div>
-
-          {expansionTargets.length === 0 ? (
-            <div className="p-12 text-center rounded-3xl bg-[#0E0E0E] border border-white/5 space-y-3">
-              <Sparkles className="w-10 h-10 text-amber-400 mx-auto" />
-              <h3 className="text-base font-bold text-white">No Immediate Upsell Triggers</h3>
-              <p className="text-xs text-white/40 max-w-md mx-auto">
-                Accounts are operating normally within their plan tier allocations.
-              </p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {expansionTargets.map((record) => {
-                const isGenerating = generatingExpansionId === record.id;
-                const seatsUsed = record.seatsUsed || 18;
-                const seatsTotal = record.seatsTotal || 20;
-                const seatPct = Math.round((seatsUsed / seatsTotal) * 100);
-                const expansionUplift = record.expansionPotentialArr || Math.round((record.dealValue || 36000) * 0.5);
-
-                return (
-                  <div 
-                    key={record.id} 
-                    className="p-5 rounded-2xl bg-[#0E0E0E] border border-amber-500/30 hover:border-amber-500/60 transition-all flex flex-col justify-between space-y-4 shadow-[0_0_25px_rgba(255,215,0,0.06)]"
-                  >
-                    <div className="space-y-3">
-                      <div className="flex items-start justify-between">
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <h4 className="text-base font-bold text-white">{record.accountName}</h4>
-                            <span className="px-2 py-0.5 rounded text-[10px] font-extrabold bg-amber-400/20 text-[#FFD700] border border-amber-400/30">
-                              {record.planTier || 'Pro Tier'}
-                            </span>
-                          </div>
-                          <p className="text-xs text-white/50">
-                            {record.contactName} • {record.contactEmail}
-                          </p>
-                        </div>
-                        <div className="text-right">
-                          <span className="text-sm font-black text-[#FFD700] font-mono block">
-                            +${expansionUplift.toLocaleString()} ARR
-                          </span>
-                          <span className="text-[10px] text-white/40">Expansion Value</span>
-                        </div>
-                      </div>
-
-                      {/* Seat Capacity Bar */}
-                      <div className="p-3 rounded-xl bg-black/40 border border-white/5 space-y-1.5">
-                        <div className="flex items-center justify-between text-xs">
-                          <span className="text-white/60">Seat Capacity Utilization</span>
-                          <span className="font-bold text-amber-400 font-mono">{seatsUsed} / {seatsTotal} seats ({seatPct}%)</span>
-                        </div>
-                        <div className="w-full h-2 rounded-full bg-white/10 overflow-hidden">
-                          <div 
-                            className={`h-full rounded-full ${seatPct >= 90 ? 'bg-amber-400' : 'bg-emerald-400'}`}
-                            style={{ width: `${Math.min(100, seatPct)}%` }}
-                          />
-                        </div>
-                      </div>
-
-                      {/* Upgrade Pitch Angle */}
-                      <div className="p-2.5 rounded-xl bg-amber-400/5 border border-amber-400/10 text-xs text-white/70">
-                        <span className="font-bold text-[#FFD700]">Upgrade Catalyst: </span>
-                        {record.notes || 'Reaching seat ceiling. Upgrade to Enterprise unlocks unlimited seats and dedicated VPC cluster.'}
-                      </div>
+                  {/* Financial & Health Metrics */}
+                  <div className="p-3 rounded-xl bg-white/5 border border-white/5 space-y-2">
+                    <div className="flex items-center justify-between text-xs font-mono">
+                      <span className="text-white/50">Deal Contract ARR:</span>
+                      <span className="font-bold text-white">${record.dealValue.toLocaleString()}</span>
                     </div>
 
-                    {/* Action button */}
-                    <div className="pt-2 border-t border-white/5">
-                      <button
-                        onClick={() => handleGenerateExpansionProposal(record)}
-                        disabled={isGenerating}
-                        className="w-full py-2.5 px-3 rounded-xl bg-[#FFD700] hover:bg-[#FFE55C] text-black text-xs font-black transition-all flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(255,215,0,0.25)] cursor-pointer disabled:opacity-50"
-                      >
-                        <Sparkles className={`w-4 h-4 ${isGenerating ? 'animate-spin' : ''}`} />
-                        <span>{isGenerating ? 'Formulating Business Case...' : '1-Click Generate Expansion Proposal'}</span>
-                      </button>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* TAB: PLG & PQL SIGNALS (PRODUCT-QUALIFIED LEADS) */}
-      {activeTab === 'pql_signals' && (
-        <div className="space-y-6">
-          {/* PLG Telemetry Summary Header */}
-          <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
-            <div className="p-4 rounded-2xl bg-cyan-950/20 border border-cyan-500/30 space-y-1">
-              <div className="flex items-center justify-between">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-cyan-400">Total PQL Signals</span>
-                <Zap className="w-3.5 h-3.5 text-cyan-400" />
-              </div>
-              <div className="text-xl font-black text-white font-mono">{plgStats.totalPQLs} High-Intent Users</div>
-              <p className="text-[10px] text-cyan-400 font-medium">{pqlSignals.filter(s => s.status === 'NEW_OPPORTUNITY').length} ready for upgrade pitch</p>
-            </div>
-
-            <div className="p-4 rounded-2xl bg-[#0E0E0E] border border-white/5 space-y-1">
-              <div className="flex items-center justify-between">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-white/40">Potential ARR Pipeline</span>
-                <TrendingUp className="w-3.5 h-3.5 text-emerald-400" />
-              </div>
-              <div className="text-xl font-black text-white font-mono">${plgStats.potentialArr.toLocaleString()}</div>
-              <p className="text-[10px] text-emerald-400 font-medium">+${(plgStats.potentialArr / 12).toFixed(0)}/mo MRR expansion</p>
-            </div>
-
-            <div className="p-4 rounded-2xl bg-[#0E0E0E] border border-white/5 space-y-1">
-              <div className="flex items-center justify-between">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-white/40">Avg PQL Score</span>
-                <Activity className="w-3.5 h-3.5 text-cyan-400" />
-              </div>
-              <div className="text-xl font-black text-white font-mono">{plgStats.avgPQLScore}/100</div>
-              <p className="text-[10px] text-white/40 font-medium">Weighted feature adoption score</p>
-            </div>
-
-            <div className="p-4 rounded-2xl bg-[#0E0E0E] border border-white/5 space-y-1">
-              <div className="flex items-center justify-between">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-white/40">Converted ARR</span>
-                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
-              </div>
-              <div className="text-xl font-black text-white font-mono">${plgStats.convertedArr.toLocaleString()}</div>
-              <p className="text-[10px] text-emerald-400 font-medium">{pqlSignals.filter(s => s.status === 'CONVERTED').length} converted to paid tier</p>
-            </div>
-          </div>
-
-          {/* PQL Cards Grid */}
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-base font-bold text-white flex items-center gap-2">
-                  <Zap className="w-4 h-4 text-cyan-400" />
-                  <span>Real-Time Product-Qualified Leads (PQL Radar)</span>
-                </h3>
-                <p className="text-xs text-white/50">
-                  Autonomous event telemetry tracking user workflow surges, onboarding milestones, and plan limit hits.
-                </p>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              {pqlSignals.map((signal) => {
-                const isGenerating = generatingPqlId === signal.id;
-                const isConverted = signal.status === 'CONVERTED';
-
-                return (
-                  <div
-                    key={signal.id}
-                    className={`p-5 rounded-3xl bg-[#0E0E0E] border transition-all space-y-4 flex flex-col justify-between ${
-                      isConverted
-                        ? 'border-emerald-500/30 opacity-80'
-                        : signal.pqlScore >= 85
-                        ? 'border-cyan-500/40 hover:border-cyan-500/70 shadow-[0_0_25px_rgba(6,182,212,0.1)]'
-                        : 'border-white/5 hover:border-white/15'
-                    }`}
-                  >
-                    <div className="space-y-3">
-                      {/* Top Header */}
-                      <div className="flex items-start justify-between">
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <h4 className="text-base font-bold text-white">{signal.userName}</h4>
-                            <span className="text-xs text-white/50">({signal.accountName})</span>
-                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider ${
-                              signal.status === 'CONVERTED'
-                                ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
-                                : signal.status === 'PITCHED'
-                                ? 'bg-amber-400/20 text-[#FFD700] border border-amber-400/30'
-                                : 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30'
-                            }`}>
-                              {signal.status.replace('_', ' ')}
-                            </span>
-                          </div>
-                          <p className="text-xs text-white/50 font-mono mt-0.5">{signal.userEmail}</p>
-                        </div>
-
-                        <div className="text-right">
-                          <div className="flex items-center gap-1.5 justify-end">
-                            <span className="text-xs font-mono font-bold text-white/40">{signal.currentPlan}</span>
-                            <ArrowRight className="w-3 h-3 text-cyan-400" />
-                            <span className="text-xs font-mono font-black text-cyan-400">{signal.targetPlan}</span>
-                          </div>
-                          <span className="text-sm font-black text-emerald-400 font-mono block mt-0.5">
-                            +${signal.estimatedArrUplift.toLocaleString()} ARR
-                          </span>
-                        </div>
+                    {record.mrr && (
+                      <div className="flex items-center justify-between text-xs font-mono">
+                        <span className="text-white/50">Monthly MRR:</span>
+                        <span className="text-[#FFD700] font-bold">${record.mrr.toLocaleString()}</span>
                       </div>
+                    )}
 
-                      {/* Behavioral Catalyst Banner */}
-                      <div className="p-3 rounded-2xl bg-cyan-950/20 border border-cyan-500/30 space-y-1.5">
-                        <div className="flex items-center justify-between text-xs">
-                          <span className="font-bold text-cyan-400 flex items-center gap-1.5">
-                            <Sparkles className="w-3.5 h-3.5" />
-                            <span>PQL TRIGGER CATALYST</span>
-                          </span>
-                          <span className="font-mono font-bold text-white">Score: {signal.pqlScore}/100</span>
-                        </div>
-                        <p className="text-xs text-white/80 leading-relaxed font-medium">
-                          {signal.pqlTriggerReason}
-                        </p>
-                      </div>
-
-                      {/* Onboarding & Telemetry Stats */}
-                      <div className="grid grid-cols-3 gap-2 text-xs">
-                        <div className="p-2.5 rounded-xl bg-black/40 border border-white/5 space-y-1">
-                          <span className="text-[10px] text-white/40 block font-bold">Onboarding</span>
-                          <span className="font-mono font-bold text-white">{signal.onboardingProgress}% Complete</span>
-                        </div>
-
-                        <div className="p-2.5 rounded-xl bg-black/40 border border-white/5 space-y-1">
-                          <span className="text-[10px] text-white/40 block font-bold">User Sentiment</span>
-                          <span className={`font-mono font-bold ${
-                            signal.sentimentScore >= 8 ? 'text-emerald-400' : 'text-amber-400'
-                          }`}>
-                            {signal.sentimentLabel} ({signal.sentimentScore}/10)
-                          </span>
-                        </div>
-
-                        <div className="p-2.5 rounded-xl bg-black/40 border border-white/5 space-y-1">
-                          <span className="text-[10px] text-white/40 block font-bold">Event Volume</span>
-                          <span className="font-mono font-bold text-cyan-400">
-                            {signal.recentEvents?.reduce((sum, e) => sum + (e.count || 1), 0) || 0} events/wk
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* Recent In-App Events Pill List */}
-                      {signal.recentEvents && signal.recentEvents.length > 0 && (
-                        <div className="space-y-1">
-                          <span className="text-[10px] font-bold text-white/40 uppercase tracking-wider">Top In-App Events:</span>
-                          <div className="flex flex-wrap gap-1.5">
-                            {signal.recentEvents.map((evt, idx) => (
-                              <span key={idx} className="px-2 py-0.5 rounded-lg bg-white/5 border border-white/10 text-[11px] text-white/70 font-mono">
-                                {evt.eventName} {evt.count ? <strong className="text-cyan-400">×{evt.count}</strong> : null}
-                              </span>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Action Buttons */}
-                    <div className="pt-3 border-t border-white/5 flex gap-2">
-                      {!isConverted ? (
-                        <>
-                          <button
-                            onClick={() => handleGeneratePQLPitch(signal)}
-                            disabled={isGenerating}
-                            className="flex-1 py-2.5 px-3 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-black text-xs font-black transition-all flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(6,182,212,0.3)] cursor-pointer disabled:opacity-50"
-                          >
-                            <Sparkles className={`w-4 h-4 ${isGenerating ? 'animate-spin' : ''}`} />
-                            <span>{isGenerating ? 'Drafting Conversion Pitch...' : '1-Click AI Conversion Pitch'}</span>
-                          </button>
-
-                          <button
-                            onClick={() => handleConvertPQL(signal)}
-                            className="py-2.5 px-3 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 border border-emerald-500/30 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer"
-                          >
-                            <CheckCircle2 className="w-3.5 h-3.5" />
-                            <span>Mark Upgraded</span>
-                          </button>
-                        </>
-                      ) : (
-                        <div className="w-full py-2 rounded-xl bg-emerald-950/20 border border-emerald-500/30 text-center text-xs font-bold text-emerald-400 flex items-center justify-center gap-2">
-                          <CheckCircle2 className="w-4 h-4" />
-                          <span>Successfully Converted to {signal.targetPlan} (+$${signal.estimatedArrUplift.toLocaleString()} ARR)</span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* TAB: RENEWAL & COMPETITOR DEFENSE PRE-EMPTOR */}
-      {activeTab === 'renewal_defense' && (
-        <div className="space-y-6">
-          {/* Renewal Defense Telemetry Summary Header */}
-          <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
-            <div className="p-4 rounded-2xl bg-indigo-950/20 border border-indigo-500/30 space-y-1">
-              <div className="flex items-center justify-between">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-400">ARR At Renewal Stake</span>
-                <CalendarCheck className="w-3.5 h-3.5 text-indigo-400" />
-              </div>
-              <div className="text-xl font-black text-white font-mono">${renewalStats.totalRenewalArrAtStake.toLocaleString()}</div>
-              <p className="text-[10px] text-indigo-300 font-medium">{renewalStats.upcomingRenewalsCount} enterprise contracts expiring &lt;90 days</p>
-            </div>
-
-            <div className="p-4 rounded-2xl bg-rose-950/20 border border-rose-500/30 space-y-1">
-              <div className="flex items-center justify-between">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-rose-400">Competitor Poach Threat</span>
-                <Swords className="w-3.5 h-3.5 text-rose-400" />
-              </div>
-              <div className="text-xl font-black text-white font-mono">${renewalStats.competitorAttackedArr.toLocaleString()}</div>
-              <p className="text-[10px] text-rose-400 font-medium">Under active competitor discount attack</p>
-            </div>
-
-            <div className="p-4 rounded-2xl bg-emerald-950/20 border border-emerald-500/30 space-y-1">
-              <div className="flex items-center justify-between">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-400">Multi-Year Locked ARR</span>
-                <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-              </div>
-              <div className="text-xl font-black text-white font-mono">${renewalStats.multiYearLockedArr.toLocaleString()}</div>
-              <p className="text-[10px] text-emerald-400 font-medium">Locked in 2-3 yr multi-year guarantees</p>
-            </div>
-
-            <div className="p-4 rounded-2xl bg-[#0E0E0E] border border-white/5 space-y-1">
-              <div className="flex items-center justify-between">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-white/40">Net Revenue Retention</span>
-                <TrendingUp className="w-3.5 h-3.5 text-emerald-400" />
-              </div>
-              <div className="text-xl font-black text-white font-mono">{renewalStats.projectedNrrImpact}% NRR</div>
-              <p className="text-[10px] text-emerald-400 font-medium">Zero churn renewal pre-emption mode</p>
-            </div>
-          </div>
-
-          {/* Renewal Cards Grid */}
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-base font-bold text-white flex items-center gap-2">
-                  <Swords className="w-4 h-4 text-indigo-400" />
-                  <span>Contract Renewal Pre-emption &amp; Competitor Counter-Strike Radar</span>
-                </h3>
-                <p className="text-xs text-white/50">
-                  Pre-empts client churn 60-90 days before annual contract expiry, neutralizes predatory competitor discounting, and locks multi-year contracts.
-                </p>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              {renewalItems.map((item) => {
-                const isGenerating = generatingRenewalId === item.id;
-                const isLocked = item.status === 'MULTI_YEAR_LOCKED';
-                const hasThreat = Boolean(item.competitorThreat);
-
-                return (
-                  <div
-                    key={item.id}
-                    className={`p-5 rounded-3xl bg-[#0E0E0E] border transition-all space-y-4 flex flex-col justify-between ${
-                      isLocked
-                        ? 'border-emerald-500/40 bg-emerald-950/10'
-                        : hasThreat
-                        ? 'border-rose-500/40 hover:border-rose-500/70 shadow-[0_0_30px_rgba(244,63,94,0.12)]'
-                        : 'border-indigo-500/30 hover:border-indigo-500/60'
-                    }`}
-                  >
-                    <div className="space-y-3">
-                      {/* Top Header */}
-                      <div className="flex items-start justify-between">
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <h4 className="text-base font-bold text-white">{item.accountName}</h4>
-                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider ${
-                              isLocked
-                                ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
-                                : hasThreat
-                                ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30'
-                                : 'bg-indigo-500/20 text-indigo-400 border border-indigo-500/30'
-                            }`}>
-                              {isLocked ? `${item.lockInTermYears}-YR LOCKED` : hasThreat ? 'COMPETITOR ATTACK' : 'RENEWAL PRE-EMPT'}
-                            </span>
-                          </div>
-                          <p className="text-xs text-white/60 mt-0.5">
-                            {item.decisionMakerName} • <span className="text-white/40">{item.decisionMakerRole}</span>
-                          </p>
-                          <p className="text-[11px] text-white/40 font-mono">{item.decisionMakerEmail}</p>
-                        </div>
-
-                        <div className="text-right">
-                          <span className="text-sm font-black text-white font-mono block">
-                            ${item.contractArr.toLocaleString()}/yr
-                          </span>
-                          <span className={`text-[11px] font-bold font-mono block mt-0.5 ${
-                            item.daysUntilRenewal <= 30 ? 'text-rose-400' : item.daysUntilRenewal <= 60 ? 'text-amber-400' : 'text-indigo-400'
-                          }`}>
-                            Expires in {item.daysUntilRenewal} days
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* Historical Value Delivered Banner */}
-                      <div className="grid grid-cols-2 gap-2 text-xs">
-                        <div className="p-2.5 rounded-xl bg-black/50 border border-white/5 space-y-0.5">
-                          <span className="text-[10px] text-emerald-400 font-bold uppercase tracking-wider flex items-center gap-1">
-                            <Award className="w-3 h-3" />
-                            <span>Financial ROI Saved</span>
-                          </span>
-                          <span className="font-mono font-black text-white text-sm">
-                            ${item.historicalRoiDollarsSaved.toLocaleString()}
-                          </span>
-                        </div>
-
-                        <div className="p-2.5 rounded-xl bg-black/50 border border-white/5 space-y-0.5">
-                          <span className="text-[10px] text-indigo-400 font-bold uppercase tracking-wider flex items-center gap-1">
-                            <Clock className="w-3 h-3" />
-                            <span>Automated Hours</span>
-                          </span>
-                          <span className="font-mono font-black text-white text-sm">
-                            {item.historicalHoursSaved} hrs
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* Competitor Threat Box (If Active Poaching) */}
-                      {item.competitorThreat && !isLocked && (
-                        <div className="p-3.5 rounded-2xl bg-rose-950/25 border border-rose-500/40 space-y-2">
-                          <div className="flex items-center justify-between text-xs">
-                            <span className="font-bold text-rose-400 flex items-center gap-1.5">
-                              <Swords className="w-3.5 h-3.5" />
-                              <span>COMPETITOR POACHING ATTEMPT: {item.competitorThreat.competitorName}</span>
-                            </span>
-                            <span className="font-mono text-rose-300 font-bold text-[11px]">
-                              {item.competitorThreat.estimatedPriceGap < 0 ? `Price Cut: ${item.competitorThreat.estimatedPriceGap.toLocaleString()}` : ''}
-                            </span>
-                          </div>
-                          <p className="text-xs text-white/80 font-medium">
-                            {item.competitorThreat.perceivedAdvantage}
-                          </p>
-                          <div className="pt-2 border-t border-rose-500/20 space-y-1">
-                            <span className="text-[10px] font-bold text-rose-400 uppercase tracking-wider">Competitor Weaknesses to Exploit:</span>
-                            <ul className="space-y-1 text-[11px] text-white/70">
-                              {item.competitorThreat.criticalWeaknesses.map((w, idx) => (
-                                <li key={idx} className="flex items-start gap-1.5">
-                                  <span className="text-rose-400 font-bold">✕</span>
-                                  <span>{w}</span>
-                                </li>
-                              ))}
-                            </ul>
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Multi-Year Locked Status Banner */}
-                      {isLocked && (
-                        <div className="p-3 rounded-2xl bg-emerald-950/20 border border-emerald-500/30 space-y-1">
-                          <div className="flex items-center gap-2 text-xs font-bold text-emerald-400">
-                            <ShieldCheck className="w-4 h-4" />
-                            <span>{item.lockInTermYears}-Year Contract Locked &amp; Protected</span>
-                          </div>
-                          <p className="text-xs text-white/70">
-                            Guaranteed rate lock of <strong className="text-white font-mono">${(item.multiYearArrTotal || item.contractArr * 2).toLocaleString()}</strong> with zero price volatility. Competitor threat neutralized.
-                          </p>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Action Buttons */}
-                    <div className="pt-3 border-t border-white/5 flex flex-col sm:flex-row gap-2">
-                      {!isLocked ? (
-                        <>
-                          <button
-                            onClick={() => handleGenerateRenewalDefense(item)}
-                            disabled={isGenerating}
-                            className="flex-1 py-2.5 px-3 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-400 hover:to-purple-500 text-white text-xs font-black transition-all flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(99,102,241,0.3)] cursor-pointer disabled:opacity-50"
-                          >
-                            <Sparkles className={`w-4 h-4 ${isGenerating ? 'animate-spin' : ''}`} />
-                            <span>{isGenerating ? 'Drafting Defense Playbook...' : '1-Click AI Counter-Strike & ROI'}</span>
-                          </button>
-
-                          <button
-                            onClick={() => handleLockInMultiYear(item, 2)}
-                            className="py-2.5 px-3 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 border border-emerald-500/30 text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap"
-                          >
-                            <ShieldCheck className="w-3.5 h-3.5" />
-                            <span>2-Yr Lock-In</span>
-                          </button>
-
-                          <button
-                            onClick={() => handleLockInMultiYear(item, 3)}
-                            className="py-2.5 px-3 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 border border-emerald-500/20 text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap"
-                          >
-                            <FileCheck className="w-3.5 h-3.5" />
-                            <span>3-Yr Lock-In</span>
-                          </button>
-                        </>
-                      ) : (
-                        <div className="w-full py-2 rounded-xl bg-emerald-950/20 border border-emerald-500/30 text-center text-xs font-bold text-emerald-400 flex items-center justify-center gap-2">
-                          <CheckCircle2 className="w-4 h-4" />
-                          <span>Active Multi-Year Contract (${(item.multiYearArrTotal || item.contractArr * 2).toLocaleString()} Secured)</span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* TAB 3: STRIPE TELEMETRY & DUNNING RECOVERY */}
-      {activeTab === 'stripe_telemetry' && (
-        <div className="space-y-6">
-          <div className="p-4 rounded-2xl bg-purple-950/20 border border-purple-500/30 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-xl bg-purple-500/20 flex items-center justify-center text-purple-400">
-                <CreditCard className="w-4 h-4" />
-              </div>
-              <div>
-                <h3 className="text-sm font-bold text-white">
-                  Stripe Subscriptions &amp; Automated Dunning Engine
-                </h3>
-                <p className="text-xs text-white/50">
-                  Real-time invoice telemetry, automated failed credit card recovery, and payment portal links.
-                </p>
-              </div>
-            </div>
-            <button
-              onClick={() => setStripeConnected(!stripeConnected)}
-              className={`px-3 py-1.5 rounded-xl text-white text-xs font-bold transition-all shadow-[0_0_15px_rgba(168,85,247,0.3)] cursor-pointer ${
-                stripeConnected ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-purple-600 hover:bg-purple-700'
-              }`}
-            >
-              {stripeConnected ? 'Telemetry Active ✓' : 'Connect Telemetry'}
-            </button>
-          </div>
-
-          {/* Dunning / Failed Charges Queue */}
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <h4 className="text-xs font-bold uppercase tracking-wider text-white/60">
-                Delinquent Invoices &amp; Recovery Queue ({dunningItems.filter(d => d.status === 'PENDING').length})
-              </h4>
-            </div>
-
-            {dunningItems.length === 0 ? (
-              <div className="p-8 text-center rounded-2xl bg-[#0E0E0E] border border-white/5 text-xs text-white/40">
-                All subscriptions are currently paid in full. No failed payments in queue.
-              </div>
-            ) : (
-              <div className="space-y-2">
-                {dunningItems.map((item) => (
-                  <div 
-                    key={item.id}
-                    className="p-4 rounded-2xl bg-[#0E0E0E] border border-purple-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-4"
-                  >
+                    {/* Health Score Bar */}
                     <div className="space-y-1">
-                      <div className="flex items-center gap-2">
-                        <h5 className="text-sm font-bold text-white">{item.customerName}</h5>
-                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                          item.status === 'RECOVERED' ? 'bg-emerald-500/20 text-emerald-300' : 'bg-rose-500/20 text-rose-300'
-                        }`}>
-                          {item.status === 'RECOVERED' ? 'RECOVERED' : 'PAST DUE'}
+                      <div className="flex items-center justify-between text-[10px] font-mono text-white/50">
+                        <span>Health Score:</span>
+                        <span className={record.healthScore < 50 ? 'text-rose-400 font-bold' : 'text-emerald-400 font-bold'}>
+                          {record.healthScore}/100
                         </span>
                       </div>
-                      <p className="text-xs text-white/50">
-                        {item.customerEmail} • {item.planName} Plan • {item.retryAttempts} charge attempts failed
-                      </p>
-                    </div>
-
-                    <div className="flex items-center gap-3">
-                      <div className="text-right">
-                        <span className="text-sm font-black text-rose-400 font-mono block">
-                          ${item.failedAmount.toLocaleString()} USD
-                        </span>
-                        <span className="text-[10px] text-white/40">Failed Invoice</span>
+                      <div className="w-full h-1.5 rounded-full bg-white/10 overflow-hidden">
+                        <div 
+                          className={`h-full rounded-full transition-all duration-500 ${
+                            record.healthScore < 50 ? 'bg-rose-500' : record.healthScore < 75 ? 'bg-amber-400' : 'bg-emerald-400'
+                          }`}
+                          style={{ width: `${record.healthScore}%` }}
+                        />
                       </div>
-
-                      {item.status === 'PENDING' && (
-                        <button
-                          onClick={() => handleGenerateDunningRecovery(item)}
-                          disabled={generatingDunningId === item.id}
-                          className="px-3.5 py-2 rounded-xl bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-[0_0_15px_rgba(168,85,247,0.3)] disabled:opacity-50"
-                        >
-                          <Sparkles className="w-3.5 h-3.5" />
-                          <span>1-Click AI Dunning</span>
-                        </button>
-                      )}
                     </div>
                   </div>
-                ))}
+
+                  {/* Risk Factors */}
+                  {record.riskFactors && record.riskFactors.length > 0 && (
+                    <div className="space-y-1">
+                      <div className="text-[10px] font-mono uppercase tracking-wider text-rose-300 font-bold flex items-center gap-1">
+                        <AlertCircle className="w-3 h-3" />
+                        <span>Sentry Flags:</span>
+                      </div>
+                      <ul className="text-[11px] text-white/60 space-y-0.5 list-disc list-inside">
+                        {record.riskFactors.slice(0, 2).map((factor, idx) => (
+                          <li key={idx} className="truncate">{factor}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+
+                {/* Card Bottom Actions */}
+                <div className="pt-4 mt-4 border-t border-white/10 flex items-center gap-2">
+                  <button
+                    onClick={() => handleOpenActionModal(record)}
+                    className="flex-1 py-2 px-3 rounded-xl bg-gradient-to-r from-amber-400 to-[#FFD700] hover:brightness-110 text-black font-extrabold text-xs transition-all flex items-center justify-center gap-1.5 shadow-sm cursor-pointer"
+                  >
+                    <Sparkles className="w-3.5 h-3.5 text-black" />
+                    <span>AI Rescue Script</span>
+                  </button>
+
+                  <a
+                    href={`mailto:${record.contactEmail}?subject=Follow-up%20from%20${encodeURIComponent(companyName || 'Leadership')}`}
+                    className="p-2 rounded-xl bg-white/5 hover:bg-white/10 text-white/70 hover:text-white transition-colors cursor-pointer border border-white/10"
+                    title={`Email ${record.contactName}`}
+                  >
+                    <Mail className="w-4 h-4" />
+                  </a>
+                </div>
               </div>
-            )}
-          </div>
+            );
+          })}
         </div>
       )}
 
-      {/* TAB 4: ALL PIPELINE & HOT DEALS */}
-      {activeTab === 'all_pipeline' && (
-        <div className="space-y-6">
-          <DealHealthTrendChart 
-            records={records} 
-            onSelectRecord={(deal) => handleGenerateChurnRescue(deal)} 
-          />
+      {/* AI Executive Action Slideover Modal */}
+      {actionModalRecord && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in">
+          <div className="w-full max-w-2xl rounded-3xl bg-[#141414] border border-[#FFD700]/40 p-6 sm:p-8 shadow-[0_0_50px_rgba(255,215,0,0.15)] space-y-6 max-h-[90vh] overflow-y-auto">
+            {/* Header */}
+            <div className="flex items-center justify-between pb-4 border-b border-white/10">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-[#FFD700]/10 border border-[#FFD700]/30 flex items-center justify-center text-[#FFD700]">
+                  <Sparkles className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-white">{actionModalRecord.accountName}</h3>
+                  <p className="text-xs text-white/50">{actionModalRecord.contactName} ({actionModalRecord.contactEmail})</p>
+                </div>
+              </div>
 
-          <div className="flex items-center justify-between pt-2">
-            <h3 className="text-sm font-bold uppercase tracking-wider text-white/60">
-              Active Pipeline Deals ({filteredRecords.length})
-            </h3>
-          </div>
+              <button
+                onClick={() => setActionModalRecord(null)}
+                className="p-1 rounded-lg text-white/40 hover:text-white transition-colors cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {filteredRecords.map((deal) => {
-              const isAtRisk = deal.daysSinceLastContact > 10;
-              return (
-                <div 
-                  key={deal.id}
-                  className="p-5 rounded-2xl bg-[#0E0E0E] border border-white/5 hover:border-white/20 transition-all space-y-3 flex flex-col justify-between"
-                >
-                  <div className="space-y-2">
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <h4 className="text-sm font-bold text-white">{deal.accountName}</h4>
-                        <p className="text-xs text-white/50">{deal.contactName}</p>
-                      </div>
-                      <span className="text-xs font-mono font-bold text-[#FFD700]">
-                        ${deal.dealValue.toLocaleString()}
-                      </span>
-                    </div>
-
-                    <div className="flex items-center justify-between gap-2">
-                      <div className="flex items-center gap-1.5" title="Zero Auto-Move: Human Authorization Enforced">
-                        <Shield className="w-3.5 h-3.5 text-[#FFD700]" />
-                        <select
-                          value={deal.stage}
-                          onChange={(e) => {
-                            const newStage = e.target.value;
-                            if (newStage !== deal.stage) {
-                              setDealMoveModal({ deal, proposedStage: newStage });
-                            }
-                          }}
-                          className="px-2 py-1 rounded-lg bg-black/80 border border-white/20 text-[11px] font-bold text-white focus:outline-none focus:border-[#FFD700] cursor-pointer"
-                          title="Change deal stage (Requires Human Approval)"
-                        >
-                          <option value="Lead">Lead</option>
-                          <option value="Qualified">Qualified</option>
-                          <option value="Proposal">Proposal</option>
-                          <option value="Negotiation">Negotiation</option>
-                          <option value="Contract Sent">Contract Sent</option>
-                          <option value="Closed Won">Closed Won</option>
-                          <option value="Active Client">Active Client</option>
-                          <option value="Renewal At Risk">Renewal At Risk</option>
-                        </select>
-                      </div>
-                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                        isAtRisk ? 'bg-rose-500/20 text-rose-300' : 'bg-emerald-500/20 text-emerald-300'
-                      }`}>
-                        {deal.daysSinceLastContact}d silent
-                      </span>
-                    </div>
+            {/* Action Details */}
+            {actionLoading ? (
+              <div className="py-12 text-center text-xs font-mono text-white/50 space-y-3">
+                <RefreshCw className="w-6 h-6 animate-spin mx-auto text-[#FFD700]" />
+                <div>Generating tailor-made executive recovery email &amp; objection strategy...</div>
+              </div>
+            ) : actionModalRecord.aiAction ? (
+              <div className="space-y-4">
+                <div className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-2">
+                  <div className="text-xs font-mono text-[#FFD700] uppercase tracking-wider font-bold">
+                    Strategic Rationale:
                   </div>
+                  <p className="text-xs text-white/80 leading-relaxed">
+                    {actionModalRecord.aiAction.strategy}
+                  </p>
+                </div>
 
-                  <div className="pt-2 border-t border-white/5 flex gap-2">
+                {/* Draft Email */}
+                <div className="space-y-2">
+                  <div className="text-xs font-mono text-white/50 uppercase tracking-wider flex items-center justify-between">
+                    <span>Generated Executive Email:</span>
                     <button
-                      onClick={() => handleGenerateChurnRescue(deal)}
-                      className="flex-1 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 text-white/80 text-xs font-semibold transition-all"
+                      onClick={() => {
+                        navigator.clipboard.writeText(
+                          `Subject: ${actionModalRecord.aiAction?.emailSubject}\n\n${actionModalRecord.aiAction?.emailBody}`
+                        );
+                        showToast('✓ Email script copied to clipboard');
+                      }}
+                      className="text-[11px] text-[#FFD700] hover:underline flex items-center gap-1 cursor-pointer font-bold"
                     >
-                      AI Playbook
+                      <Copy className="w-3 h-3" />
+                      <span>Copy</span>
                     </button>
                   </div>
+
+                  <div className="p-4 rounded-xl bg-[#0D0D0D] border border-white/15 space-y-2 text-xs font-mono text-white/90">
+                    <div className="text-white/60 pb-2 border-b border-white/10">
+                      <strong>Subject:</strong> {actionModalRecord.aiAction.emailSubject}
+                    </div>
+                    <div className="whitespace-pre-line leading-relaxed text-zinc-300">
+                      {actionModalRecord.aiAction.emailBody}
+                    </div>
+                  </div>
                 </div>
-              );
-            })}
+
+                {/* Action Buttons */}
+                <div className="pt-4 flex flex-col sm:flex-row items-center justify-end gap-3">
+                  <button
+                    onClick={() => setActionModalRecord(null)}
+                    className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs transition-colors cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+
+                  <button
+                    onClick={() => handleApproveAction(actionModalRecord)}
+                    className="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-gradient-to-r from-amber-400 via-[#FFD700] to-yellow-500 text-black font-black text-xs hover:brightness-110 transition-all flex items-center justify-center gap-2 shadow-md cursor-pointer active:scale-95"
+                  >
+                    <CheckCircle2 className="w-4 h-4 text-black" />
+                    <span>Approve &amp; Log Touchpoint</span>
+                  </button>
+                </div>
+              </div>
+            ) : null}
           </div>
         </div>
       )}
 
-      {/* MODAL 1: 1-CLICK AI CHURN AUTO-RESCUE */}
-      {churnModalOpen && churnPlaybook && selectedRecordForChurn && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="w-full max-w-2xl rounded-3xl bg-[#121212] border border-rose-500/40 p-6 sm:p-7 space-y-6 shadow-[0_0_50px_rgba(244,63,94,0.2)] animate-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto">
+      {/* Add Deal Modal */}
+      {newDealModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in">
+          <form onSubmit={handleCreateDeal} className="w-full max-w-lg rounded-3xl bg-[#141414] border border-white/15 p-6 sm:p-8 shadow-2xl space-y-4">
             <div className="flex items-center justify-between pb-3 border-b border-white/10">
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-xl bg-rose-500/20 text-rose-400 flex items-center justify-center">
-                  <ShieldAlert className="w-5 h-5" />
-                </div>
-                <div>
-                  <h3 className="text-base font-bold text-white">
-                    1-Click Auto-Rescue: {selectedRecordForChurn.accountName}
-                  </h3>
-                  <p className="text-xs text-rose-400">
-                    {churnPlaybook.churnProbability}% Churn Probability • ${churnPlaybook.savedArr.toLocaleString()} ARR At-Risk
-                  </p>
-                </div>
-              </div>
-              <button 
-                onClick={() => setChurnModalOpen(false)}
-                className="p-1.5 rounded-lg text-white/40 hover:text-white hover:bg-white/10 transition-all cursor-pointer"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            {/* Mandatory Safety Guidance Disclaimer in Churn Modal */}
-            <AIGuidanceDisclaimer variant="modal" companyId={activeCompanyId} companyName={activeCompanyName} />
-
-            {/* Retention Diagnosis */}
-            <div className="p-4 rounded-2xl bg-rose-950/20 border border-rose-500/30 space-y-2 text-xs">
-              <div className="flex items-center gap-2 text-rose-400 font-bold">
-                <AlertCircle className="w-4 h-4" />
-                <span>DIAGNOSTIC STRATEGY</span>
-              </div>
-              <p className="text-white/80 leading-relaxed">
-                {churnPlaybook.rescueStrategy}
-              </p>
-              <div className="pt-2 border-t border-rose-500/20">
-                <span className="text-rose-300 font-bold">Proposed Retention Concession: </span>
-                <span className="text-white font-medium">{churnPlaybook.proposedConcession}</span>
-              </div>
-            </div>
-
-            {/* Auto-Drafted Rescue Email */}
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <label className="text-xs font-bold text-white/60">
-                  Ready-to-Send Executive Rescue Email
-                </label>
-                <button
-                  onClick={() => copyToClipboard(churnPlaybook.rescueEmailBody, 'rescue_email')}
-                  className="flex items-center gap-1 text-[11px] text-[#FFD700] hover:underline cursor-pointer"
-                >
-                  <Copy className="w-3 h-3" />
-                  <span>{copiedText === 'rescue_email' ? 'Copied!' : 'Copy Email'}</span>
-                </button>
-              </div>
-
-              <div className="p-4 rounded-2xl bg-black/60 border border-white/10 space-y-3 font-mono text-xs text-white/90">
-                <div className="text-white/40">
-                  Subject: <span className="text-white font-semibold">{churnPlaybook.rescueEmailSubject}</span>
-                </div>
-                <div className="whitespace-pre-wrap leading-relaxed border-t border-white/5 pt-2 text-white/80">
-                  {churnPlaybook.rescueEmailBody}
-                </div>
-              </div>
-            </div>
-
-            {/* Action buttons */}
-            <div className="flex flex-col sm:flex-row gap-3 pt-2">
+              <h3 className="text-base font-bold text-white flex items-center gap-2">
+                <Plus className="w-4 h-4 text-[#FFD700]" />
+                <span>Add Monitored Account / Deal</span>
+              </h3>
               <button
-                onClick={handlePushRescueToInbox}
-                className="flex-1 py-3 px-4 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer border border-white/10"
+                type="button"
+                onClick={() => setNewDealModalOpen(false)}
+                className="text-white/40 hover:text-white transition-colors"
               >
-                <Mail className="w-4 h-4 text-[#FFD700]" />
-                <span>{pushedToInboxId === selectedRecordForChurn.id ? 'Pushed to Inbox Drafts!' : 'Push as Priority Draft to Inbox'}</span>
-              </button>
-
-              <button
-                onClick={handleApplyChurnRescueAction}
-                className="flex-1 py-3 px-4 rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-500 hover:to-emerald-600 text-white text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer shadow-[0_0_25px_rgba(16,185,129,0.3)] hover:scale-105 active:scale-95"
-              >
-                <ShieldCheck className="w-4 h-4 text-[#FFD700]" />
-                <span>Human Approval Required: Apply Concession</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* MODAL 2: 1-CLICK AI EXPANSION PROPOSAL */}
-      {expansionModalOpen && expansionPlaybook && selectedRecordForExpansion && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="w-full max-w-2xl rounded-3xl bg-[#121212] border border-amber-500/40 p-6 sm:p-7 space-y-6 shadow-[0_0_50px_rgba(255,215,0,0.2)] animate-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between pb-3 border-b border-white/10">
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-xl bg-amber-400/20 text-[#FFD700] flex items-center justify-center">
-                  <TrendingUp className="w-5 h-5" />
-                </div>
-                <div>
-                  <h3 className="text-base font-bold text-white">
-                    Expansion Proposal: {selectedRecordForExpansion.accountName}
-                  </h3>
-                  <p className="text-xs text-[#FFD700]">
-                    Recommended: {expansionPlaybook.recommendedTier} (+${expansionPlaybook.expansionArrUplift.toLocaleString()} ARR Uplift)
-                  </p>
-                </div>
-              </div>
-              <button 
-                onClick={() => setExpansionModalOpen(false)}
-                className="p-1.5 rounded-lg text-white/40 hover:text-white hover:bg-white/10 transition-all cursor-pointer"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            {/* Mandatory Safety Guidance Disclaimer in Expansion Modal */}
-            <AIGuidanceDisclaimer variant="modal" companyId={activeCompanyId} companyName={activeCompanyName} />
-
-            {/* ROI Calculation */}
-            <div className="p-4 rounded-2xl bg-amber-950/20 border border-amber-500/30 space-y-2 text-xs">
-              <span className="font-bold text-[#FFD700] uppercase tracking-wider block">Business Case &amp; ROI</span>
-              <p className="text-white/90 leading-relaxed font-medium">
-                {expansionPlaybook.roiSummary}
-              </p>
-              <ul className="text-white/70 space-y-1 pt-1 border-t border-amber-500/20">
-                {expansionPlaybook.businessCaseDeckPoints.map((point, idx) => (
-                  <li key={idx} className="flex items-start gap-1.5">
-                    <span className="text-[#FFD700]">✓</span>
-                    <span>{point}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            {/* Proposal Email */}
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <label className="text-xs font-bold text-white/60">
-                  Generated Executive Pitch Email
-                </label>
-                <button
-                  onClick={() => copyToClipboard(expansionPlaybook.proposalEmailBody, 'expansion_email')}
-                  className="flex items-center gap-1 text-[11px] text-[#FFD700] hover:underline cursor-pointer"
-                >
-                  <Copy className="w-3 h-3" />
-                  <span>{copiedText === 'expansion_email' ? 'Copied!' : 'Copy Email'}</span>
-                </button>
-              </div>
-
-              <div className="p-4 rounded-2xl bg-black/60 border border-white/10 space-y-3 font-mono text-xs text-white/90">
-                <div className="text-white/40">
-                  Subject: <span className="text-white font-semibold">{expansionPlaybook.proposalEmailSubject}</span>
-                </div>
-                <div className="whitespace-pre-wrap leading-relaxed border-t border-white/5 pt-2 text-white/80">
-                  {expansionPlaybook.proposalEmailBody}
-                </div>
-              </div>
-            </div>
-
-            {/* Action buttons */}
-            <div className="flex flex-col sm:flex-row gap-3 pt-2">
-              <button
-                onClick={handlePushExpansionToInbox}
-                className="flex-1 py-3 px-4 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer border border-white/10"
-              >
-                <Mail className="w-4 h-4 text-[#FFD700]" />
-                <span>{pushedToInboxId === selectedRecordForExpansion.id ? 'Pushed to Inbox Drafts!' : 'Push as Expansion Draft to Inbox'}</span>
-              </button>
-
-              <button
-                onClick={handleApplyExpansionUpgrade}
-                className="flex-1 py-3 px-4 rounded-xl bg-gradient-to-r from-[#FFD700] via-amber-300 to-[#FFD700] hover:scale-105 active:scale-95 text-black text-xs font-black transition-all flex items-center justify-center gap-2 cursor-pointer shadow-[0_0_25px_rgba(255,215,0,0.35)]"
-              >
-                <ShieldCheck className="w-4 h-4 text-black" />
-                <span>Human Approval Required: Upgrade Account</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* MODAL 3: 1-CLICK DUNNING RECOVERY */}
-      {dunningModalOpen && selectedDunning && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="w-full max-w-xl rounded-3xl bg-[#121212] border border-purple-500/40 p-6 sm:p-7 space-y-6 shadow-[0_0_50px_rgba(168,85,247,0.2)] animate-in zoom-in-95 duration-200">
-            <div className="flex items-center justify-between pb-3 border-b border-white/10">
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-xl bg-purple-500/20 text-purple-400 flex items-center justify-center">
-                  <CreditCard className="w-5 h-5" />
-                </div>
-                <div>
-                  <h3 className="text-base font-bold text-white">
-                    Recover Payment: {selectedDunning.customerName}
-                  </h3>
-                  <p className="text-xs text-purple-400">
-                    Failed Invoice: ${selectedDunning.failedAmount.toLocaleString()} USD
-                  </p>
-                </div>
-              </div>
-              <button 
-                onClick={() => setDunningModalOpen(false)}
-                className="p-1.5 rounded-lg text-white/40 hover:text-white hover:bg-white/10 transition-all cursor-pointer"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-xs font-bold text-white/60">
-                Generated Recovery Email
-              </label>
-              <div className="p-4 rounded-2xl bg-black/60 border border-white/10 space-y-2 text-xs font-mono text-white/80">
-                <div className="text-white/40">Subject: <span className="text-white">{selectedDunning.recoveryEmailSubject}</span></div>
-                <div className="whitespace-pre-wrap pt-2 border-t border-white/5">
-                  {selectedDunning.recoveryEmailBody}
-                </div>
-              </div>
-            </div>
-
-            <div className="flex gap-3 pt-2">
-              <button
-                onClick={() => copyToClipboard(selectedDunning.recoveryEmailBody || '', 'dunning_email')}
-                className="flex-1 py-3 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold transition-all cursor-pointer"
-              >
-                {copiedText === 'dunning_email' ? 'Copied!' : 'Copy Recovery Email'}
-              </button>
-
-              <button
-                onClick={() => handleMarkDunningRecovered(selectedDunning.id)}
-                className="flex-1 py-3 rounded-xl bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold transition-all shadow-[0_0_20px_rgba(168,85,247,0.3)] cursor-pointer"
-              >
-                Mark Payment Recovered ($+{selectedDunning.failedAmount.toLocaleString()})
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* MODAL: 1-CLICK AI PQL CONVERSION PITCH */}
-      {pqlPitchModalOpen && selectedPql && selectedPql.aiConversionPitch && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="w-full max-w-2xl rounded-3xl bg-[#121212] border border-cyan-500/40 p-6 sm:p-7 space-y-6 shadow-[0_0_50px_rgba(6,182,212,0.2)] animate-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between pb-3 border-b border-white/10">
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-xl bg-cyan-500/20 text-cyan-400 flex items-center justify-center">
-                  <Zap className="w-5 h-5" />
-                </div>
-                <div>
-                  <h3 className="text-base font-bold text-white">
-                    PQL Upgrade Pitch: {selectedPql.userName}
-                  </h3>
-                  <p className="text-xs text-cyan-400">
-                    {selectedPql.accountName} • {selectedPql.currentPlan} → {selectedPql.targetPlan} (+$${selectedPql.estimatedArrUplift.toLocaleString()} ARR)
-                  </p>
-                </div>
-              </div>
-              <button 
-                onClick={() => setPqlPitchModalOpen(false)}
-                className="p-1.5 rounded-lg text-white/40 hover:text-white hover:bg-white/10 transition-all cursor-pointer"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            {/* Mandatory Safety Guidance Disclaimer in PQL Modal */}
-            <AIGuidanceDisclaimer variant="modal" companyId={activeCompanyId} companyName={activeCompanyName} />
-
-            {/* Catalyst and Offer */}
-            <div className="p-4 rounded-2xl bg-cyan-950/20 border border-cyan-500/30 space-y-2 text-xs">
-              <div className="flex items-center justify-between text-cyan-400 font-bold">
-                <div className="flex items-center gap-2">
-                  <Sparkles className="w-4 h-4" />
-                  <span>RECOMMENDED CONVERSION OFFER</span>
-                </div>
-                <span className="font-mono text-white">Score: {selectedPql.pqlScore}/100</span>
-              </div>
-              <p className="text-white font-medium text-sm">
-                {selectedPql.aiConversionPitch.suggestedOffer}
-              </p>
-              <div className="pt-2 border-t border-cyan-500/20 flex flex-wrap gap-2 text-[11px]">
-                {selectedPql.aiConversionPitch.talkingPoints.map((tp, idx) => (
-                  <span key={idx} className="px-2.5 py-1 rounded-lg bg-black/40 border border-cyan-500/30 text-white/80">
-                    ✓ {tp}
-                  </span>
-                ))}
-              </div>
-            </div>
-
-            {/* In-App / Email Pitch Body */}
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <label className="text-xs font-bold text-white/60">
-                  Ready-to-Deploy Outreach &amp; In-App Pitch
-                </label>
-                <button
-                  onClick={() => copyToClipboard(selectedPql.aiConversionPitch?.body || '', 'pql_email')}
-                  className="flex items-center gap-1 text-[11px] text-cyan-400 hover:underline cursor-pointer"
-                >
-                  <Copy className="w-3 h-3" />
-                  <span>{copiedText === 'pql_email' ? 'Copied!' : 'Copy Pitch'}</span>
-                </button>
-              </div>
-
-              <div className="p-4 rounded-2xl bg-black/60 border border-white/10 space-y-3 font-mono text-xs text-white/90">
-                <div className="text-white/40">
-                  Subject: <span className="text-white font-semibold">{selectedPql.aiConversionPitch.subject}</span>
-                </div>
-                <div className="whitespace-pre-wrap leading-relaxed border-t border-white/5 pt-2 text-white/80">
-                  {selectedPql.aiConversionPitch.body}
-                </div>
-              </div>
-            </div>
-
-            {/* Action buttons */}
-            <div className="flex flex-col sm:flex-row gap-3 pt-2">
-              <button
-                onClick={handlePushPQLToInbox}
-                className="flex-1 py-3 px-4 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer border border-white/10"
-              >
-                <Mail className="w-4 h-4 text-cyan-400" />
-                <span>{pushedToInboxId === selectedPql.id ? 'Pushed to Inbox Drafts!' : 'Push as Priority Outreach to Inbox'}</span>
-              </button>
-
-              <button
-                onClick={() => handleConvertPQL(selectedPql)}
-                className="flex-1 py-3 px-4 rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-500 hover:to-emerald-600 text-white text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer shadow-[0_0_25px_rgba(16,185,129,0.3)] hover:scale-105 active:scale-95"
-              >
-                <ShieldCheck className="w-4 h-4 text-[#FFD700]" />
-                <span>Human Approval Required: Convert to {selectedPql.targetPlan}</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* MODAL: 1-CLICK AI COMPETITOR COUNTER-STRIKE & RENEWAL DEFENSE */}
-      {renewalDefenseModalOpen && selectedRenewal && selectedRenewal.aiDefenseStrategy && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="w-full max-w-3xl rounded-3xl bg-[#121212] border border-indigo-500/40 p-6 sm:p-7 space-y-6 shadow-[0_0_60px_rgba(99,102,241,0.25)] animate-in zoom-in-95 duration-200 max-h-[92vh] overflow-y-auto">
-            <div className="flex items-center justify-between pb-3 border-b border-white/10">
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-xl bg-indigo-500/20 text-indigo-400 flex items-center justify-center">
-                  <Swords className="w-5 h-5" />
-                </div>
-                <div>
-                  <h3 className="text-base font-bold text-white">
-                    Competitor Counter-Strike &amp; Renewal Defense: {selectedRenewal.accountName}
-                  </h3>
-                  <p className="text-xs text-indigo-300">
-                    {selectedRenewal.decisionMakerName} ({selectedRenewal.decisionMakerRole}) • ${selectedRenewal.contractArr.toLocaleString()}/yr • Expires in {selectedRenewal.daysUntilRenewal} days
-                  </p>
-                </div>
-              </div>
-              <button 
-                onClick={() => setRenewalDefenseModalOpen(false)}
-                className="p-1.5 rounded-lg text-white/40 hover:text-white hover:bg-white/10 transition-all cursor-pointer"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            {/* Mandatory Safety Guidance Disclaimer in Renewal Modal */}
-            <AIGuidanceDisclaimer variant="modal" companyId={activeCompanyId} companyName={activeCompanyName} />
-
-            {/* ROI Executive Value Realization */}
-            <div className="p-4 rounded-2xl bg-indigo-950/30 border border-indigo-500/30 space-y-1.5 text-xs">
-              <div className="flex items-center gap-2 text-indigo-400 font-bold uppercase tracking-wider">
-                <Award className="w-4 h-4" />
-                <span>Executive Value Realization &amp; Financial Impact</span>
-              </div>
-              <p className="text-white/90 leading-relaxed font-medium">
-                {selectedRenewal.aiDefenseStrategy.roiExecutiveSummary}
-              </p>
-            </div>
-
-            {/* Competitor Counter-Strike & Battle Points */}
-            <div className="p-4 rounded-2xl bg-rose-950/25 border border-rose-500/30 space-y-2 text-xs">
-              <div className="flex items-center gap-2 text-rose-400 font-bold uppercase tracking-wider">
-                <Swords className="w-4 h-4" />
-                <span>Competitor Neutralization Strategy</span>
-              </div>
-              <p className="text-white/90 leading-relaxed font-medium">
-                {selectedRenewal.aiDefenseStrategy.competitorCounterStrike}
-              </p>
-              <div className="pt-2 border-t border-rose-500/20 space-y-1">
-                <span className="text-[10px] font-bold text-rose-300 uppercase tracking-wider">Executive Talking Points:</span>
-                <ul className="space-y-1 text-[11px] text-white/80">
-                  {selectedRenewal.aiDefenseStrategy.battleCardTalkingPoints.map((tp, idx) => (
-                    <li key={idx} className="flex items-start gap-1.5">
-                      <span className="text-rose-400 font-bold">✓</span>
-                      <span>{tp}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-
-            {/* Recommended Multi-Year Lock-In Concession */}
-            <div className="p-4 rounded-2xl bg-amber-950/20 border border-amber-500/30 space-y-1.5 text-xs">
-              <div className="flex items-center gap-2 text-[#FFD700] font-bold uppercase tracking-wider">
-                <ShieldCheck className="w-4 h-4" />
-                <span>Recommended Multi-Year Lock-in Concession</span>
-              </div>
-              <p className="text-white/90 leading-relaxed font-medium">
-                {selectedRenewal.aiDefenseStrategy.multiYearOfferProposal}
-              </p>
-            </div>
-
-            {/* Executive Outreach Email Draft */}
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <label className="text-xs font-bold text-white/60">
-                  C-Level Executive Outreach &amp; Lock-in Proposal
-                </label>
-                <button
-                  onClick={() => copyToClipboard(selectedRenewal.aiDefenseStrategy?.executiveOutreachBody || '', 'renewal_email')}
-                  className="flex items-center gap-1 text-[11px] text-indigo-400 hover:underline cursor-pointer"
-                >
-                  <Copy className="w-3 h-3" />
-                  <span>{copiedText === 'renewal_email' ? 'Copied!' : 'Copy Email'}</span>
-                </button>
-              </div>
-
-              <div className="p-4 rounded-2xl bg-black/60 border border-white/10 space-y-3 font-mono text-xs text-white/90">
-                <div className="text-white/40">
-                  Subject: <span className="text-white font-semibold">{selectedRenewal.aiDefenseStrategy.executiveOutreachSubject}</span>
-                </div>
-                <div className="whitespace-pre-wrap leading-relaxed border-t border-white/5 pt-2 text-white/80">
-                  {selectedRenewal.aiDefenseStrategy.executiveOutreachBody}
-                </div>
-              </div>
-            </div>
-
-            {/* Action buttons */}
-            <div className="flex flex-col sm:flex-row gap-3 pt-2">
-              <button
-                onClick={handlePushRenewalToInbox}
-                className="flex-1 py-3 px-4 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer border border-white/10"
-              >
-                <Mail className="w-4 h-4 text-indigo-400" />
-                <span>{pushedToInboxId === selectedRenewal.id ? 'Pushed to Inbox Drafts!' : 'Push as Priority Outreach to Inbox'}</span>
-              </button>
-
-              <button
-                onClick={() => handleLockInMultiYear(selectedRenewal, 2)}
-                className="flex-1 py-3 px-4 rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-500 hover:to-emerald-600 text-white text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer shadow-[0_0_25px_rgba(16,185,129,0.3)]"
-              >
-                <ShieldCheck className="w-4 h-4" />
-                <span>Lock 2-Year Contract (${(selectedRenewal.contractArr * 2).toLocaleString()})</span>
-              </button>
-
-              <button
-                onClick={() => handleLockInMultiYear(selectedRenewal, 3)}
-                className="flex-1 py-3 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer shadow-[0_0_25px_rgba(99,102,241,0.3)]"
-              >
-                <Award className="w-4 h-4" />
-                <span>Lock 3-Year Contract (${(selectedRenewal.contractArr * 3).toLocaleString()})</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* MODAL 5: SUPABASE CRM CONFIGURATION */}
-      {supabaseModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="w-full max-w-md rounded-3xl bg-[#121212] border border-emerald-500/40 p-6 space-y-5">
-            <div className="flex items-center justify-between pb-3 border-b border-white/10">
-              <div className="flex items-center gap-2.5">
-                <Database className="w-5 h-5 text-emerald-400" />
-                <h3 className="text-base font-bold text-white">Supabase CRM Sync</h3>
-              </div>
-              <button 
-                onClick={() => setSupabaseModalOpen(false)}
-                className="p-1.5 rounded-lg text-white/40 hover:text-white"
-              >
-                <X className="w-4 h-4" />
+                <X className="w-5 h-5" />
               </button>
             </div>
 
             <div className="space-y-3 text-xs">
-              <div className="space-y-1">
-                <label className="text-white/60 font-bold">Supabase URL</label>
-                <input
-                  type="text"
-                  value={supabaseConfig.url}
-                  onChange={(e) => setSupabaseConfigState({ ...supabaseConfig, url: e.target.value })}
-                  placeholder="https://xyz.supabase.co"
-                  className="w-full bg-[#181818] border border-white/10 rounded-xl px-3 py-2 text-white font-mono"
-                />
-              </div>
-
-              <div className="space-y-1">
-                <label className="text-white/60 font-bold">Anon Public Key</label>
-                <input
-                  type="password"
-                  value={supabaseConfig.anonKey}
-                  onChange={(e) => setSupabaseConfigState({ ...supabaseConfig, anonKey: e.target.value })}
-                  placeholder="eyJhbGciOiJIUzI1NiIsIn..."
-                  className="w-full bg-[#181818] border border-white/10 rounded-xl px-3 py-2 text-white font-mono"
-                />
-              </div>
-            </div>
-
-            <button
-              onClick={() => {
-                saveSupabaseConfig(supabaseConfig);
-                loadData();
-                setSupabaseModalOpen(false);
-              }}
-              className="w-full py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-all shadow-[0_0_20px_rgba(16,185,129,0.3)] cursor-pointer"
-            >
-              Save &amp; Fetch Supabase Deals
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* MODAL 6: ADD NEW CRM / SAAS ACCOUNT */}
-      {newRecordModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
-          <form onSubmit={handleCreateRecord} className="w-full max-w-lg rounded-3xl bg-[#121212] border border-white/10 p-6 space-y-4">
-            <div className="flex items-center justify-between pb-2 border-b border-white/10">
-              <h3 className="text-base font-bold text-white">Add SaaS / CRM Account</h3>
-              <button 
-                type="button" 
-                onClick={() => setNewRecordModalOpen(false)}
-                className="p-1 text-white/40 hover:text-white"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3 text-xs">
-              <div className="space-y-1">
-                <label className="text-white/60 font-bold">Account / Company Name *</label>
-                <input
-                  type="text"
-                  required
-                  value={newRecordData.accountName}
-                  onChange={(e) => setNewRecordData({ ...newRecordData, accountName: e.target.value })}
-                  placeholder="Acme Corp"
-                  className="w-full bg-[#181818] border border-white/10 rounded-xl px-3 py-2 text-white"
-                />
-              </div>
-
-              <div className="space-y-1">
-                <label className="text-white/60 font-bold">Contact Name *</label>
-                <input
-                  type="text"
-                  required
-                  value={newRecordData.contactName}
-                  onChange={(e) => setNewRecordData({ ...newRecordData, contactName: e.target.value })}
-                  placeholder="John Doe"
-                  className="w-full bg-[#181818] border border-white/10 rounded-xl px-3 py-2 text-white"
-                />
-              </div>
-
-              <div className="space-y-1">
-                <label className="text-white/60 font-bold">Contact Email</label>
-                <input
-                  type="email"
-                  value={newRecordData.contactEmail}
-                  onChange={(e) => setNewRecordData({ ...newRecordData, contactEmail: e.target.value })}
-                  placeholder="john@acme.com"
-                  className="w-full bg-[#181818] border border-white/10 rounded-xl px-3 py-2 text-white"
-                />
-              </div>
-
-              <div className="space-y-1">
-                <label className="text-white/60 font-bold">Monthly MRR ($)</label>
-                <input
-                  type="number"
-                  value={newRecordData.mrr}
-                  onChange={(e) => {
-                    const m = Number(e.target.value);
-                    setNewRecordData({ ...newRecordData, mrr: m, dealValue: m * 12 });
-                  }}
-                  className="w-full bg-[#181818] border border-white/10 rounded-xl px-3 py-2 text-white font-mono"
-                />
-              </div>
-
-              <div className="space-y-1">
-                <label className="text-white/60 font-bold">Plan Tier</label>
-                <select
-                  value={newRecordData.planTier}
-                  onChange={(e: any) => setNewRecordData({ ...newRecordData, planTier: e.target.value })}
-                  className="w-full bg-[#181818] border border-white/10 rounded-xl px-3 py-2 text-white"
-                >
-                  <option value="Starter">Starter ($1,499/mo)</option>
-                  <option value="Pro">Pro ($2,999/mo)</option>
-                  <option value="Enterprise">Enterprise ($4,999/mo)</option>
-                </select>
-              </div>
-
-              <div className="space-y-1">
-                <label className="text-white/60 font-bold">Days Since Last Contact</label>
-                <input
-                  type="number"
-                  value={newRecordData.daysSinceLastContact}
-                  onChange={(e) => setNewRecordData({ ...newRecordData, daysSinceLastContact: Number(e.target.value) })}
-                  className="w-full bg-[#181818] border border-white/10 rounded-xl px-3 py-2 text-white font-mono"
-                />
-              </div>
-            </div>
-
-            <button
-              type="submit"
-              className="w-full py-3 rounded-xl bg-[#FFD700] hover:bg-[#FFE55C] text-black text-xs font-bold transition-all shadow-[0_0_20px_rgba(255,215,0,0.2)] cursor-pointer"
-            >
-              Save SaaS Deal
-            </button>
-          </form>
-        </div>
-      )}
-
-      {/* APPROVAL MODAL 1: MOVE DEAL STAGE */}
-      {dealMoveModal && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="bg-[#121212] border border-[#FFD700]/50 rounded-2xl p-6 max-w-md w-full space-y-5 shadow-2xl">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-[#FFD700]/20 border border-[#FFD700]/40 flex items-center justify-center text-[#FFD700]">
-                <ShieldCheck className="w-5 h-5" />
-              </div>
               <div>
-                <h3 className="text-base font-bold text-white">Human Authorization Required</h3>
-                <p className="text-xs text-white/50">Deal Stage Transition Governance</p>
+                <label className="block text-white/60 mb-1">Company / Account Name:</label>
+                <input
+                  type="text"
+                  required
+                  value={newDeal.accountName}
+                  onChange={(e) => setNewDeal({ ...newDeal, accountName: e.target.value })}
+                  placeholder="e.g. Acme Enterprise Global"
+                  className="w-full bg-[#181818] border border-white/15 rounded-xl px-3.5 py-2.5 text-white focus:border-[#FFD700] focus:outline-none"
+                />
               </div>
-            </div>
 
-            <div className="p-4 rounded-xl bg-black/50 border border-white/10 space-y-2 text-xs">
-              <div className="flex justify-between">
-                <span className="text-white/60">Account:</span>
-                <span className="text-white font-bold">{dealMoveModal.deal.accountName}</span>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-white/60 mb-1">Contact Name:</label>
+                  <input
+                    type="text"
+                    required
+                    value={newDeal.contactName}
+                    onChange={(e) => setNewDeal({ ...newDeal, contactName: e.target.value })}
+                    placeholder="e.g. John Miller"
+                    className="w-full bg-[#181818] border border-white/15 rounded-xl px-3.5 py-2.5 text-white focus:border-[#FFD700] focus:outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-white/60 mb-1">Contact Email:</label>
+                  <input
+                    type="email"
+                    required
+                    value={newDeal.contactEmail}
+                    onChange={(e) => setNewDeal({ ...newDeal, contactEmail: e.target.value })}
+                    placeholder="jmiller@acme.com"
+                    className="w-full bg-[#181818] border border-white/15 rounded-xl px-3.5 py-2.5 text-white focus:border-[#FFD700] focus:outline-none"
+                  />
+                </div>
               </div>
-              <div className="flex justify-between">
-                <span className="text-white/60">Deal Value:</span>
-                <span className="text-[#FFD700] font-mono font-bold">${dealMoveModal.deal.dealValue.toLocaleString()}</span>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-white/60 mb-1">Contract Deal Value ($):</label>
+                  <input
+                    type="number"
+                    required
+                    value={newDeal.dealValue}
+                    onChange={(e) => setNewDeal({ ...newDeal, dealValue: Number(e.target.value) })}
+                    className="w-full bg-[#181818] border border-white/15 rounded-xl px-3.5 py-2.5 text-white focus:border-[#FFD700] focus:outline-none font-mono"
+                  />
+                </div>
+                <div>
+                  <label className="block text-white/60 mb-1">Monthly MRR ($):</label>
+                  <input
+                    type="number"
+                    value={newDeal.mrr}
+                    onChange={(e) => setNewDeal({ ...newDeal, mrr: Number(e.target.value) })}
+                    className="w-full bg-[#181818] border border-white/15 rounded-xl px-3.5 py-2.5 text-white focus:border-[#FFD700] focus:outline-none font-mono"
+                  />
+                </div>
               </div>
-              <div className="flex justify-between items-center pt-2 border-t border-white/10">
-                <span className="text-white/60">Stage Movement:</span>
-                <div className="flex items-center gap-2">
-                  <span className="px-2 py-0.5 rounded bg-white/10 text-white/80 font-bold">{dealMoveModal.deal.stage}</span>
-                  <span className="text-[#FFD700]">→</span>
-                  <span className="px-2 py-0.5 rounded bg-[#FFD700]/20 text-[#FFD700] font-bold border border-[#FFD700]/30">{dealMoveModal.proposedStage}</span>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-white/60 mb-1">Days Since Last Touchpoint:</label>
+                  <input
+                    type="number"
+                    value={newDeal.daysSinceLastContact}
+                    onChange={(e) => setNewDeal({ ...newDeal, daysSinceLastContact: Number(e.target.value) })}
+                    className="w-full bg-[#181818] border border-white/15 rounded-xl px-3.5 py-2.5 text-white focus:border-[#FFD700] focus:outline-none font-mono"
+                  />
+                </div>
+                <div>
+                  <label className="block text-white/60 mb-1">Initial Health Score (0-100):</label>
+                  <input
+                    type="number"
+                    min="0"
+                    max="100"
+                    value={newDeal.healthScore}
+                    onChange={(e) => setNewDeal({ ...newDeal, healthScore: Number(e.target.value) })}
+                    className="w-full bg-[#181818] border border-white/15 rounded-xl px-3.5 py-2.5 text-white focus:border-[#FFD700] focus:outline-none font-mono"
+                  />
                 </div>
               </div>
             </div>
 
-            <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/20 text-[11px] text-amber-200/90 leading-relaxed">
-              <strong>Zero Auto-Move Policy:</strong> PRIME AI never autonomously transitions deals without executive consent. Authorizing this action records an immutable audit log entry and activates a 2-minute undo safety window.
-            </div>
-
-            <div className="flex gap-3">
+            <div className="pt-3 flex items-center justify-end gap-3">
               <button
-                onClick={() => setDealMoveModal(null)}
-                className="flex-1 py-2.5 rounded-xl border border-white/10 text-white/70 hover:bg-white/5 text-xs font-semibold cursor-pointer"
+                type="button"
+                onClick={() => setNewDealModalOpen(false)}
+                className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs"
               >
                 Cancel
               </button>
               <button
-                onClick={handleConfirmDealMove}
-                className="flex-1 py-2.5 rounded-xl bg-[#FFD700] hover:bg-[#FFE55C] text-black text-xs font-bold transition-all shadow-[0_0_20px_rgba(255,215,0,0.2)] cursor-pointer"
+                type="submit"
+                className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-400 to-[#FFD700] text-black font-black text-xs hover:brightness-110"
               >
-                Authorize &amp; Move Stage
+                Save &amp; Monitor
               </button>
             </div>
-          </div>
+          </form>
         </div>
       )}
 
-      {/* APPROVAL MODAL 2: CONVERT PQL */}
-      {pqlApproveModal && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="bg-[#121212] border border-[#FFD700]/50 rounded-2xl p-6 max-w-md w-full space-y-5 shadow-2xl">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-purple-500/20 border border-purple-500/40 flex items-center justify-center text-purple-300">
-                <ShieldCheck className="w-5 h-5" />
-              </div>
-              <div>
-                <h3 className="text-base font-bold text-white">Human Authorization Required</h3>
-                <p className="text-xs text-white/50">PQL Product-Led Conversion</p>
-              </div>
-            </div>
-
-            <div className="p-4 rounded-xl bg-black/50 border border-white/10 space-y-2 text-xs">
-              <div className="flex justify-between">
-                <span className="text-white/60">User / Account:</span>
-                <span className="text-white font-bold">{pqlApproveModal.userName} ({pqlApproveModal.accountName})</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-white/60">Target Tier:</span>
-                <span className="text-purple-300 font-bold">{pqlApproveModal.targetPlan}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-white/60">Estimated ARR Uplift:</span>
-                <span className="text-emerald-400 font-mono font-bold">+${pqlApproveModal.estimatedArrUplift.toLocaleString()}</span>
-              </div>
-            </div>
-
-            {/* Mandatory Safety Disclaimer in PQL Approval Modal */}
-            <AIGuidanceDisclaimer variant="modal" companyId={activeCompanyId} companyName={activeCompanyName} />
-
-            <div className="flex gap-3">
-              <button
-                onClick={() => setPqlApproveModal(null)}
-                className="flex-1 py-2.5 rounded-xl border border-white/10 text-white/70 hover:bg-white/5 text-xs font-semibold cursor-pointer"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleConfirmPqlConvert}
-                className="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-purple-500 to-indigo-600 text-white text-xs font-bold transition-all shadow-lg cursor-pointer hover:scale-105 active:scale-95"
-              >
-                Human Approval Granted: Convert
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* APPROVAL MODAL 3: MULTI-YEAR LOCK-IN */}
-      {multiYearModal && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="bg-[#121212] border border-[#FFD700]/50 rounded-2xl p-6 max-w-md w-full space-y-5 shadow-2xl">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400">
-                <ShieldCheck className="w-5 h-5" />
-              </div>
-              <div>
-                <h3 className="text-base font-bold text-white">Human Authorization Required</h3>
-                <p className="text-xs text-white/50">Multi-Year Contract Lock-In</p>
-              </div>
-            </div>
-
-            <div className="p-4 rounded-xl bg-black/50 border border-white/10 space-y-2 text-xs">
-              <div className="flex justify-between">
-                <span className="text-white/60">Account:</span>
-                <span className="text-white font-bold">{multiYearModal.item.accountName}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-white/60">Term:</span>
-                <span className="text-emerald-400 font-bold">{multiYearModal.years} Years Contract</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-white/60">Total Contract ARR:</span>
-                <span className="text-[#FFD700] font-mono font-bold">${(multiYearModal.item.contractArr * multiYearModal.years).toLocaleString()}</span>
-              </div>
-            </div>
-
-            {/* Mandatory Safety Disclaimer in Multi-Year Modal */}
-            <AIGuidanceDisclaimer variant="modal" companyId={activeCompanyId} companyName={activeCompanyName} />
-
-            <div className="flex gap-3">
-              <button
-                onClick={() => setMultiYearModal(null)}
-                className="flex-1 py-2.5 rounded-xl border border-white/10 text-white/70 hover:bg-white/5 text-xs font-semibold cursor-pointer"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleConfirmLockInMultiYear}
-                className="flex-1 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-black text-xs font-bold transition-all shadow-lg cursor-pointer hover:scale-105 active:scale-95"
-              >
-                Human Approval Granted: Lock Contract
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* APPROVAL MODAL 4: CHURN CONCESSION */}
-      {churnApproveModal && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="bg-[#121212] border border-[#FFD700]/50 rounded-2xl p-6 max-w-md w-full space-y-5 shadow-2xl">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-rose-500/20 border border-rose-500/40 flex items-center justify-center text-rose-400">
-                <ShieldCheck className="w-5 h-5" />
-              </div>
-              <div>
-                <h3 className="text-base font-bold text-white">Human Authorization Required</h3>
-                <p className="text-xs text-white/50">Deploy Churn Concession &amp; Rescue</p>
-              </div>
-            </div>
-
-            <div className="p-4 rounded-xl bg-black/50 border border-white/10 space-y-2 text-xs">
-              <div className="flex justify-between">
-                <span className="text-white/60">Account:</span>
-                <span className="text-white font-bold">{churnApproveModal.record.accountName}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-white/60">Proposed Concession:</span>
-                <span className="text-amber-400 font-bold text-right max-w-[220px]">{churnApproveModal.playbook.proposedConcession}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-white/60">ARR Protected:</span>
-                <span className="text-emerald-400 font-mono font-bold">${churnApproveModal.playbook.savedArr.toLocaleString()}</span>
-              </div>
-            </div>
-
-            {/* Mandatory Safety Disclaimer in Churn Modal */}
-            <AIGuidanceDisclaimer variant="modal" companyId={activeCompanyId} companyName={activeCompanyName} />
-
-            <div className="flex gap-3">
-              <button
-                onClick={() => setChurnApproveModal(null)}
-                className="flex-1 py-2.5 rounded-xl border border-white/10 text-white/70 hover:bg-white/5 text-xs font-semibold cursor-pointer"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleConfirmChurnConcession}
-                className="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-rose-500 to-amber-500 text-white text-xs font-bold transition-all shadow-lg cursor-pointer hover:scale-105 active:scale-95"
-              >
-                Human Approval Granted: Apply Concession
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Free Churn Audit Modal */}
+      <FreeChurnAuditModal
+        isOpen={churnAuditModalOpen}
+        onClose={() => setChurnAuditModalOpen(false)}
+      />
     </div>
   );
 };
