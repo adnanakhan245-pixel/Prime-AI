@@ -45,7 +45,7 @@ export const MarketingStudio: React.FC<MarketingStudioProps> = ({
   const [aspectRatio, setAspectRatio] = useState<AspectRatio>('linkedin-post');
   const [frameStyle, setFrameStyle] = useState<FrameStyle>('macbook');
   const [accentColor, setAccentColor] = useState<'gold' | 'emerald' | 'cyan' | 'purple'>('gold');
-  const [headline, setHeadline] = useState('Autonomous AI Chief of Operations for Modern Founders');
+  const [headline, setHeadline] = useState('AI-Assisted Chief of Operations for Modern Founders. AI will help you to close.');
   const [subheading, setSubheading] = useState('Save 20+ hours a week on operational firefighting, deal triage, & executive reporting.');
   const [showBadges, setShowBadges] = useState(true);
   const [isExporting, setIsExporting] = useState(false);
@@ -74,24 +74,24 @@ export const MarketingStudio: React.FC<MarketingStudioProps> = ({
   useEffect(() => {
     switch (template) {
       case 'executive-war-room':
-        setHeadline('Autonomous AI Chief of Operations');
-        setSubheading('Unify metrics, run predictive simulations, and automate 24/7 executive execution.');
+        setHeadline('AI-Assisted Chief of Operations');
+        setSubheading('Unify metrics, run predictive simulations, and automate 24/7 executive execution. AI will help you to close.');
         break;
       case 'ceo-twin':
         setHeadline('Executive Digital Twin 3.0');
-        setSubheading('Clone your decision framework. Let AI triage boardroom briefs & meetings 24/7.');
+        setSubheading('Clone your decision framework. Let AI triage boardroom briefs & meetings 24/7. AI will help you to close.');
         break;
       case 'revenue-radar':
         setHeadline('Live Revenue Radar & Deal Triage');
-        setSubheading('Spot pipeline bottlenecks before they cost revenue. Instant ARR intervention.');
+        setSubheading('Spot pipeline bottlenecks before they cost revenue. Instant ARR intervention. AI will help you to close.');
         break;
       case 'closer-ai':
         setHeadline('Deal Room & High-Stakes Closer AI');
-        setSubheading('Predict deal velocity, automate objection scripts, and close enterprise deals faster.');
+        setSubheading('Predict deal velocity, automate objection scripts, and close enterprise deals faster. AI will help you to close.');
         break;
       case 'launch-special':
         setHeadline('PRIME AI Official Launch — Live Platform');
-        setSubheading('Replace $200k/yr COO overhead with an autonomous AI executive system.');
+        setSubheading('Replace $200k/yr COO overhead with an AI-assisted executive system. AI will help you to close.');
         break;
     }
   }, [template]);
@@ -273,11 +273,11 @@ export const MarketingStudio: React.FC<MarketingStudioProps> = ({
       title: '🎯 Direct Value Hook (Founders & CEOs)',
       content: `Founders are losing 15–20 hours every week on operational firefighting instead of high-leverage revenue growth.
 
-We built PRIME AI — the Autonomous AI Chief of Operations designed to solve this forever.
+We built PRIME AI — the AI-Assisted Chief of Operations designed to solve this forever. AI will help you to close.
 
-⚡ Autonomous Executive War Room: Real-time strategic simulations & boardroom metrics.
+⚡ AI-Assisted Executive War Room: Real-time strategic simulations & boardroom metrics.
 🎯 Revenue Radar: Instant deal bottleneck triage & pipeline rescue.
-🤖 24/7 Executive Twin: Autonomous delegation and priority alignment.
+🤖 24/7 Executive Twin: AI-assisted delegation and priority alignment.
 
 No $200k/yr executive hiring lag. Instant deployment.
 
@@ -288,7 +288,7 @@ ${publicAppUrl}
     },
     {
       title: '💡 "Behind The Build" Launch Post',
-      content: `🚀 Introducing PRIME AI — The Autonomous Chief of Operations for Modern Leadership.
+      content: `🚀 Introducing PRIME AI — The AI-Assisted Chief of Operations for Modern Leadership. AI will help you to close.
 
 Scaling a business shouldn't mean drowning in Slack pings, unorganized reports, and manual executive summaries.
 
@@ -311,7 +311,7 @@ Would love your feedback!
 ❌ 3–6 months onboarding time
 ❌ Unavailable 16 hours a day
 
-Deploying PRIME AI (Autonomous Operations Suite):
+Deploying PRIME AI (AI-Assisted Operations Suite):
 ✅ $499/month instant activation
 ✅ Available 24/7/365 across meetings, CRM, & financials
 ✅ Real-time predictive ROI scenario simulations
@@ -398,7 +398,7 @@ ${publicAppUrl}
             <div className="grid grid-cols-1 gap-2">
               {[
                 { id: 'executive-war-room', label: 'Executive War Room & Dashboard', desc: 'Main telemetry, $1.4M ARR metrics, live action stream' },
-                { id: 'ceo-twin', label: 'CEO Digital Twin 3.0', desc: 'Autonomous AI delegation, voice agent, strategy memory' },
+                { id: 'ceo-twin', label: 'CEO Digital Twin 3.0', desc: 'AI-assisted delegation, voice agent, strategy memory' },
                 { id: 'revenue-radar', label: 'Revenue Radar & Pipeline Triage', desc: 'Live bottleneck radar, deal risks, MRR acceleration' },
                 { id: 'closer-ai', label: 'Deal Room & Closer AI', desc: 'Enterprise objection counters, deal velocity predictor' },
                 { id: 'launch-special', label: 'Official Launch Special Banner', desc: 'Priced plans ($499), Payoneer verification badges' },
@@ -590,7 +590,7 @@ ${publicAppUrl}
                     <div className="flex items-center gap-2">
                       <span className="px-2.5 py-1 rounded-full bg-black/60 border border-white/15 text-white/80 text-[10px] font-mono font-bold flex items-center gap-1.5 shadow-sm">
                         <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                        24/7 AUTONOMOUS
+                        24/7 AI-ASSISTED
                       </span>
                       <span className="px-2.5 py-1 rounded-full bg-black/60 border border-white/15 text-[#FFD700] text-[10px] font-mono font-bold hidden sm:flex items-center gap-1">
                         <Shield className="w-3 h-3" />
@@ -654,7 +654,7 @@ ${publicAppUrl}
                           <div className="p-2.5 rounded-lg bg-black/80 border border-white/10 flex items-center justify-between">
                             <div className="flex items-center gap-2">
                               <div className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
-                              <span className="text-[11px] text-white font-bold font-mono">Autonomous Strategic Action Stream</span>
+                              <span className="text-[11px] text-white font-bold font-mono">AI-Assisted Strategic Action Stream</span>
                             </div>
                             <span className="text-[9px] font-mono text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/30">
                               Active 24/7 Execution
@@ -764,7 +764,7 @@ ${publicAppUrl}
                     <div className="flex items-center justify-between">
                       <div className="text-sm font-bold text-white font-mono flex items-center gap-2">
                         <Sparkles className="w-4 h-4 text-[#FFD700]" />
-                        <span>Autonomous Operations Engine</span>
+                        <span>AI-Assisted Operations Engine</span>
                       </div>
                       <span className="text-xs font-mono text-emerald-400 font-bold">$1.4M ARR Live</span>
                     </div>

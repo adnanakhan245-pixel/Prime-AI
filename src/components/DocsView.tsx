@@ -25,6 +25,9 @@ import { useAuth } from '../context/AuthContext';
 import { fetchUserDocuments, saveDocument, deleteDocument } from '../services/db';
 import { DocumentItem } from '../types';
 import { ContractPaywallModal } from './ContractPaywallModal';
+import { registerUploadedCsv, getActiveCsvFiles, UploadedCsvFile } from '../services/csvStore';
+import { CsvAutoDeleteTimer } from './CsvAutoDeleteTimer';
+import { AISuggestionBadge } from './AIGuidanceDisclaimer';
 
 interface DocsViewProps {
   onUpgradeToPro?: () => void;
@@ -42,7 +45,7 @@ const SAMPLE_CONTRACTS: DocumentItem[] = [
 BETWEEN: Apex Tech Systems ("Vendor") AND Titan Global Holdings ("Client")
 Effective Date: March 2026
 
-1. SCOPE OF SERVICES: Vendor shall provide autonomous infrastructure and software services.
+1. SCOPE OF SERVICES: Vendor shall provide AI-assisted infrastructure and software services.
 2. FEES & PAYMENT: Client agrees to pay $120,000 annually, billed quarterly in advance. Late payments incur 1.5% interest per month.
 3. SERVICE LEVEL COMMITMENT (SLA): Vendor guarantees 99.99% monthly uptime. If uptime drops below 99.95%, Client is entitled to a 50% invoice penalty credit. If downtime exceeds 4 hours in a single calendar month, Client may terminate the agreement immediately with full refund of all prepaid fees for the entire contract term.
 4. INDEMNIFICATION & LIABILITY: Vendor agrees to defend, indemnify, and hold harmless Client against any claims, losses, or legal fees. Vendor's total aggregate liability under this agreement SHALL BE UNLIMITED for any breaches of data security, confidentiality, or performance warranties.
@@ -116,6 +119,8 @@ export const DocsView: React.FC<DocsViewProps> = ({ onUpgradeToPro }) => {
   const [docTitle, setDocTitle] = useState('');
   const [showPasteModal, setShowPasteModal] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [activeCsvFiles, setActiveCsvFiles] = useState<UploadedCsvFile[]>(() => getActiveCsvFiles());
+  const [humanApprovedDocId, setHumanApprovedDocId] = useState<string | null>(null);
 
   // Contract check paywall state
   const [showContractPaywall, setShowContractPaywall] = useState(false);
@@ -265,6 +270,13 @@ export const DocsView: React.FC<DocsViewProps> = ({ onUpgradeToPro }) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    // RULE 3: Auto-register CSV files for 24-hour expiration
+    if (file.name.toLowerCase().endsWith('.csv') || file.type.includes('csv')) {
+      const registered = registerUploadedCsv(file.name, file.size, 50, 'Contract / Pipeline CSV Telemetry');
+      setActiveCsvFiles(prev => [registered, ...prev]);
+      showToast('✓ CSV file uploaded. Rule 3 Active: This file will auto-delete after 24h.');
+    }
+
     const reader = new FileReader();
     reader.onload = async (event) => {
       const text = event.target?.result as string;
@@ -364,7 +376,7 @@ export const DocsView: React.FC<DocsViewProps> = ({ onUpgradeToPro }) => {
             type="file"
             ref={fileInputRef}
             onChange={handleFileUpload}
-            accept=".pdf,.docx,.txt,.md,.json"
+            accept=".pdf,.docx,.txt,.md,.json,.csv,text/csv"
             className="hidden"
           />
 
@@ -410,6 +422,22 @@ export const DocsView: React.FC<DocsViewProps> = ({ onUpgradeToPro }) => {
           </button>
         </div>
       </div>
+
+      {/* RULE 3: CSV 24-HOUR AUTO-DELETE TIMERS */}
+      {activeCsvFiles.length > 0 && (
+        <div className="space-y-3">
+          {activeCsvFiles.map(file => (
+            <CsvAutoDeleteTimer
+              key={file.id}
+              file={file}
+              onDeleted={() => {
+                setActiveCsvFiles(prev => prev.filter(f => f.id !== file.id));
+                showToast('CSV file auto-deleted after 24 hours (Zero-retention policy).');
+              }}
+            />
+          ))}
+        </div>
+      )}
 
       {/* Sample Document Quick Starters */}
       <div className="p-3.5 rounded-xl bg-[#161616] border border-white/5 flex flex-wrap items-center justify-between gap-3 text-xs">
@@ -563,9 +591,12 @@ export const DocsView: React.FC<DocsViewProps> = ({ onUpgradeToPro }) => {
 
               {/* 1. EXECUTIVE SUMMARY */}
               <div className="p-4 rounded-xl bg-[#FFD700]/5 border border-[#FFD700]/20 space-y-2">
-                <div className="flex items-center gap-2 text-xs font-bold text-[#FFD700] uppercase tracking-wider">
-                  <Sparkles className="w-4 h-4 text-[#FFD700]" />
-                  <span>Bottom-Line Financial & Liability Synthesis (100% Free Report)</span>
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div className="flex items-center gap-2 text-xs font-bold text-[#FFD700] uppercase tracking-wider">
+                    <Sparkles className="w-4 h-4 text-[#FFD700]" />
+                    <span>Bottom-Line Financial & Liability Synthesis (100% Free Report)</span>
+                  </div>
+                  <AISuggestionBadge size="sm" />
                 </div>
                 <p className="text-xs text-zinc-200 leading-relaxed font-sans">
                   {selectedDoc.summary}
@@ -608,10 +639,13 @@ export const DocsView: React.FC<DocsViewProps> = ({ onUpgradeToPro }) => {
 
               {/* 4. 3 COO DIRECT ACTIONS */}
               <div className="p-4 rounded-xl bg-[#121212] border border-white/5 space-y-3">
-                <h3 className="text-xs font-bold text-emerald-400 uppercase tracking-wider flex items-center gap-2">
-                  <ListChecks className="w-4 h-4 text-emerald-400" />
-                  <span>Executive Actions & Redlines to Prevent Loss</span>
-                </h3>
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <h3 className="text-xs font-bold text-emerald-400 uppercase tracking-wider flex items-center gap-2">
+                    <ListChecks className="w-4 h-4 text-emerald-400" />
+                    <span>Executive Actions & Redlines to Prevent Loss</span>
+                  </h3>
+                  <AISuggestionBadge size="sm" />
+                </div>
                 <div className="space-y-2">
                   {selectedDoc.nextActions?.map((action, idx) => (
                     <div key={idx} className="p-2.5 rounded-lg bg-[#161616] border border-white/5 flex items-start gap-2.5 text-xs text-zinc-200">
@@ -620,6 +654,27 @@ export const DocsView: React.FC<DocsViewProps> = ({ onUpgradeToPro }) => {
                     </div>
                   ))}
                 </div>
+              </div>
+
+              {/* RULE 1: HUMAN APPROVAL BUTTON FOR REDLINES & ACTION */}
+              <div className="p-4 rounded-xl bg-[#141414] border border-[#FFD700]/30 flex flex-wrap items-center justify-between gap-3 shadow-lg">
+                <div className="text-xs text-white/70">
+                  <strong className="text-white">Rule 1 Governance:</strong> AI never signs or executes contract amendments. Approval is strictly reserved for human legal counsel.
+                </div>
+                <button
+                  onClick={() => {
+                    setHumanApprovedDocId(selectedDoc.id);
+                    showToast('✓ Human Approval Recorded: Contract redlines authorized by executive.');
+                  }}
+                  className={`px-4 py-2.5 rounded-xl text-xs font-bold flex items-center gap-2 transition-all cursor-pointer shadow-md ${
+                    humanApprovedDocId === selectedDoc.id
+                      ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 cursor-default'
+                      : 'bg-gradient-to-r from-[#FFD700] via-amber-300 to-[#FFC700] text-black hover:brightness-110 active:scale-95'
+                  }`}
+                >
+                  <CheckCircle2 className="w-4 h-4" />
+                  <span>{humanApprovedDocId === selectedDoc.id ? '✓ Human Approved: Redlines Authorized' : 'Human Approval: Approve Redlines & Counter-Terms'}</span>
+                </button>
               </div>
             </>
           ) : (

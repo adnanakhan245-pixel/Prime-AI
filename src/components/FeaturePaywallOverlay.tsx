@@ -26,7 +26,7 @@ export const FeaturePaywallOverlay: React.FC<FeaturePaywallOverlayProps> = ({
   featureName,
   featureDescription,
   benefits = [
-    'Unlimited 24/7 autonomous operations & reasoning',
+    'Unlimited 24/7 AI-assisted operations & reasoning. AI will help you to close.',
     'Real-time deal risk detection and AI outreach',
     'Custom fine-tuned executive neural twin model',
     'Multi-tenant data isolation & SOC2 compliance'

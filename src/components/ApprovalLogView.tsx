@@ -318,7 +318,7 @@ export const ApprovalLogView: React.FC = () => {
             <div className="flex flex-wrap items-center gap-2">
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#FFD700]/10 border border-[#FFD700]/30 text-[#FFD700] text-xs font-bold uppercase tracking-wider">
                 <ShieldCheck className="w-3.5 h-3.5" />
-                <span>Zero Autonomous Execution: Human Approval Required</span>
+                <span>Zero Auto-Execution: Human Approval Required • AI will help you to close</span>
               </div>
               <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-mono">
                 <Database className="w-3 h-3" />

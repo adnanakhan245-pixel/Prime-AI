@@ -25,6 +25,7 @@ import { useAuth } from '../context/AuthContext';
 import { recordApprovedAction } from '../services/approvals';
 import { FreeChurnAuditModal } from './FreeChurnAuditModal';
 import { DealHealthTrendChart } from './DealHealthTrendChart';
+import { AIGuidanceDisclaimer, AISuggestionBadge } from './AIGuidanceDisclaimer';
 import { 
   CRMRecord, 
   RevenueRadarStats,
@@ -243,7 +244,7 @@ export const RevenueRadarView: React.FC<RevenueRadarViewProps> = ({ onNavigate }
                 </span>
               </div>
               <p className="text-xs text-white/50 mt-0.5">
-                Autonomous deal risk monitoring, executive rescue scripts, and revenue telemetry for <strong>{companyName || 'Apex Enterprises'}</strong>
+                AI-assisted deal risk monitoring, executive rescue drafts, and revenue telemetry. AI will help you to close — it never closes, sends, or charges on its own. 100% Human Approval Required.
               </p>
             </div>
           </div>
@@ -285,6 +286,9 @@ export const RevenueRadarView: React.FC<RevenueRadarViewProps> = ({ onNavigate }
           </button>
         </div>
       </div>
+
+      {/* RULE 2: MANDATORY AI SUGGESTION NOTICE BANNER */}
+      <AIGuidanceDisclaimer variant="banner" companyId={activeCompanyId} companyName={companyName} />
 
       {/* KPI Telemetry Banner */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -631,6 +635,13 @@ export const RevenueRadarView: React.FC<RevenueRadarViewProps> = ({ onNavigate }
               </div>
             ) : actionModalRecord.aiAction ? (
               <div className="space-y-4">
+                <div className="flex flex-wrap items-center justify-between gap-2 p-3 rounded-xl bg-white/5 border border-white/10">
+                  <div className="text-xs text-white/70">
+                    <strong className="text-white">Revenue Defense Playbook:</strong> AI objection strategy and draft reply.
+                  </div>
+                  <AISuggestionBadge size="sm" />
+                </div>
+
                 <div className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-2">
                   <div className="text-xs font-mono text-[#FFD700] uppercase tracking-wider font-bold">
                     Strategic Rationale:
@@ -682,7 +693,7 @@ export const RevenueRadarView: React.FC<RevenueRadarViewProps> = ({ onNavigate }
                     className="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-gradient-to-r from-amber-400 via-[#FFD700] to-yellow-500 text-black font-black text-xs hover:brightness-110 transition-all flex items-center justify-center gap-2 shadow-md cursor-pointer active:scale-95"
                   >
                     <CheckCircle2 className="w-4 h-4 text-black" />
-                    <span>Approve &amp; Log Touchpoint</span>
+                    <span>Human Approval: Approve &amp; Dispatch Touchpoint</span>
                   </button>
                 </div>
               </div>

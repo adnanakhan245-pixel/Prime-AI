@@ -27,6 +27,7 @@ import {
 import { useAuth } from '../context/AuthContext';
 import { MeetingRecord, MeetingActionItem, MeetingDraftEmail } from '../types';
 import { saveMeetingToSupabase, fetchUserMeetings, saveEmail } from '../services/db';
+import { AISuggestionBadge } from './AIGuidanceDisclaimer';
 
 const SAMPLE_MEETINGS = [
   {
@@ -276,7 +277,7 @@ export const MeetingsView: React.FC = () => {
                 </span>
               </div>
               <p className="text-xs text-white/50">
-                Autonomous Executive Chief of Staff meeting transcription, 3-section executive synthesis & 1-click follow-up dispatch.
+                AI-assisted Executive Chief of Staff meeting transcription, 3-section executive synthesis & 1-click follow-up dispatch. AI will help you to close.
               </p>
             </div>
           </div>
@@ -434,7 +435,7 @@ export const MeetingsView: React.FC = () => {
               
               {/* SECTION 1: EXECUTIVE SUMMARY CARD */}
               <div className="p-6 rounded-2xl bg-[#141414] border border-white/5 shadow-xl space-y-4 relative overflow-hidden">
-                <div className="flex items-center justify-between">
+                <div className="flex flex-wrap items-center justify-between gap-2">
                   <div className="flex items-center gap-2">
                     <div className="w-7 h-7 rounded-lg bg-[#FFD700]/10 border border-[#FFD700]/30 flex items-center justify-center text-[#FFD700]">
                       <Crown className="w-4 h-4" />
@@ -444,13 +445,16 @@ export const MeetingsView: React.FC = () => {
                     </span>
                   </div>
 
-                  <button
-                    onClick={() => copyToClipboard(selectedMeeting.summary, 'summary')}
-                    className="flex items-center gap-1.5 px-3 py-1 text-xs rounded-lg bg-white/5 hover:bg-white/10 text-white/60 hover:text-white transition-colors cursor-pointer"
-                  >
-                    {copiedSection === 'summary' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
-                    <span>{copiedSection === 'summary' ? 'Copied' : 'Copy'}</span>
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <AISuggestionBadge size="sm" />
+                    <button
+                      onClick={() => copyToClipboard(selectedMeeting.summary, 'summary')}
+                      className="flex items-center gap-1.5 px-3 py-1 text-xs rounded-lg bg-white/5 hover:bg-white/10 text-white/60 hover:text-white transition-colors cursor-pointer"
+                    >
+                      {copiedSection === 'summary' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                      <span>{copiedSection === 'summary' ? 'Copied' : 'Copy'}</span>
+                    </button>
+                  </div>
                 </div>
 
                 <div className="p-4 rounded-xl bg-black/40 border border-white/5">
@@ -461,7 +465,7 @@ export const MeetingsView: React.FC = () => {
 
               {/* SECTION 2: ACTION ITEMS CHECKLIST */}
               <div className="p-6 rounded-2xl bg-[#141414] border border-white/5 shadow-xl space-y-4">
-                <div className="flex items-center justify-between">
+                <div className="flex flex-wrap items-center justify-between gap-2">
                   <div className="flex items-center gap-2">
                     <div className="w-7 h-7 rounded-lg bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
                       <ListChecks className="w-4 h-4" />
@@ -471,16 +475,19 @@ export const MeetingsView: React.FC = () => {
                     </span>
                   </div>
 
-                  <button
-                    onClick={() => {
-                      const text = selectedMeeting.action_items.map((a, i) => `${i + 1}. [${a.owner}] ${a.task}`).join('\n');
-                      copyToClipboard(text, 'actions');
-                    }}
-                    className="flex items-center gap-1.5 px-3 py-1 text-xs rounded-lg bg-white/5 hover:bg-white/10 text-white/60 hover:text-white transition-colors cursor-pointer"
-                  >
-                    {copiedSection === 'actions' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
-                    <span>Copy All Items</span>
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <AISuggestionBadge size="sm" />
+                    <button
+                      onClick={() => {
+                        const text = selectedMeeting.action_items.map((a, i) => `${i + 1}. [${a.owner}] ${a.task}`).join('\n');
+                        copyToClipboard(text, 'actions');
+                      }}
+                      className="flex items-center gap-1.5 px-3 py-1 text-xs rounded-lg bg-white/5 hover:bg-white/10 text-white/60 hover:text-white transition-colors cursor-pointer"
+                    >
+                      {copiedSection === 'actions' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                      <span>Copy All Items</span>
+                    </button>
+                  </div>
                 </div>
 
                 <div className="space-y-2.5">
@@ -524,7 +531,7 @@ export const MeetingsView: React.FC = () => {
 
               {/* SECTION 3: DRAFT FOLLOW-UP EMAIL WITH SEND BUTTON */}
               <div className="p-6 rounded-2xl bg-[#141414] border border-white/5 shadow-xl space-y-4">
-                <div className="flex items-center justify-between">
+                <div className="flex flex-wrap items-center justify-between gap-2">
                   <div className="flex items-center gap-2">
                     <div className="w-7 h-7 rounded-lg bg-blue-500/10 border border-blue-500/30 flex items-center justify-center text-blue-400">
                       <Mail className="w-4 h-4" />
@@ -535,6 +542,7 @@ export const MeetingsView: React.FC = () => {
                   </div>
 
                   <div className="flex items-center gap-2">
+                    <AISuggestionBadge size="sm" />
                     <button
                       onClick={() => copyToClipboard(`${selectedMeeting.draft_followup_email.subject}\n\n${selectedMeeting.draft_followup_email.body}`, 'email')}
                       className="flex items-center gap-1.5 px-3 py-1 text-xs rounded-lg bg-white/5 hover:bg-white/10 text-white/60 hover:text-white transition-colors cursor-pointer"
@@ -580,7 +588,7 @@ export const MeetingsView: React.FC = () => {
                   >
                     <Send className={`w-3.5 h-3.5 ${emailSending ? 'animate-spin' : ''}`} />
                     <span>
-                      {emailSending ? 'Dispatching...' : selectedMeeting.emailSent || emailSentSuccess ? 'Approved & Sent' : 'Approve & Send Email'}
+                      {emailSending ? 'Dispatching...' : selectedMeeting.emailSent || emailSentSuccess ? '✓ Human Approved: Sent' : 'Human Approval: Approve & Send Email'}
                     </span>
                   </button>
                 </div>

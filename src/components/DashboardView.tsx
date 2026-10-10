@@ -39,6 +39,7 @@ import {
   UserX
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { AISuggestionBadge } from './AIGuidanceDisclaimer';
 import { getApprovalActions } from '../services/approvals';
 import { getAIDecisionLogs } from '../services/aiAuditLogger';
 import { AgentSwarmGrid } from './AgentSwarmGrid';
@@ -367,10 +368,10 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigate, onOpen
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 pb-4 border-b border-white/5">
         <div>
           <h2 className="text-lg sm:text-xl font-light tracking-tight text-white leading-tight">
-            Operational Overview &amp; <span className="text-[#FFD700] font-semibold">Autonomous Velocity</span>
+            Operational Overview &amp; <span className="text-[#FFD700] font-semibold">AI-assisted Velocity</span>
           </h2>
           <p className="text-xs text-white/40 mt-1">
-            Real-time telemetry streaming from your partitioned tenant workspace.
+            Real-time telemetry streaming from your partitioned tenant workspace. AI will help you to close.
           </p>
         </div>
 
@@ -415,7 +416,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigate, onOpen
           <button
             onClick={() => onNavigate('twin')}
             className="px-3 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold border border-white/10 transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap shrink-0"
-            title="Autonomous Executive Decision Twin"
+            title="AI-assisted Executive Decision Twin"
           >
             <Crown className="w-3.5 h-3.5 text-[#FFD700]" />
             <span>CEO Digital Twin</span>
@@ -545,7 +546,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigate, onOpen
         </button>
       </div>
 
-      {/* AUTONOMOUS COO DAILY BRIEFING CARD IF GENERATED */}
+      {/* AI-ASSISTED COO DAILY BRIEFING CARD IF GENERATED */}
       {briefing && (
         <section className="bg-gradient-to-br from-[#1A1810] to-[#121212] rounded-2xl border border-[#FFD700]/30 p-6 shadow-2xl relative overflow-hidden">
           <div className="flex items-center justify-between gap-4 mb-4 pb-3 border-b border-[#FFD700]/15">
@@ -555,7 +556,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigate, onOpen
               </div>
               <div>
                 <span className="text-[10px] font-bold text-[#FFD700] uppercase tracking-widest font-mono">
-                  Autonomous COO Morning Briefing
+                  AI-assisted COO Morning Briefing
                 </span>
                 <h3 className="text-sm sm:text-base font-semibold text-white">
                   {briefing.headline}
@@ -620,7 +621,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigate, onOpen
               Welcome to <span className="text-[#FFD700]">{companyName || 'PRIME AI'}</span> Command Center
             </h3>
             <p className="text-xs text-white/60 leading-relaxed">
-              Your tenant database is live and empty. Import your active CRM pipeline or invite your executive team to begin autonomous operations.
+              Your tenant database is live and empty. Import your active CRM pipeline or invite your executive team to begin AI-assisted operations. AI will help you to close.
             </p>
           </div>
 
@@ -762,12 +763,15 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigate, onOpen
                   </div>
 
                   {/* AI Advice Box: "اس کو بیس فیصد رعایت دو" */}
-                  <div className="p-3.5 rounded-xl bg-gradient-to-r from-amber-500/15 via-[#FFD700]/10 to-amber-500/15 border border-[#FFD700]/40 space-y-1.5">
-                    <div className="flex items-center justify-between">
+                  <div className="p-3.5 rounded-xl bg-gradient-to-r from-amber-500/15 via-[#FFD700]/10 to-amber-500/15 border border-[#FFD700]/40 space-y-2">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
                       <span className="text-[11px] font-extrabold text-[#FFD700] flex items-center gap-1.5 uppercase font-mono">
                         <Sparkles className="w-3.5 h-3.5 text-[#FFD700]" />
                         <span>AI مشورہ (AI Recommendation):</span>
                       </span>
+                      <AISuggestionBadge size="sm" />
+                    </div>
+                    <div className="flex items-center justify-between">
                       <span className="text-[9px] font-mono px-2 py-0.5 rounded bg-[#FFD700]/20 text-[#FFD700] font-black border border-[#FFD700]/30">
                         20% CODE: {item.discountCode}
                       </span>
@@ -795,7 +799,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigate, onOpen
                         className="px-4 py-2 rounded-xl bg-gradient-to-r from-[#FFD700] via-amber-400 to-[#FFD700] hover:brightness-110 text-black font-black text-xs shadow-md cursor-pointer transition-all flex items-center gap-1.5 active:scale-95"
                       >
                         <Zap className="w-3.5 h-3.5 text-black" />
-                        <span>20% رعایت اور ری-انگیجمنٹ میسج بھیجیں</span>
+                        <span>Human Approval: 20% رعایت اور ری-انگیجمنٹ میسج بھیجیں</span>
                       </button>
                     )}
                   </div>
@@ -882,16 +886,25 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigate, onOpen
                 </div>
 
                 {/* Supabase Action Buttons: کسٹمر واپس آیا یا چلا گیا */}
-                <div className="flex items-center gap-2 shrink-0 self-end md:self-auto">
+                <div className="flex items-center gap-2 shrink-0 self-end md:self-auto flex-wrap">
                   {item.status === 'PENDING' ? (
                     <>
+                      {!item.day1EmailSent && (
+                        <button
+                          onClick={() => handleSendDay1Email(item.id)}
+                          className="px-2.5 py-1.5 rounded-xl bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 font-bold border border-blue-500/30 text-xs cursor-pointer flex items-center gap-1"
+                        >
+                          <Mail className="w-3 h-3" />
+                          <span>Human Approval: ای میل</span>
+                        </button>
+                      )}
                       {!item.day3WhatsAppSent && (
                         <button
                           onClick={() => handleSendDay3WhatsApp(item)}
                           className="px-2.5 py-1.5 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 font-bold border border-emerald-500/30 text-xs cursor-pointer flex items-center gap-1"
                         >
                           <MessageSquare className="w-3 h-3" />
-                          <span>واٹس ایپ بھیجیں</span>
+                          <span>Human Approval: واٹس ایپ</span>
                         </button>
                       )}
                       <button
@@ -1090,7 +1103,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigate, onOpen
                 </div>
               </div>
 
-              {/* Primary 3: PRIME Brain (Autonomous COO) */}
+              {/* Primary 3: PRIME Brain (AI-Assisted COO) */}
               <div
                 onClick={() => onNavigate('brain')}
                 className="p-5 rounded-2xl bg-[#141414] border border-[#FFD700]/30 hover:border-[#FFD700] transition-all cursor-pointer group flex flex-col justify-between shadow-lg relative overflow-hidden"
@@ -1106,7 +1119,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigate, onOpen
                   </div>
                   <div>
                     <h4 className="text-base font-bold text-white group-hover:text-[#FFD700] transition-colors">
-                      PRIME Brain (Autonomous COO)
+                      PRIME Brain (AI-assisted COO)
                     </h4>
                     <p className="text-xs text-white/50 leading-relaxed mt-1">
                       Direct strategic operations engine delivering 3 high-leverage execution steps on any business problem.
@@ -1477,7 +1490,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigate, onOpen
       )}
 
       {/* ============================================================ */}
-      {/* TAB 4: AUTONOMOUS AGENT SWARMS                                */}
+      {/* TAB 4: AI-ASSISTED AGENT SWARMS                                */}
       {/* ============================================================ */}
       {activeTab === 'swarms' && (
         <section className="space-y-4">
@@ -1485,7 +1498,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigate, onOpen
             <div>
               <h3 className="text-base sm:text-lg font-bold text-white flex items-center gap-2">
                 <Layers className="w-4 h-4 text-purple-400" />
-                <span>Autonomous Agent Swarms (Background Multi-Agent Fleet)</span>
+                <span>AI-assisted Agent Swarms (Background Multi-Agent Fleet)</span>
               </h3>
               <p className="text-xs text-white/50 mt-0.5">
                 Continuously patrolling your business telemetry: Finance, Legal, Pipeline, Talent, SecOps, and Board liaison.

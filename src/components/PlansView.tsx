@@ -99,7 +99,7 @@ export const PlansView: React.FC<PlansViewProps> = ({ onNavigate }) => {
         </h1>
 
         <p className="text-sm sm:text-base text-white/60 max-w-lg mx-auto leading-relaxed">
-          Pay securely via Payoneer to unlock full 24/7 autonomous Chief of Operations, Revenue Radar, and executive delegation.
+          Pay securely via Payoneer to unlock full 24/7 AI-assisted Chief of Operations, Revenue Radar, and executive delegation. AI will help you to close.
         </p>
       </div>
 
@@ -142,9 +142,9 @@ export const PlansView: React.FC<PlansViewProps> = ({ onNavigate }) => {
                 <CheckCircle2 className="w-3.5 h-3.5" /> Instant Payoneer Authorization
               </span>
             </div>
-            <h2 className="text-2xl font-bold text-white">Full Autonomous COO Suite</h2>
+            <h2 className="text-2xl font-bold text-white">Full AI-Assisted COO Suite</h2>
             <p className="text-xs text-white/60 max-w-md">
-              Unlimited AI operations, CEO Digital Twin 3.0, Revenue Radar deal sentry, and daily 9:00 AM executive briefings.
+              Unlimited AI operations, CEO Digital Twin 3.0, Revenue Radar deal sentry, and daily 9:00 AM executive briefings. AI will help you to close.
             </p>
           </div>
 

@@ -84,7 +84,7 @@ export const TrialBanner: React.FC<TrialBannerProps> = ({ onUpgradeClick, compac
               </span>
             </div>
             <p className="text-[11px] text-red-300/80 mt-0.5">
-              Brain 3.0, Revenue Radar, and Deal Alerts are locked. Upgrade to Pro to restore 24/7 autonomous COO execution.
+              Brain 3.0, Revenue Radar, and Deal Alerts are locked. Upgrade to Pro to restore 24/7 AI-assisted COO execution. AI will help you to close.
             </p>
           </div>
         </div>

@@ -286,7 +286,7 @@ export const ClientPaymentModal: React.FC<ClientPaymentModalProps> = ({
                   </div>
                   <div className="flex justify-between">
                     <span className="text-neutral-400">Authorization:</span>
-                    <span className="text-emerald-400 font-semibold">Autonomous Instant Settlement</span>
+                    <span className="text-emerald-400 font-semibold">AI-assisted Instant Settlement</span>
                   </div>
                 </div>
 
@@ -437,7 +437,7 @@ export const ClientPaymentModal: React.FC<ClientPaymentModalProps> = ({
                       Bank Name: Silicon Valley Bank / JPMorgan Chase • Account: Ending in 8892 • Routing: 121000358
                     </p>
                     <p className="text-[10px] text-blue-300">
-                      Submitting here marks your invoice settled immediately with autonomous verification.
+                      Submitting here marks your invoice settled immediately with secure verification.
                     </p>
                   </div>
                 )}
@@ -449,11 +449,11 @@ export const ClientPaymentModal: React.FC<ClientPaymentModalProps> = ({
                   </div>
                 )}
 
-                {/* Autonomous processing badge */}
+                {/* Instant processing badge */}
                 <div className="flex items-center gap-2 text-[11px] text-neutral-400 pt-1">
                   <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
                   <span>
-                    <strong>Instant Autonomous Processing:</strong> Payments are processed immediately without requiring any admin approval or delays.
+                    <strong>Instant Automated Processing:</strong> Payments are processed immediately without requiring manual delays.
                   </span>
                 </div>
 

@@ -38,7 +38,7 @@ const DEFAULT_SAMPLE_BOARD_PACK: BoardPackData = {
   meetingTitle: "PRIME Corp Board of Directors - Q4 2026 Executive Review",
   quarter: "Q4 2026",
   executiveSummary: "PRIME Corp achieved record operating leverage across Q4, accelerating ARR to $2.10M (+42% YoY) while maintaining 22 months of treasury runway ($4.8M). Net revenue retention remains elite at 118%, powered by zero churn in Tier-1 enterprise logos and significant expansion in automated operations licenses.",
-  ceoMessage: "We have proven our thesis: autonomous AI operations compress enterprise overhead by >70% while improving response latency. In Q4, we transitioned from an initial product wedge to a critical enterprise intelligence layer. Our focus for 2027 is expanding market share in mid-market tech and unlocking cash-flow positive unit economics.",
+  ceoMessage: "We have proven our thesis: AI-assisted operations compress enterprise overhead by >70% while improving response latency. In Q4, we transitioned from an initial product wedge to a critical enterprise intelligence layer. Our focus for 2027 is expanding market share in mid-market tech and unlocking cash-flow positive unit economics. AI will help you to close.",
   financialMetrics: [
     {
       label: "Annual Recurring Revenue (ARR)",
@@ -71,7 +71,7 @@ const DEFAULT_SAMPLE_BOARD_PACK: BoardPackData = {
   ],
   keyHighlights: [
     "Closed 4 high-ticket enterprise contracts totalling $620k in new ARR",
-    "Shipped PRIME 2.0 Autonomous Intelligence pipeline with sub-150ms latency",
+    "Shipped PRIME 2.0 AI-assisted Intelligence pipeline with sub-150ms latency",
     "SOC2 Type II compliance audit completed with zero non-conformities",
     "Customer Acquisition Cost (CAC) payback period compressed to 6.2 months"
   ],
@@ -226,7 +226,7 @@ export const BoardPackView: React.FC = () => {
             PRIME <span className="font-semibold text-[#FFD700]">Board Pack Generator</span>
           </h1>
           <p className="text-xs text-white/50 mt-1 max-w-2xl">
-            Autonomous Board Deck & Director Pack synthesizer. Consolidates financial metrics, ARR trajectories, risk governance, and formal resolutions.
+            AI-assisted Board Deck &amp; Director Pack synthesizer. Consolidates financial metrics, ARR trajectories, risk governance, and formal resolutions. AI will help you to close.
           </p>
         </div>
 

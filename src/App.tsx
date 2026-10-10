@@ -26,6 +26,8 @@ import { AuthModal } from './components/AuthModal';
 import { SettingsModal } from './components/SettingsModal';
 import { SettingsView } from './components/SettingsView';
 import { FreeChurnAuditModal } from './components/FreeChurnAuditModal';
+import { LegalModals } from './components/LegalModals';
+import { PrivacyPolicyPage } from './components/PrivacyPolicyPage';
 import { CommandPalette } from './components/CommandPalette';
 import { VoiceExecutiveModal } from './components/VoiceExecutiveModal';
 import { DailyBriefingModal } from './components/DailyBriefingModal';
@@ -71,7 +73,7 @@ function AppContent() {
     openUpgradeModal,
     loading 
   } = useAuth();
-  const [currentView, setCurrentView] = useState<'landing' | 'dashboard' | 'radar' | 'inbox' | 'approvals' | 'plans' | 'admin' | 'closer' | 'hiring' | 'meetings' | 'growth' | 'strategy' | 'board-pack' | 'docs' | 'brain' | 'twin' | 'ad-spend' | 'cashflow-guard' | 'roi-calculator' | 'feedback' | 'settings' | 'rescue'>('landing');
+  const [currentView, setCurrentView] = useState<'landing' | 'dashboard' | 'radar' | 'inbox' | 'approvals' | 'plans' | 'admin' | 'closer' | 'hiring' | 'meetings' | 'growth' | 'strategy' | 'board-pack' | 'docs' | 'brain' | 'twin' | 'ad-spend' | 'cashflow-guard' | 'roi-calculator' | 'feedback' | 'settings' | 'rescue' | 'privacy-policy'>('landing');
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [authMode, setAuthMode] = useState<'login' | 'signup' | 'verify-email' | 'forgot-password'>('login');
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -84,15 +86,20 @@ function AppContent() {
   const [savePromptReason, setSavePromptReason] = useState<string | null>(null);
   const [demoLeadModalOpen, setDemoLeadModalOpen] = useState(false);
   const [churnAuditModalOpen, setChurnAuditModalOpen] = useState(false);
+  const [legalModalType, setLegalModalType] = useState<'privacy' | 'terms' | 'deletion' | 'meta-whatsapp' | null>(null);
 
   // 24/7 Client Self-Service Portals (Payment & Email - No Admin Approval Gating)
   const [clientPaymentModalOpen, setClientPaymentModalOpen] = useState(false);
   const [clientContactModalOpen, setClientContactModalOpen] = useState(false);
   const [targetedInvoiceId, setTargetedInvoiceId] = useState<string | null>(null);
 
-  // Check URL query parameters for contact (?contact=true)
+  // Check URL path (/privacy-policy) and query parameters (?contact=true)
   useEffect(() => {
     if (typeof window !== 'undefined') {
+      const path = window.location.pathname;
+      if (path === '/privacy-policy' || path === '/privacy') {
+        setCurrentView('privacy-policy');
+      }
       const params = new URLSearchParams(window.location.search);
       if (params.get('contact') === 'true') {
         setClientContactModalOpen(true);
@@ -258,6 +265,16 @@ function AppContent() {
           setCurrentView('radar');
         }}
         onOpenChurnAudit={() => setChurnAuditModalOpen(true)}
+        onOpenLegal={(type) => {
+          if (type === 'privacy') {
+            if (typeof window !== 'undefined') {
+              window.history.pushState({}, '', '/privacy-policy');
+            }
+            setCurrentView('privacy-policy');
+          } else {
+            setLegalModalType(type);
+          }
+        }}
       />
 
       {/* Unverified Email Warning Banner */}
@@ -314,7 +331,16 @@ function AppContent() {
       )}
 
       {/* Main View Area */}
-      {(!user && !isDemoMode) || currentView === 'landing' ? (
+      {currentView === 'privacy-policy' ? (
+        <PrivacyPolicyPage
+          onBack={() => {
+            if (typeof window !== 'undefined') {
+              window.history.pushState({}, '', '/');
+            }
+            setCurrentView(user || isDemoMode ? 'radar' : 'landing');
+          }}
+        />
+      ) : (!user && !isDemoMode) || currentView === 'landing' ? (
         <LandingPage
           onOpenAuth={handleOpenAuth}
           onEnterDemo={() => {
@@ -327,6 +353,16 @@ function AppContent() {
           }}
           onOpenClientContact={() => setClientContactModalOpen(true)}
           onOpenChurnAudit={() => setChurnAuditModalOpen(true)}
+          onOpenLegal={(type) => {
+            if (type === 'privacy') {
+              if (typeof window !== 'undefined') {
+                window.history.pushState({}, '', '/privacy-policy');
+              }
+              setCurrentView('privacy-policy');
+            } else {
+              setLegalModalType(type);
+            }
+          }}
         />
       ) : (
         <div className="flex-1 flex flex-col md:flex-row w-full min-h-[calc(100vh-5rem)]">
@@ -351,7 +387,7 @@ function AppContent() {
             {(currentView === 'dashboard' || currentView === 'radar') && (
               <FeaturePaywallOverlay 
                 featureName="PRIME REVENUE & SAAS RADAR" 
-                featureDescription="Real-time multi-tenant deal risk monitoring, executive rescue scripts, and autonomous revenue pipeline telemetry."
+                featureDescription="AI-assisted deal risk monitoring, executive rescue drafts, and revenue telemetry. AI will help you to close — it never closes, sends, or charges on its own. 100% Human Approval Required."
                 isDemoMode={isDemoMode && !user}
                 onOpenAuth={handleOpenAuth}
               >
@@ -366,7 +402,7 @@ function AppContent() {
             {currentView === 'closer' && (
               <FeaturePaywallOverlay 
                 featureName="PRIME Deal Closer AI"
-                featureDescription="Autonomous high-stakes objection overcoming, real-time contract closer, and live audio negotiation partner."
+                featureDescription="AI-assisted high-stakes objection overcoming, real-time negotiation drafts, and live audio guidance. AI will help you to close — final decision is yours."
                 isDemoMode={isDemoMode && !user}
                 onOpenAuth={handleOpenAuth}
               >
@@ -379,7 +415,7 @@ function AppContent() {
             {currentView === 'strategy' && (
               <FeaturePaywallOverlay 
                 featureName="Strategy Board Intelligence"
-                featureDescription="Automated competitive moats, pricing elasticities, and board-level risk simulation."
+                featureDescription="AI-assisted competitive moats, pricing elasticities, and board-level risk simulation. AI will help you to close."
                 isDemoMode={isDemoMode && !user}
                 onOpenAuth={handleOpenAuth}
               >
@@ -391,7 +427,7 @@ function AppContent() {
             {currentView === 'brain' && (
               <FeaturePaywallOverlay 
                 featureName="Brain 3.0 Neural Knowledge Core" 
-                featureDescription="Autonomous institutional memory, multi-vector reasoning, and real-time operational context retrieval."
+                featureDescription="AI-assisted institutional memory, multi-vector reasoning, and real-time operational context retrieval. AI will help you to close."
                 isDemoMode={isDemoMode && !user}
                 onOpenAuth={handleOpenAuth}
               >
@@ -401,7 +437,7 @@ function AppContent() {
             {currentView === 'twin' && (
               <FeaturePaywallOverlay 
                 featureName="CEO Digital Twin" 
-                featureDescription="24/7 executive decision cloning, personalized tone modulation, and autonomous delegation engine."
+                featureDescription="24/7 executive decision cloning, personalized tone modulation, and AI-assisted delegation engine. Human approval required."
                 isDemoMode={isDemoMode && !user}
                 onOpenAuth={handleOpenAuth}
               >
@@ -411,7 +447,7 @@ function AppContent() {
             {currentView === 'ad-spend' && (
               <FeaturePaywallOverlay 
                 featureName="Ad Spend Optimizer" 
-                featureDescription="Autonomous CAC reduction, wasted ad detection, and cross-channel ROAS reallocation."
+                featureDescription="AI-assisted CAC reduction, wasted ad detection, and cross-channel ROAS reallocation recommendations."
                 isDemoMode={isDemoMode && !user}
                 onOpenAuth={handleOpenAuth}
               >
@@ -424,7 +460,7 @@ function AppContent() {
             {currentView === 'cashflow-guard' && (
               <FeaturePaywallOverlay 
                 featureName="Cash Flow Guard & Invoices" 
-                featureDescription="Autonomous invoice recovery, burn rate projections, and runway extension warnings."
+                featureDescription="AI-assisted invoice recovery drafts, burn rate projections, and runway extension warnings. Human approval required."
                 isDemoMode={isDemoMode && !user}
                 onOpenAuth={handleOpenAuth}
               >
@@ -616,6 +652,12 @@ function AppContent() {
           setChurnAuditModalOpen(false);
           handleNavigate('settings');
         }}
+      />
+
+      {/* Meta WhatsApp Cloud API & Legal Compliance Modals */}
+      <LegalModals
+        type={legalModalType}
+        onClose={() => setLegalModalType(null)}
       />
     </div>
   );

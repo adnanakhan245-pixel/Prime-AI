@@ -32,6 +32,9 @@ import {
 } from '../services/churnAudit';
 import { ChurnAuditResult, ChurnAuditAccount } from '../types';
 import { useAuth } from '../context/AuthContext';
+import { registerUploadedCsv, UploadedCsvFile, getActiveCsvFiles } from '../services/csvStore';
+import { CsvAutoDeleteTimer } from './CsvAutoDeleteTimer';
+import { AISuggestionBadge } from './AIGuidanceDisclaimer';
 
 interface FreeChurnAuditModalProps {
   isOpen: boolean;
@@ -51,12 +54,20 @@ export const FreeChurnAuditModal: React.FC<FreeChurnAuditModalProps> = ({
   const [auditResult, setAuditResult] = useState<ChurnAuditResult | null>(null);
   const [recoveredCount, setRecoveredCount] = useState(0);
   const [toastMsg, setToastMsg] = useState<string | null>(null);
+  const [uploadedCsvFile, setUploadedCsvFile] = useState<UploadedCsvFile | null>(() => {
+    const active = getActiveCsvFiles();
+    return active.length > 0 ? active[0] : null;
+  });
 
   useEffect(() => {
     if (isOpen) {
       const existing = getSavedChurnAudit();
       if (existing) {
         setAuditResult(existing);
+      }
+      const active = getActiveCsvFiles();
+      if (active.length > 0) {
+        setUploadedCsvFile(active[0]);
       }
     }
   }, [isOpen]);
@@ -104,6 +115,8 @@ export const FreeChurnAuditModal: React.FC<FreeChurnAuditModalProps> = ({
       const text = (event.target?.result as string) || '';
       try {
         const result = await runChurnAuditFromCsv(text, company?.id || 'comp_workspace_01');
+        const registered = registerUploadedCsv(file.name, file.size, result.allAccounts.length, `30-Day Pipeline Churn Diagnostic: ${result.allAccounts.length} accounts`);
+        setUploadedCsvFile(registered);
         setTimeout(() => {
           setAuditResult(result);
           setScanning(false);
@@ -329,6 +342,25 @@ export const FreeChurnAuditModal: React.FC<FreeChurnAuditModalProps> = ({
           {auditResult && !scanning && (
             <div className="space-y-6 animate-in fade-in duration-200">
               
+              {/* RULE 3: CSV 24-HOUR AUTO-DELETE TIMER */}
+              {uploadedCsvFile && (
+                <CsvAutoDeleteTimer 
+                  file={uploadedCsvFile} 
+                  onDeleted={() => {
+                    setUploadedCsvFile(null);
+                    showToast('CSV file 24h timer expired: File data permanently auto-deleted.');
+                  }} 
+                />
+              )}
+
+              {/* RULE 2: AI SUGGESTION NOTICE */}
+              <div className="flex flex-wrap items-center justify-between gap-2 p-3 rounded-2xl bg-white/5 border border-white/10">
+                <div className="text-xs text-white/70">
+                  <strong className="text-white">Pipeline Telemetry Diagnosis:</strong> AI identifies churn risk factors for human review.
+                </div>
+                <AISuggestionBadge size="sm" />
+              </div>
+
               {/* BIG SHOCK BANNER: RED LOSS vs GREEN RECOVERY */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 
@@ -482,10 +514,10 @@ export const FreeChurnAuditModal: React.FC<FreeChurnAuditModalProps> = ({
                           <button
                             type="button"
                             onClick={() => handle1ClickRecover(account)}
-                            className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:brightness-110 text-black font-extrabold text-xs shadow-md cursor-pointer transition-all flex items-center gap-1.5"
+                            className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:brightness-110 text-black font-black text-xs shadow-md cursor-pointer transition-all flex items-center gap-1.5"
                           >
-                            <Zap className="w-3.5 h-3.5 text-black" />
-                            <span>1-کلک ریسکیو (واپسی)</span>
+                            <ShieldCheck className="w-3.5 h-3.5 text-black" />
+                            <span>Human Approval: Deploy Rescue</span>
                           </button>
                         )}
                       </div>

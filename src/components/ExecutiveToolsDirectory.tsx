@@ -31,7 +31,7 @@ interface ExecutiveToolsDirectoryProps {
 interface ToolDefinition {
   id: string;
   name: string;
-  category: 'AI Executives' | 'Finance & Margins' | 'Core Operations' | 'Autonomous Swarms';
+  category: 'AI Executives' | 'Finance & Margins' | 'Core Operations';
   description: string;
   icon: React.ComponentType<{ className?: string }>;
   tag: string;
@@ -46,7 +46,7 @@ export const toolsCatalog: ToolDefinition[] = [
     id: 'closer',
     name: 'PRIME Closer AI',
     category: 'AI Executives',
-    description: 'Executive sales call audio audit, objection defense scoring (0-100), and custom closing battle scripts.',
+    description: 'AI will help you to close. Executive sales call audio audit, objection defense scoring (0-100), and custom battle scripts (suggestions only).',
     icon: Mic,
     tag: 'Audio Coach',
     tagColor: 'bg-[#FFD700] text-black',
@@ -113,9 +113,9 @@ export const toolsCatalog: ToolDefinition[] = [
     id: 'twin',
     name: 'CEO Digital Twin 3.0',
     category: 'AI Executives',
-    description: 'Your autonomous digital persona with customized tone calibration, decision frameworks, and instant delegate replies.',
+    description: 'Your AI-assisted digital persona with customized tone calibration, decision frameworks, and instant delegate replies. AI will help you to close.',
     icon: Sparkles,
-    tag: 'Autonomous Twin',
+    tag: 'AI-Assisted Twin',
     tagColor: 'bg-gradient-to-r from-[#FFD700] to-amber-500 text-black',
     metrics: 'Trained on 100+ Decisions',
     actionLabel: 'Open Digital Twin',
@@ -191,7 +191,7 @@ export const toolsCatalog: ToolDefinition[] = [
     id: 'radar',
     name: 'Revenue Radar & Churn Sentry',
     category: 'Core Operations',
-    description: 'Real-time multi-tenant deal risk monitoring, revenue pipeline telemetry, and executive rescue playbooks.',
+    description: 'AI-assisted deal risk monitoring, executive rescue drafts, and revenue telemetry. AI will help you to close — it never closes, sends, or charges on its own. 100% Human Approval Required.',
     icon: Radar,
     tag: 'Deal Shield',
     tagColor: 'bg-rose-500 text-white',

@@ -68,7 +68,7 @@ export const AgentSwarmGrid: React.FC<{ onNavigate: (view: string) => void }> = 
     },
     {
       id: 'agent-legal',
-      name: 'Autonomous Legal & Redline Sentinel',
+      name: 'AI-Assisted Legal & Redline Sentinel',
       role: 'Contract Risk & Indemnification Audit',
       status: 'STANDBY',
       lastAction: 'Counter-redlined Clause 14.2 uncapped liability MSA',
@@ -102,14 +102,14 @@ export const AgentSwarmGrid: React.FC<{ onNavigate: (view: string) => void }> = 
               <Cpu className="w-4 h-4" />
             </div>
             <h3 className="text-xs font-bold uppercase tracking-widest text-white flex items-center gap-2 font-mono">
-              Autonomous Agent Swarm Matrix
+              AI-Assisted Agent Swarm Matrix
               <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-400 border border-emerald-500/25">
                 4 SUB-AGENTS ONLINE
               </span>
             </h3>
           </div>
           <p className="text-xs text-white/40">
-            Real-time autonomous micro-agents monitoring communication, revenue slippage, contracts, and growth.
+            Real-time AI-assisted micro-agents monitoring communication, revenue slippage, contracts, and growth. AI will help you to close.
           </p>
         </div>
 
@@ -158,7 +158,7 @@ export const AgentSwarmGrid: React.FC<{ onNavigate: (view: string) => void }> = 
               </span>
             </div>
 
-            {/* Last Autonomous Action */}
+            {/* Last AI-Assisted Action */}
             <div className="p-2.5 rounded-lg bg-white/[0.03] border border-white/5 text-xs text-white/80">
               <span className="text-[10px] text-white/40 uppercase tracking-wider block font-mono">Last Action:</span>
               <p className="mt-0.5 line-clamp-2 text-white/90">{agent.lastAction}</p>

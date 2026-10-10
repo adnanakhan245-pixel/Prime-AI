@@ -27,12 +27,14 @@ interface LandingPageProps {
   onOpenClientPayment?: () => void;
   onOpenClientContact?: () => void;
   onOpenChurnAudit?: () => void;
+  onOpenLegal?: (type: 'privacy' | 'terms' | 'deletion' | 'meta-whatsapp') => void;
 }
 
 export const LandingPage: React.FC<LandingPageProps> = ({ 
   onOpenAuth, 
   onEnterDemo,
-  onOpenChurnAudit 
+  onOpenChurnAudit,
+  onOpenLegal
 }) => {
   const [interactiveLostAmount] = useState<number>(4820);
   const [interactiveRecoveredAmount] = useState<number>(4150);
@@ -354,7 +356,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               </div>
 
               <div className="space-y-1">
-                <span className="text-[11px] font-mono text-emerald-400 font-bold">Autonomous Churn Prevention</span>
+                <span className="text-[11px] font-mono text-emerald-400 font-bold">AI-assisted Churn Prevention</span>
                 <h3 className="text-lg font-black text-white">
                   AI خود کسٹمر کو روک کر رکھے
                 </h3>
@@ -525,7 +527,45 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             <span>— خودکار ریونیو ریکوری اور چرن ڈیفنس</span>
           </div>
 
-          <div className="flex items-center gap-4 flex-wrap justify-center">
+          {/* Legal Compliance & Meta WhatsApp Review Quick Links */}
+          <div className="flex items-center gap-3 flex-wrap justify-center text-[11px] text-zinc-400">
+            {onOpenLegal && (
+              <>
+                <button
+                  type="button"
+                  onClick={() => onOpenLegal('meta-whatsapp')}
+                  className="text-emerald-400 hover:text-emerald-300 transition-colors cursor-pointer font-bold flex items-center gap-1 bg-emerald-500/10 px-2.5 py-1 rounded-lg border border-emerald-500/20"
+                >
+                  <span>Meta WhatsApp Cloud API</span>
+                </button>
+                <a
+                  href="/privacy-policy"
+                  onClick={(e) => {
+                    if (onOpenLegal) {
+                      e.preventDefault();
+                      onOpenLegal('privacy');
+                    }
+                  }}
+                  className="hover:text-[#FFD700] transition-colors cursor-pointer font-medium"
+                >
+                  Privacy Policy &amp; Disclaimer
+                </a>
+                <button
+                  type="button"
+                  onClick={() => onOpenLegal('terms')}
+                  className="hover:text-white transition-colors cursor-pointer"
+                >
+                  Terms of Service
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onOpenLegal('deletion')}
+                  className="hover:text-white transition-colors cursor-pointer"
+                >
+                  User Data Deletion
+                </button>
+              </>
+            )}
             <button
               type="button"
               onClick={handleOpenAuditOrTour}

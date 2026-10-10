@@ -28,6 +28,7 @@ import {
   AdPlatformType, 
   Company 
 } from '../types';
+import { AISuggestionBadge } from './AIGuidanceDisclaimer';
 import { 
   fetchUserAdCampaigns, 
   saveAdCampaign, 
@@ -417,14 +418,17 @@ export const AdSpendOptimizerView: React.FC<AdSpendOptimizerViewProps> = ({
           </select>
         </div>
 
-        <button
-          id="refresh-ad-campaigns-btn"
-          onClick={loadCampaigns}
-          className="inline-flex items-center gap-1.5 text-xs text-neutral-500 hover:text-neutral-900 dark:hover:text-white"
-        >
-          <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
-          Sync Data
-        </button>
+        <div className="flex items-center gap-2">
+          <AISuggestionBadge size="sm" />
+          <button
+            id="refresh-ad-campaigns-btn"
+            onClick={loadCampaigns}
+            className="inline-flex items-center gap-1.5 text-xs text-neutral-500 hover:text-neutral-900 dark:hover:text-white"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
+            Sync Data
+          </button>
+        </div>
       </div>
 
       {/* Campaigns Table / Empty State */}
@@ -586,7 +590,7 @@ export const AdSpendOptimizerView: React.FC<AdSpendOptimizerViewProps> = ({
                               onClick={() => handleQuickPauseWaste(c)}
                               className="px-2 py-1 text-xs font-semibold bg-rose-600 hover:bg-rose-700 text-white rounded transition-colors"
                             >
-                              Pause Waste
+                              Human Approval: Pause Waste
                             </button>
                           )}
                           <button

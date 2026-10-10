@@ -235,7 +235,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
             </span>
           </h1>
           <p className="text-xs sm:text-sm text-zinc-400 mt-1 max-w-2xl">
-            Configure your enterprise workspace identity, autonomous AI safety gates, team access permissions, and billing tier.
+            Configure your enterprise workspace identity, AI-assisted safety gates, team access permissions, and billing tier. AI will help you to close.
           </p>
         </div>
 
@@ -508,7 +508,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                 </div>
                 <div>
                   <h2 className="text-xl font-bold text-white">AI Safety, Executive Governance & Compliance Policy</h2>
-                  <p className="text-xs text-zinc-400">Strict enterprise safeguards guaranteeing no autonomous outbound message leaves without human sign-off.</p>
+                  <p className="text-xs text-zinc-400">Strict enterprise safeguards guaranteeing no outbound message leaves without human sign-off. AI will help you to close.</p>
                 </div>
               </div>
             </div>
@@ -523,7 +523,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
             {/* Policy Controls Section */}
             <div className="space-y-4 pt-2">
               <h3 className="text-xs font-bold text-white uppercase tracking-wider text-zinc-400">
-                Autonomous Safety Toggles & Circuit Breakers
+                AI-Assisted Safety Toggles & Circuit Breakers
               </h3>
 
               {/* Control 1: Human Approval on Outbound Emails */}
@@ -578,7 +578,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               <div className="p-5 rounded-2xl bg-black/40 border border-white/5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div className="max-w-2xl">
                   <div className="flex items-center gap-2.5">
-                    <h4 className="text-sm font-bold text-white">Autonomous Safety Undo Window</h4>
+                    <h4 className="text-sm font-bold text-white">AI-Assisted Safety Undo Window</h4>
                     <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#FFD700]/10 text-[#FFD700] border border-[#FFD700]/30 font-mono font-bold">
                       {undoWindowSeconds}s ACTIVE
                     </span>
@@ -638,7 +638,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                 </div>
                 <div>
                   <h2 className="text-xl font-bold text-white">Subscription, License Tier & Billing</h2>
-                  <p className="text-xs text-zinc-400">Monitor executive trial duration, autonomous AI operational allowances, and license upgrades.</p>
+                  <p className="text-xs text-zinc-400">Monitor executive trial duration, AI-assisted operational allowances, and license upgrades. AI will help you to close.</p>
                 </div>
               </div>
             </div>
@@ -689,14 +689,14 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                         <Flame className="w-5 h-5" />
                       </div>
                       <div>
-                        <p className="text-[10px] text-zinc-400 uppercase font-mono font-bold">Autonomous AI Actions</p>
+                        <p className="text-[10px] text-zinc-400 uppercase font-mono font-bold">AI-Assisted Actions</p>
                         <p className="text-lg font-black text-white">{aiActionsRemaining} / 50 Remaining</p>
                       </div>
                     </div>
                   </div>
 
                   <p className="text-xs text-zinc-300 leading-relaxed max-w-3xl">
-                    Your 14-day executive trial includes 50 free autonomous operations, full Revenue Radar multi-account telemetry, contract risk scans, and CEO Digital Twin simulations. Upgrade anytime to unlock unlimited deal monitoring and dedicated enterprise SLA speed.
+                    Your 14-day executive trial includes 50 free AI-assisted operations, full Revenue Radar multi-account telemetry, contract risk scans, and CEO Digital Twin simulations. Upgrade anytime to unlock unlimited deal monitoring and dedicated enterprise SLA speed. AI will help you to close.
                   </p>
 
                   <div className="flex flex-col sm:flex-row items-center gap-3 pt-2">
@@ -967,7 +967,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                   </span>
                 </div>
                 <p className="text-xs text-zinc-400 leading-relaxed">
-                  High-velocity neural reasoning powering contract liability auditing, negotiation scripts, and autonomous revenue forecasting.
+                  High-velocity neural reasoning powering contract liability auditing, negotiation scripts, and AI-assisted revenue forecasting. AI will help you to close.
                 </p>
                 <div className="pt-2 border-t border-white/5 flex items-center justify-between text-[11px] text-zinc-500 font-mono">
                   <span>Availability: 99.99%</span>

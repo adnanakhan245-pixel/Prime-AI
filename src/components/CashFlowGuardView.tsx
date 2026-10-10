@@ -26,7 +26,7 @@ import {
   Link as LinkIcon
 } from 'lucide-react';
 import { ClientPaymentModal } from './ClientPaymentModal';
-import { AIGuidanceDisclaimer } from './AIGuidanceDisclaimer';
+import { AIGuidanceDisclaimer, AISuggestionBadge } from './AIGuidanceDisclaimer';
 import { 
   InvoiceItem, 
   CashFlowGuardStats, 
@@ -1120,13 +1120,14 @@ export const CashFlowGuardView: React.FC<CashFlowGuardViewProps> = ({
 
             {/* Generated Body */}
             <div>
-              <div className="flex items-center justify-between mb-1.5">
+              <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
                 <span className="text-xs font-semibold text-neutral-700 dark:text-neutral-300">
                   Formatted Message:
                 </span>
+                <AISuggestionBadge size="sm" />
                 <button
                   onClick={handleCopyReminder}
-                  className="inline-flex items-center gap-1 text-xs text-blue-600 hover:text-blue-700 font-medium"
+                  className="inline-flex items-center gap-1 text-xs text-blue-600 hover:text-blue-700 font-medium cursor-pointer"
                 >
                   {copied ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
                   {copied ? 'Copied to Clipboard!' : 'Copy Text'}

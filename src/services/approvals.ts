@@ -87,8 +87,8 @@ export function saveApprovalActions(actions: AIActionItem[], companyId?: string)
 }
 
 /**
- * Queue an autonomous action that requires human approval.
- * Guarantees that zero actions are executed silently.
+ * Queue an AI-assisted action that requires human approval.
+ * Guarantees that zero actions are executed silently. AI will help you to close.
  */
 export function queueApprovalAction(action: Omit<AIActionItem, 'id' | 'createdAt' | 'status'> & { id?: string; companyId?: string }): AIActionItem {
   const companyId = action.companyId || action.undoData?.companyId || localStorage.getItem('prime_ai_active_company_id') || 'comp_apex_01';

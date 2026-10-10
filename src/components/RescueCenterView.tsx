@@ -30,6 +30,7 @@ import {
 } from '../services/dunningRescue';
 import { DunningRecoveryItem, InactivityRiskItem } from '../types';
 import { useAuth } from '../context/AuthContext';
+import { AISuggestionBadge } from './AIGuidanceDisclaimer';
 
 export interface RescueCenterViewProps {
   onNavigate?: (view: string) => void;
@@ -130,7 +131,7 @@ export const RescueCenterView: React.FC<RescueCenterViewProps> = ({ onNavigate }
           <div className="flex items-center gap-2 text-xs font-mono text-zinc-400 mb-1">
             <span className="text-[#FFD700] font-bold">Stripe Webhooks &amp; Supabase</span>
             <span>•</span>
-            <span className="text-rose-400">Autonomous Churn Protection</span>
+            <span className="text-rose-400">AI-assisted Churn Protection</span>
           </div>
           <h2 className="text-2xl font-black text-white flex items-center gap-3">
             <span>Rescue Center: فیل پیمنٹ اور جانے والے کسٹمرز کا حل</span>
@@ -252,9 +253,19 @@ export const RescueCenterView: React.FC<RescueCenterViewProps> = ({ onNavigate }
                   <p className="text-xs text-zinc-300 font-medium">
                     "آپ کی ادائیگی ناکام ہو گئی، ایک کلک میں ٹھیک کریں"
                   </p>
-                  <p className="text-[10px] text-zinc-500">
-                    One-click payment link dispatched directly to client billing inbox.
-                  </p>
+                  <div className="flex items-center justify-between pt-1">
+                    <p className="text-[10px] text-zinc-500">
+                      One-click payment link dispatched directly to client billing inbox.
+                    </p>
+                    {!item.day1EmailSent && item.status === 'PENDING' && (
+                      <button
+                        onClick={() => handleSendDay1Email(item.id)}
+                        className="text-[10px] px-2.5 py-1 rounded-lg bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 font-bold border border-blue-500/30 cursor-pointer transition-colors shrink-0"
+                      >
+                        Human Approval: ای میل بھیجیں
+                      </button>
+                    )}
+                  </div>
                 </div>
 
                 {/* DAY 3: WHATSAPP */}
@@ -282,9 +293,9 @@ export const RescueCenterView: React.FC<RescueCenterViewProps> = ({ onNavigate }
                     {!item.day3WhatsAppSent && item.status === 'PENDING' && (
                       <button
                         onClick={() => handleSendDay3WhatsApp(item)}
-                        className="text-[10px] px-2 py-1 rounded bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 font-bold border border-emerald-500/30 cursor-pointer transition-colors"
+                        className="text-[10px] px-2.5 py-1 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 font-bold border border-emerald-500/30 cursor-pointer transition-colors shrink-0"
                       >
-                        ⚡ Send WhatsApp Now
+                        Human Approval: واٹس ایپ بھیجیں
                       </button>
                     )}
                   </div>
@@ -388,12 +399,15 @@ export const RescueCenterView: React.FC<RescueCenterViewProps> = ({ onNavigate }
               </div>
 
               {/* AI ADVICE BOX: "اس کو بیس فیصد رعایت دو" */}
-              <div className="p-4 rounded-xl bg-gradient-to-r from-amber-500/15 to-yellow-500/10 border border-[#FFD700]/40 space-y-2">
-                <div className="flex items-center justify-between">
+              <div className="p-4 rounded-xl bg-gradient-to-r from-amber-500/15 to-yellow-500/10 border border-[#FFD700]/40 space-y-2.5">
+                <div className="flex flex-wrap items-center justify-between gap-2">
                   <span className="text-xs font-extrabold text-[#FFD700] flex items-center gap-1.5 uppercase font-mono">
                     <Sparkles className="w-3.5 h-3.5 text-[#FFD700]" />
                     <span>AI مشورہ (AI Recommendation)</span>
                   </span>
+                  <AISuggestionBadge size="sm" />
+                </div>
+                <div className="flex items-center justify-between">
                   <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-[#FFD700]/20 text-[#FFD700] font-black border border-[#FFD700]/30">
                     20% OFF CODE: {item.discountCode}
                   </span>
@@ -422,7 +436,7 @@ export const RescueCenterView: React.FC<RescueCenterViewProps> = ({ onNavigate }
                     className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#FFD700] via-amber-400 to-[#FFD700] hover:brightness-110 text-black font-black text-xs shadow-md cursor-pointer transition-all flex items-center gap-1.5 active:scale-95"
                   >
                     <Zap className="w-3.5 h-3.5 text-black" />
-                    <span>20% رعایت اور ری-انگیجمنٹ میسج بھیجیں</span>
+                    <span>Human Approval: 20% رعایت اور ری-انگیجمنٹ میسج بھیجیں</span>
                     <ArrowRight className="w-3.5 h-3.5 text-black" />
                   </button>
                 )}

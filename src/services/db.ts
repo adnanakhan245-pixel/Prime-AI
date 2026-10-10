@@ -537,12 +537,12 @@ export async function seedInitialUserDataIfEmpty(
       title: `${companyName} - Operations & Revenue Expansion Strategy.pdf`,
       fileType: 'application/pdf',
       fileSize: 1024 * 480,
-      content: `EXECUTIVE SUMMARY - OPERATIONS & REVENUE ROADMAP FOR ${companyName}\nTarget: $10M ARR Milestone\nCurrent Run Rate: $6.8M ARR\nGross Margin: 83.5%\nCore Focus Areas:\n1. Enterprise Pipeline Expansion (ACV > $120k)\n2. Autonomous Ops Automation (Reduce customer onboarding time by 50%)\n3. International Tier-1 expansion into EMEA.\nKey Risks: Vendor latency dependencies, hiring bottleneck in Solutions Architecture.\nAction Items: Deploy automated triage, lock reserved compute contracts, onboard VP of Solutions.`,
+      content: `EXECUTIVE SUMMARY - OPERATIONS & REVENUE ROADMAP FOR ${companyName}\nTarget: $10M ARR Milestone\nCurrent Run Rate: $6.8M ARR\nGross Margin: 83.5%\nCore Focus Areas:\n1. Enterprise Pipeline Expansion (ACV > $120k)\n2. AI-Assisted Ops Automation (Reduce customer onboarding time by 50%)\n3. International Tier-1 expansion into EMEA.\nKey Risks: Vendor latency dependencies, hiring bottleneck in Solutions Architecture.\nAction Items: Deploy automated triage, lock reserved compute contracts, onboard VP of Solutions. AI will help you to close.`,
       uploadedAt: new Date(Date.now() - 1000 * 60 * 60 * 12).toISOString(),
-      summary: `Strategic operational blueprint for ${companyName} scaling from $6.8M to $10M ARR while maintaining 83.5% gross margin via autonomous workflow efficiency and enterprise sales expansion.`,
+      summary: `Strategic operational blueprint for ${companyName} scaling from $6.8M to $10M ARR while maintaining 83.5% gross margin via AI-assisted workflow efficiency and enterprise sales expansion. AI will help you to close.`,
       keyPoints: [
         'Target ARR expansion from $6.8M to $10M target with 83.5% gross margins.',
-        'Autonomous operations workflow cuts enterprise client onboarding by 50%.',
+        'AI-assisted operations workflow cuts enterprise client onboarding by 50%. AI will help you to close.',
         'EMEA market expansion planned for Q4 with dedicated local compliance.'
       ],
       risks: [
@@ -2560,7 +2560,7 @@ export async function submitClientInboundEmail(payload: {
   const compId = payload.companyId || localStorage.getItem('prime_ai_active_company_id') || 'comp_apex_01';
   const now = new Date().toISOString();
 
-  // Instant autonomous AI preview / analysis
+  // Instant AI-assisted preview / analysis. AI will help you to close.
   const snippet = payload.message.slice(0, 140) + (payload.message.length > 140 ? '...' : '');
   const aiKeyTakeaway = `Direct client outreach from ${payload.senderName} (${payload.senderEmail}) regarding "${payload.subject}". Instant receipt acknowledged to client.`;
   const aiDraftReply = `Dear ${payload.senderName},\n\nThank you for contacting us regarding "${payload.subject}". We have received your inquiry and our executive team is reviewing your message.\n\nWe will get back to you shortly.\n\nBest regards,\nExecutive Support Team`;

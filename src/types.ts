@@ -762,7 +762,7 @@ export interface CEODigitalTwinConfig {
   heuristics: CEODecisionHeuristics;
   voiceStyleSummary?: string;
   lastCalibratedAt?: string;
-  activeStatus: 'ONLINE_ACTIVE' | 'SUPERVISED_AUTONOMOUS' | 'OFFLINE_TRAINING';
+  activeStatus: 'ONLINE_ACTIVE' | 'SUPERVISED_ASSISTED' | 'OFFLINE_TRAINING';
 }
 
 export interface DigitalTwinSimulationResult {

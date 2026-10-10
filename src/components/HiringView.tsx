@@ -25,6 +25,9 @@ import {
 } from 'lucide-react';
 import { RankedCandidate, HiringAnalysis } from '../types';
 import { saveHiringAnalysisToSupabase, fetchUserHiringAnalyses } from '../services/db';
+import { AISuggestionBadge } from './AIGuidanceDisclaimer';
+import { registerUploadedCsv, UploadedCsvFile } from '../services/csvStore';
+import { CsvAutoDeleteTimer } from './CsvAutoDeleteTimer';
 
 interface ResumeFile {
   id: string;
@@ -58,7 +61,7 @@ Location: San Francisco, CA / Remote
 Compensation: $240,000 - $310,000 + Equity
 
 About the Role:
-Leading the autonomous operations and deployment infrastructure for our multi-agent LLM systems. Responsible for sub-second latency SLAs, unit-economics GPU optimization, and enterprise data privacy compliance (SOC2/HIPAA).
+Leading the AI-assisted operations and deployment infrastructure for our multi-agent LLM systems. Responsible for sub-second latency SLAs, unit-economics GPU optimization, and enterprise data privacy compliance (SOC2/HIPAA).
 
 Key Requirements:
 - 7+ years of engineering leadership in high-scale distributed systems or AI inference infrastructure.
@@ -156,6 +159,8 @@ export const HiringView: React.FC = () => {
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saved'>('idle');
   const [selectedCandidate, setSelectedCandidate] = useState<RankedCandidate | null>(null);
   const [copiedQuestionIndex, setCopiedQuestionIndex] = useState<number | null>(null);
+  const [humanApprovedCandidateId, setHumanApprovedCandidateId] = useState<string | null>(null);
+  const [activeCsvFiles, setActiveCsvFiles] = useState<UploadedCsvFile[]>([]);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -192,6 +197,12 @@ export const HiringView: React.FC = () => {
 
     const newResumes: ResumeFile[] = [];
     Array.from(files).forEach((file, index) => {
+      // RULE 3: CSV auto-deletion within 24 hours
+      if (file.name.toLowerCase().endsWith('.csv') || file.type.includes('csv')) {
+        const registered = registerUploadedCsv(file.name, file.size, 10, 'Candidate Roster Batch CSV');
+        setActiveCsvFiles(prev => [registered, ...prev]);
+      }
+
       const reader = new FileReader();
       reader.onload = () => {
         const textContent = (reader.result as string) || `Resume document: ${file.name}`;
@@ -505,9 +516,24 @@ export const HiringView: React.FC = () => {
               ref={fileInputRef}
               onChange={handleMultiFileUpload}
               multiple
-              accept=".pdf,.doc,.docx,.txt"
+              accept=".pdf,.doc,.docx,.txt,.csv,text/csv"
               className="hidden"
             />
+
+            {/* RULE 3: CSV 24-HOUR AUTO-DELETE TIMERS */}
+            {activeCsvFiles.length > 0 && (
+              <div className="space-y-3">
+                {activeCsvFiles.map(file => (
+                  <CsvAutoDeleteTimer
+                    key={file.id}
+                    file={file}
+                    onDeleted={() => {
+                      setActiveCsvFiles(prev => prev.filter(f => f.id !== file.id));
+                    }}
+                  />
+                ))}
+              </div>
+            )}
 
             {/* Upload Zone */}
             <div
@@ -609,22 +635,25 @@ export const HiringView: React.FC = () => {
                   </p>
                 </div>
 
-                <button
-                  onClick={handleCopyAllQuestions}
-                  className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-white text-xs font-bold transition-all cursor-pointer shrink-0"
-                >
-                  {copiedQuestionIndex === 999 ? (
-                    <>
-                      <Check className="w-3.5 h-3.5 text-emerald-400" />
-                      <span className="text-emerald-400">All 10 Questions Copied</span>
-                    </>
-                  ) : (
-                    <>
-                      <Copy className="w-3.5 h-3.5 text-[#FFD700]" />
-                      <span>Copy All 10 Questions</span>
-                    </>
-                  )}
-                </button>
+                <div className="flex items-center gap-2">
+                  <AISuggestionBadge size="sm" />
+                  <button
+                    onClick={handleCopyAllQuestions}
+                    className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-white text-xs font-bold transition-all cursor-pointer shrink-0"
+                  >
+                    {copiedQuestionIndex === 999 ? (
+                      <>
+                        <Check className="w-3.5 h-3.5 text-emerald-400" />
+                        <span className="text-emerald-400">All 10 Questions Copied</span>
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="w-3.5 h-3.5 text-[#FFD700]" />
+                        <span>Copy All 10 Questions</span>
+                      </>
+                    )}
+                  </button>
+                </div>
               </div>
 
               {/* Top 5 Candidates List with Score Bars */}
@@ -753,6 +782,30 @@ export const HiringView: React.FC = () => {
                   ))}
                 </div>
               </div>
+
+              {/* RULE 1: HUMAN APPROVAL BUTTON FOR CANDIDATE HIRING ACTION */}
+              {selectedCandidate && (
+                <div className="p-4 rounded-xl bg-[#141414] border border-[#FFD700]/30 flex flex-wrap items-center justify-between gap-3 shadow-lg">
+                  <div className="text-xs text-white/70">
+                    <strong className="text-white">Rule 1 Governance:</strong> AI ranks semantic fit as suggestions only. Hiring offers and interview advances require human executive sign-off.
+                  </div>
+                  <button
+                    onClick={() => setHumanApprovedCandidateId(selectedCandidate.id)}
+                    className={`px-4 py-2.5 rounded-xl text-xs font-bold flex items-center gap-2 transition-all cursor-pointer shadow-md ${
+                      humanApprovedCandidateId === selectedCandidate.id
+                        ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 cursor-default'
+                        : 'bg-gradient-to-r from-[#FFD700] via-amber-300 to-[#FFC700] text-black hover:brightness-110 active:scale-95'
+                    }`}
+                  >
+                    <CheckCircle2 className="w-4 h-4" />
+                    <span>
+                      {humanApprovedCandidateId === selectedCandidate.id
+                        ? `✓ Human Approved: ${selectedCandidate.name} Shortlisted`
+                        : `Human Approval: Advance ${selectedCandidate.name} to Interview`}
+                    </span>
+                  </button>
+                </div>
+              )}
             </>
           ) : (
             <div className="p-12 rounded-2xl bg-[#0E0E0E] border border-white/10 text-center space-y-4">

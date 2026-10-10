@@ -70,7 +70,7 @@ export const UpgradePaywallModal: React.FC = () => {
 
           <p className="text-xs sm:text-sm text-white/60 max-w-lg mx-auto">
             {isTrialExpired 
-              ? 'Your trial has ended. Re-activate uninterrupted 24/7 autonomous COO execution for your workspace.'
+              ? 'Your trial has ended. Re-activate uninterrupted 24/7 AI-assisted COO support for your workspace. AI will help you to close.'
               : `Full access active for ${trialDaysRemaining} days. Unlock permanent executive leverage with 1 click.`}
           </p>
         </div>
@@ -91,7 +91,7 @@ export const UpgradePaywallModal: React.FC = () => {
                 <span>PRIME AI Executive License</span>
                 <span className="px-2 py-0.5 rounded-full bg-[#FFD700] text-black text-[10px] font-extrabold uppercase">UNLIMITED</span>
               </div>
-              <p className="text-xs text-white/50 mt-0.5">Complete multi-tenant autonomous operations suite</p>
+              <p className="text-xs text-white/50 mt-0.5">Complete multi-tenant AI-assisted operations suite. AI will help you to close.</p>
             </div>
             <div className="text-right">
               <span className="text-2xl font-black text-[#FFD700]">Active</span>
@@ -101,7 +101,7 @@ export const UpgradePaywallModal: React.FC = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs text-white/80">
             <div className="flex items-center gap-2">
               <Check className="w-4 h-4 text-[#FFD700] shrink-0" />
-              <span>Unlimited Autonomous AI Operations</span>
+              <span>Unlimited AI-assisted Operations (AI will help you to close)</span>
             </div>
             <div className="flex items-center gap-2">
               <Check className="w-4 h-4 text-[#FFD700] shrink-0" />

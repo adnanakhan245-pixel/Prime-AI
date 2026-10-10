@@ -99,7 +99,7 @@ export class ErrorBoundary extends Component<Props, State> {
             </div>
 
             <p className="text-[10px] text-zinc-500">
-              PRIME AI Autonomous Kernel • Self-Healing Architecture
+              PRIME AI-assisted Kernel • Self-Healing Architecture
             </p>
           </div>
         </div>

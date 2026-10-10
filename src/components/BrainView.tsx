@@ -210,7 +210,7 @@ export const BrainView: React.FC = () => {
       role: 'assistant',
       content: `👋 Welcome to PRIME AI Intelligence Workbench!
 
-I am your autonomous corporate, legal, and operational AI Copilot. You can consult me in English or Urdu on any business, legal, or strategic challenge:
+I am your AI-assisted corporate, legal, and operational AI Copilot. AI will help you to close. You can consult me in English or Urdu on any business, legal, or strategic challenge:
 
 • 🛡️ Contract Risk & Redline Analysis — Detect hidden liability traps, SLA penalties, and indemnity exposure.
 • ✉️ High-Converting Client Proposals — Draft assertive, winning proposals and client follow-up sequences.
@@ -247,7 +247,7 @@ Click any quick tool below or type your question directly in the console.`,
           sender: `${contactName} (${accountName})`,
           senderEmail: contactEmail,
           subject: `EXECUTIVE URGENT: $${dealValue.toLocaleString()} Enterprise Renewal & Expansion Terms`,
-          snippet: `Autonomous executive re-engagement formulated by BRAIN 3.0 COO.`,
+          snippet: `AI-assisted executive re-engagement formulated by BRAIN 3.0 COO. AI will help you to close.`,
           fullBody: `Hi ${contactName.split(' ')[0]},\n\nI am reaching out directly from the Executive Office at ${activeCompanyName} regarding our partnership with ${accountName}.\n\nWe have prepared our updated roadmap and guaranteed SLA terms for your $${dealValue.toLocaleString()} contract renewal.\n\nLet's connect for 10 minutes this Thursday to finalize terms.\n\nBest regards,\nExecutive Office | ${activeCompanyName}`,
           urgency: 'HIGH',
           category: 'CLIENT',
@@ -282,7 +282,7 @@ Click any quick tool below or type your question directly in the console.`,
           title: `BRAIN 3.0 $30,000 Monthly Cost Optimization Protocol`,
           fileType: 'text/markdown',
           fileSize: 1024,
-          content: `# BRAIN 3.0 Autonomous $30,000 Monthly Cost Cut Directive\n\n**Company**: ${activeCompanyName}\n**Target Monthly Savings**: $30,000/month ($360,000/year)\n\n## Action Items:\n1. Consolidate idle GPU cloud clusters and compute instances (-$15,000/mo).\n2. Eliminate redundant enterprise SaaS seat licenses (-$10,000/mo).\n3. Renegotiate vendor payment terms and database IOPS tiers (-$5,000/mo).`,
+          content: `# BRAIN 3.0 AI-Assisted $30,000 Monthly Cost Cut Directive\n\n**Company**: ${activeCompanyName}\n**Target Monthly Savings**: $30,000/month ($360,000/year)\n\n## Action Items:\n1. Consolidate idle GPU cloud clusters and compute instances (-$15,000/mo).\n2. Eliminate redundant enterprise SaaS seat licenses (-$10,000/mo).\n3. Renegotiate vendor payment terms and database IOPS tiers (-$5,000/mo).`,
           uploadedAt: new Date().toISOString(),
           summary: 'Cost reduction protocol codified by BRAIN 3.0 to cut $30,000/month in operational waste.',
           keyPoints: ['Downscale idle GPU compute', 'SaaS seat rightsizing', 'Database IOPS renegotiation'],
@@ -406,7 +406,7 @@ Click any quick tool below or type your question directly in the console.`,
       if (isUpsellQuery) {
         const topAccount = deals.find(d => d.dealValue >= 50000)?.accountName || 'Cyberdyne Systems';
         const threat = `$50,000 expansion ARR uncaptured across high-utilization enterprise accounts hitting tier limits`;
-        const opportunity = `$50,000 immediate ARR upsell by activating autonomous AI throughput add-on for ${topAccount}`;
+        const opportunity = `$50,000 immediate ARR upsell by activating AI-assisted throughput add-on for ${topAccount}`;
         const play = `Deploy 1-Click $50k Platform Tier Upgrade Proposal & Executive Addendum`;
 
         const assistantMsg: ChatMessage = {
@@ -624,7 +624,7 @@ Click any quick tool below or type your question directly in the console.`,
               </span>
             </div>
             <p className="text-[11px] text-white/40">
-              Autonomous Intelligence • Real AI Generation • Enterprise Executive Reasoning
+              AI-assisted Intelligence • Real AI Generation • Enterprise Executive Reasoning • AI will help you to close
             </p>
           </div>
         </div>
@@ -757,7 +757,7 @@ Click any quick tool below or type your question directly in the console.`,
                 <div className="flex items-center justify-between gap-4 mb-3 pb-2 border-b border-white/10">
                   <div className="flex items-center gap-2">
                     <span className={`font-bold text-[11px] uppercase tracking-wider ${isAssistant ? 'text-[#FFD700]' : 'text-black/80'}`}>
-                      {isAssistant ? 'BRAIN 3.0 (Autonomous COO)' : (profile?.displayName || 'Executive')}
+                      {isAssistant ? 'BRAIN 3.0 (AI-Assisted COO)' : (profile?.displayName || 'Executive')}
                     </span>
                     {isAssistant && (
                       <span className="text-[9px] font-extrabold px-1.5 py-0.5 rounded bg-[#FFD700]/20 text-[#FFD700] border border-[#FFD700]/30 uppercase font-mono">

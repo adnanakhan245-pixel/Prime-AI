@@ -28,7 +28,7 @@ import { useAuth } from '../context/AuthContext';
 import { fetchUserEmails, updateEmailStatus, saveEmail, deleteEmail, saveSentEmailToSupabase } from '../services/db';
 import { recordApprovedAction, undoApprovedAction } from '../services/approvals';
 import { EmailItem } from '../types';
-import { AIGuidanceDisclaimer } from './AIGuidanceDisclaimer';
+import { AIGuidanceDisclaimer, AISuggestionBadge } from './AIGuidanceDisclaimer';
 
 interface AiDraftModalState {
   email: EmailItem;
@@ -563,6 +563,7 @@ export const InboxView: React.FC = () => {
                     <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#FFD700]/10 text-[#FFD700] border border-[#FFD700]/25 font-mono font-semibold">
                       3-Line Reply
                     </span>
+                    <AISuggestionBadge size="sm" />
                   </div>
                   <p className="text-[11px] text-white/40 mt-0.5">
                     Direct • Professional • Confident • Solutions-Oriented
@@ -690,7 +691,7 @@ export const InboxView: React.FC = () => {
                   className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#FFD700] via-amber-300 to-[#FFD700] hover:scale-105 active:scale-95 text-black text-xs font-black shadow-[0_0_25px_rgba(255,215,0,0.35)] transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50"
                 >
                   <ShieldCheck className={`w-4 h-4 ${aiModal.sending ? 'animate-spin' : ''}`} />
-                  <span>{aiModal.sending ? 'Authorizing & Dispatching...' : 'Human Approval Required: Approve & Send'}</span>
+                  <span>{aiModal.sending ? 'Authorizing & Dispatching...' : 'Human Approval: Approve & Dispatch Email'}</span>
                 </button>
               </div>
             </div>
@@ -737,7 +738,7 @@ export const InboxView: React.FC = () => {
         <div className="flex items-center gap-2.5">
           <ShieldCheck className="w-4 h-4 text-[#FFD700]" />
           <span>
-            <strong className="text-white">Zero Unapproved Execution:</strong> Autonomous AI generates drafts; every email dispatch requires explicit executive authorization and creates an audit log with an undo option.
+            <strong className="text-white">Zero Unapproved Execution:</strong> AI-assisted drafting only. AI will help you to close — it never sends emails on its own. Every email dispatch requires explicit executive authorization and creates an audit log with an undo option.
           </span>
         </div>
         <span className="text-[10px] font-mono uppercase tracking-wider text-emerald-400 font-bold bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
@@ -757,7 +758,7 @@ export const InboxView: React.FC = () => {
             </span>
           </div>
           <p className="text-xs text-white/40 mt-1">
-            Autonomous triage & decision synthesis. 3-line replies powered by Gemini & synced to Supabase.
+            AI-assisted triage &amp; decision synthesis. AI will help you to close. 3-line reply drafts powered by Gemini &amp; synced to Supabase. 100% Human Approval Required.
           </p>
         </div>
 
@@ -962,12 +963,12 @@ export const InboxView: React.FC = () => {
 
               {/* AI COO Executive Takeaway & Suggested Action */}
               <div className="p-4 rounded-xl bg-[#FFD700]/5 border border-[#FFD700]/20 space-y-2">
-                <div className="flex items-center justify-between">
+                <div className="flex flex-wrap items-center justify-between gap-2">
                   <div className="flex items-center gap-2 text-xs font-bold text-[#FFD700]">
                     <Sparkles className="w-4 h-4 text-[#FFD700]" />
                     <span>PRIME Executive Synthesis</span>
                   </div>
-                  <span className="text-[10px] text-white/40 font-mono">Gemini 3.7 Flash</span>
+                  <AISuggestionBadge size="sm" />
                 </div>
                 <p className="text-xs text-zinc-300">
                   <strong className="text-[#FFD700]">Core Takeaway: </strong>
@@ -1058,7 +1059,7 @@ export const InboxView: React.FC = () => {
                       className="px-4 py-2 rounded-xl bg-gradient-to-r from-[#FFD700] via-amber-300 to-[#FFD700] text-black text-xs font-black hover:scale-105 active:scale-95 shadow-[0_0_20px_rgba(255,215,0,0.25)] flex items-center gap-2 cursor-pointer transition-all"
                     >
                       <ShieldCheck className="w-4 h-4 text-black" />
-                      <span>Human Approval Required</span>
+                      <span>Human Approval: Approve &amp; Dispatch Email</span>
                     </button>
                   </div>
                 </div>

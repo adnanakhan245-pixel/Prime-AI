@@ -24,6 +24,7 @@ import {
 } from 'lucide-react';
 import { CallRecord, CallFeedback } from '../types';
 import { saveCallToSupabase, fetchUserCalls } from '../services/db';
+import { AISuggestionBadge } from './AIGuidanceDisclaimer';
 
 interface SampleCall {
   id: string;
@@ -125,6 +126,8 @@ export const CloserView: React.FC = () => {
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saved'>('idle');
   const [customNotes, setCustomNotes] = useState<string>('');
   const [activeTab, setActiveTab] = useState<'analysis' | 'transcript' | 'history'>('analysis');
+  const [humanApprovedDeal, setHumanApprovedDeal] = useState<boolean>(false);
+  const [approvalMessage, setApprovalMessage] = useState<string | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const audioPlayerRef = useRef<HTMLAudioElement | null>(null);
@@ -315,9 +318,12 @@ export const CloserView: React.FC = () => {
                 <span className="px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wider rounded-full bg-[#FFD700]/15 text-[#FFD700] border border-[#FFD700]/30">
                   PAGE 6
                 </span>
+                <span className="px-2.5 py-0.5 text-[10px] font-bold rounded-full bg-blue-500/10 text-blue-300 border border-blue-500/30">
+                  Suggestions Only
+                </span>
               </div>
-              <p className="text-xs text-white/50">
-                Sales Call Intelligence, Objection Mastery & High-Ticket Close Scoring
+              <p className="text-xs text-white/70">
+                <strong className="text-[#FFD700]">&ldquo;AI will help you to close&rdquo;</strong> — Sales Call Intelligence, Objection Mastery &amp; Audio Audit
               </p>
             </div>
           </div>
@@ -646,29 +652,33 @@ export const CloserView: React.FC = () => {
 
                   {/* "Better Script" Box */}
                   <div className="p-6 rounded-2xl bg-gradient-to-br from-[#18150A] via-[#141208] to-[#0D0D0D] border-2 border-[#FFD700]/30 shadow-[0_0_30px_rgba(255,215,0,0.08)] space-y-4 relative">
-                    <div className="flex items-center justify-between">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
                       <div className="flex items-center gap-2 text-[#FFD700]">
                         <Sparkles className="w-4 h-4" />
                         <h3 className="text-xs font-extrabold uppercase tracking-widest">
                           Better Script (Use Next Time)
                         </h3>
                       </div>
-                      <button
-                        onClick={handleCopyScript}
-                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#FFD700]/10 hover:bg-[#FFD700]/20 border border-[#FFD700]/30 text-[#FFD700] text-xs font-bold transition-all cursor-pointer"
-                      >
-                        {copiedScript ? (
-                          <>
-                            <Check className="w-3.5 h-3.5" />
-                            <span>Copied to Clipboard</span>
-                          </>
-                        ) : (
-                          <>
-                            <Copy className="w-3.5 h-3.5" />
-                            <span>Copy Script</span>
-                          </>
-                        )}
-                      </button>
+                      
+                      <div className="flex items-center gap-2">
+                        <AISuggestionBadge size="sm" />
+                        <button
+                          onClick={handleCopyScript}
+                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#FFD700]/10 hover:bg-[#FFD700]/20 border border-[#FFD700]/30 text-[#FFD700] text-xs font-bold transition-all cursor-pointer"
+                        >
+                          {copiedScript ? (
+                            <>
+                              <Check className="w-3.5 h-3.5" />
+                              <span>Copied to Clipboard</span>
+                            </>
+                          ) : (
+                            <>
+                              <Copy className="w-3.5 h-3.5" />
+                              <span>Copy Script</span>
+                            </>
+                          )}
+                        </button>
+                      </div>
                     </div>
 
                     <div className="p-4 rounded-xl bg-black/60 border border-[#FFD700]/20">
@@ -680,6 +690,55 @@ export const CloserView: React.FC = () => {
                     <div className="flex items-center justify-between text-[11px] text-white/40 pt-1">
                       <span>Coach Tip: Deliver with calm authority and pause 2 full seconds after asking.</span>
                       <span className="text-emerald-400 font-mono font-bold">+28% Close Probability</span>
+                    </div>
+                  </div>
+
+                  {/* RULE 1: HUMAN APPROVAL BUTTON FOR DEAL CLOSE ACTION */}
+                  <div className="p-5 rounded-2xl bg-[#141414] border border-[#FFD700]/30 shadow-lg space-y-3">
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2">
+                          <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-[#FFD700] text-black font-black uppercase">
+                            Rule 1: Human-in-the-Loop
+                          </span>
+                          <span className="text-xs font-bold text-white uppercase tracking-wider">
+                            Deal Close Final Authorization
+                          </span>
+                        </div>
+                        <p className="text-xs text-white/60">
+                          AI never takes final action. Closing this deal or locking commercial concessions requires explicit human sign-off.
+                        </p>
+                      </div>
+
+                      <AISuggestionBadge size="sm" />
+                    </div>
+
+                    <div className="pt-2 flex flex-wrap items-center justify-between gap-3 border-t border-white/5">
+                      <div className="text-xs text-white/50">
+                        {humanApprovedDeal ? (
+                          <span className="text-emerald-400 font-semibold flex items-center gap-1.5">
+                            <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                            <span>{approvalMessage || 'Deal Close Approved by Human Executive'}</span>
+                          </span>
+                        ) : (
+                          <span className="text-amber-300">Pending Executive Review &amp; Sign-Off</span>
+                        )}
+                      </div>
+
+                      <button
+                        onClick={() => {
+                          setHumanApprovedDeal(true);
+                          setApprovalMessage(`Human Approval Confirmed: Deal Close Authorized at ${new Date().toLocaleTimeString()}`);
+                        }}
+                        className={`px-5 py-2.5 rounded-xl font-bold text-xs flex items-center gap-2 transition-all cursor-pointer shadow-lg ${
+                          humanApprovedDeal
+                            ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
+                            : 'bg-gradient-to-r from-[#FFD700] via-amber-300 to-[#FFC700] text-black hover:brightness-110 active:scale-95'
+                        }`}
+                      >
+                        <CheckCircle2 className="w-4 h-4" />
+                        <span>{humanApprovedDeal ? '✓ Human Approved: Deal Close Authorized' : 'Human Approval: Approve & Execute Deal Close'}</span>
+                      </button>
                     </div>
                   </div>
                 </>

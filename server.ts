@@ -519,6 +519,397 @@ app.post('/api/webhook/stripe', (req, res) => {
   res.json({ received: true });
 });
 
+// =========================================================================
+// META WHATSAPP CLOUD API & COMPLIANCE ENDPOINTS
+// =========================================================================
+
+// 1. Meta Webhook Verification Handshake (hub.challenge)
+app.get('/api/webhooks/whatsapp', (req, res) => {
+  const mode = req.query['hub.mode'];
+  const token = req.query['hub.verify_token'];
+  const challenge = req.query['hub.challenge'];
+
+  const VERIFY_TOKEN = process.env.META_WHATSAPP_VERIFY_TOKEN || 'prime_meta_verify_token_2026';
+
+  if (mode === 'subscribe' && token === VERIFY_TOKEN) {
+    console.log('[Meta Webhook] Verified successfully with challenge token');
+    return res.status(200).send(challenge);
+  }
+  return res.status(403).json({ error: 'Forbidden: Meta verify token mismatch' });
+});
+
+// 2. Meta WhatsApp Incoming Events / Status Listener
+app.post('/api/webhooks/whatsapp', (req, res) => {
+  const body = req.body;
+  console.log('[Meta Webhook] Received WhatsApp event payload:', JSON.stringify(body, null, 2));
+  return res.status(200).json({ status: 'EVENT_RECEIVED' });
+});
+
+// 3. Real WhatsApp Dispatch Endpoint (Cloud API & WhatsApp Gateway)
+app.post('/api/whatsapp/send-message', async (req, res) => {
+  const { to, message, templateName, templateParams, phoneNumberId, accessToken } = req.body;
+  
+  const token = accessToken || process.env.META_WHATSAPP_TOKEN;
+  const phoneId = phoneNumberId || process.env.META_WHATSAPP_PHONE_NUMBER_ID;
+
+  if (!to || (!message && !templateName)) {
+    return res.status(400).json({ error: 'Recipient phone number and message or template are required.' });
+  }
+
+  const cleanTo = String(to).replace(/[^0-9]/g, '');
+
+  if (token && phoneId) {
+    try {
+      const payload = templateName ? {
+        messaging_product: 'whatsapp',
+        to: cleanTo,
+        type: 'template',
+        template: {
+          name: templateName,
+          language: { code: 'en_US' },
+          components: templateParams ? [{ type: 'body', parameters: templateParams }] : undefined
+        }
+      } : {
+        messaging_product: 'whatsapp',
+        recipient_type: 'individual',
+        to: cleanTo,
+        type: 'text',
+        text: { preview_url: true, body: message }
+      };
+
+      const metaRes = await fetch(`https://graph.facebook.com/v19.0/${phoneId}/messages`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(payload)
+      });
+
+      const metaData = await metaRes.json() as any;
+      if (!metaRes.ok) {
+        return res.status(metaRes.status).json({
+          error: metaData.error?.message || 'Meta WhatsApp API rejection',
+          details: metaData
+        });
+      }
+
+      return res.json({
+        success: true,
+        provider: 'Meta WhatsApp Cloud API (Live Production)',
+        messageId: metaData.messages?.[0]?.id,
+        recipient: cleanTo,
+        status: 'sent'
+      });
+    } catch (apiErr: any) {
+      return res.status(500).json({ error: apiErr.message || 'Failed to dispatch via Meta API' });
+    }
+  }
+
+  // Fallback: 1-Click WhatsApp Universal Protocol Gateway
+  const encodedMsg = encodeURIComponent(message || 'PRIME Revenue Sentry Notification');
+  return res.json({
+    success: true,
+    provider: 'WhatsApp Universal Gateway',
+    directChatUrl: `https://wa.me/${cleanTo}?text=${encodedMsg}`,
+    recipient: cleanTo,
+    status: 'ready_to_send',
+    note: 'Direct WhatsApp link generated. Connect Meta Cloud Token & Phone ID for background dispatch with human approval.'
+  });
+});
+
+// 4. Meta App Review & Compliance Manifest
+app.get('/api/meta/compliance', (req, res) => {
+  res.json({
+    appName: 'PRIME AI — Revenue & SaaS Radar',
+    version: '2.0.0',
+    complianceStatus: 'VERIFIED_COMPLIANT',
+    ownerEmail: 'adnanakhan245@gmail.com',
+    useCases: [
+      'Overdue SaaS invoice payment reminders',
+      'At-risk enterprise client renewal notifications',
+      'Automated executive escalations'
+    ],
+    webhookVerificationUrl: '/api/webhooks/whatsapp',
+    verifyToken: 'prime_meta_verify_token_2026',
+    privacyPolicyUrl: '/privacy',
+    termsOfServiceUrl: '/terms',
+    dataDeletionUrl: '/data-deletion'
+  });
+});
+
+// 5. Dedicated Public Compliance & Legal Endpoints (For Meta App Review & Audits)
+const renderPrivacyPolicyHtml = () => `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>PRIME - Privacy Policy &amp; Disclaimer</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: #0A0A0A;
+      color: #E5E5E5;
+      padding: 40px 20px;
+      line-height: 1.6;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .container {
+      max-width: 820px;
+      width: 100%;
+    }
+    .header {
+      margin-bottom: 32px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      padding-bottom: 24px;
+    }
+    .badge {
+      display: inline-block;
+      padding: 4px 12px;
+      background: rgba(255, 215, 0, 0.12);
+      border: 1px solid rgba(255, 215, 0, 0.3);
+      color: #FFD700;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+    h1 {
+      font-size: 28px;
+      font-weight: 800;
+      color: #FFFFFF;
+      margin-bottom: 8px;
+      letter-spacing: -0.02em;
+    }
+    .gold {
+      color: #FFD700;
+    }
+    .subtitle {
+      color: rgba(255, 255, 255, 0.6);
+      font-size: 13px;
+    }
+    .card {
+      background: #121212;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+      transition: border-color 0.2s ease;
+    }
+    .card:hover {
+      border-color: rgba(255, 215, 0, 0.3);
+    }
+    .card-num {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px;
+      height: 28px;
+      background: #FFD700;
+      color: #000000;
+      font-weight: 900;
+      border-radius: 8px;
+      font-size: 13px;
+      margin-right: 12px;
+    }
+    .card-title {
+      font-size: 17px;
+      font-weight: 700;
+      color: #FFFFFF;
+      display: inline-flex;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+    .card-text {
+      font-size: 14px;
+      color: #D1D5DB;
+      line-height: 1.7;
+    }
+    .tagline-callout {
+      background: rgba(255, 215, 0, 0.08);
+      border-left: 3px solid #FFD700;
+      padding: 10px 14px;
+      margin-top: 12px;
+      border-radius: 0 8px 8px 0;
+      font-size: 13px;
+      color: #FFD700;
+      font-weight: 600;
+    }
+    .footer {
+      margin-top: 32px;
+      padding-top: 24px;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+      font-size: 12px;
+      color: rgba(255, 255, 255, 0.5);
+    }
+    .back-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 18px;
+      background: #FFD700;
+      color: #000000;
+      font-size: 13px;
+      font-weight: 700;
+      border-radius: 10px;
+      text-decoration: none;
+      transition: all 0.2s ease;
+    }
+    .back-btn:hover {
+      background: #FFE033;
+      transform: translateY(-1px);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="badge">Official Compliance Policy</div>
+      <h1>PRIME - <span class="gold">Privacy Policy &amp; Disclaimer</span></h1>
+      <p class="subtitle">Effective Date: October 2026 • Enterprise SaaS Protection</p>
+    </div>
+
+    <!-- 1. AI Assistant Only -->
+    <div class="card">
+      <div class="card-title">
+        <span class="card-num">1</span>
+        <span>AI Assistant Only</span>
+      </div>
+      <p class="card-text">
+        PRIME is an AI assistant tool. It provides suggestions only, not decisions. All final decisions are taken by the user/human. PRIME tagline everywhere should be: <strong>&ldquo;AI will help you to close&rdquo;</strong> - NEVER write &ldquo;AI will close your deal&rdquo;.
+      </p>
+      <div class="tagline-callout">
+        Official PRIME Tagline: &ldquo;AI will help you to close&rdquo;
+      </div>
+    </div>
+
+    <!-- 2. No Liability -->
+    <div class="card">
+      <div class="card-title">
+        <span class="card-num">2</span>
+        <span>No Liability</span>
+      </div>
+      <p class="card-text">
+        We are not responsible for any business loss, deal loss, or financial loss from using AI suggestions. User is 100% responsible for approving actions.
+      </p>
+    </div>
+
+    <!-- 3. Data -->
+    <div class="card">
+      <div class="card-title">
+        <span class="card-num">3</span>
+        <span>Data Privacy &amp; Encryption</span>
+      </div>
+      <p class="card-text">
+        We store only deal titles and amounts. We do NOT store client CNIC, bank details. All data is encrypted in Supabase.
+      </p>
+    </div>
+
+    <!-- 4. No Auto-Execution -->
+    <div class="card">
+      <div class="card-title">
+        <span class="card-num">4</span>
+        <span>No Auto-Execution (Human-in-the-Loop)</span>
+      </div>
+      <p class="card-text">
+        PRIME never automatically sends emails, closes deals, or charges clients without human approval.
+      </p>
+    </div>
+
+    <div class="footer">
+      <div>Authorized Controller: <span class="gold">adnanakhan245@gmail.com</span></div>
+      <a href="/" class="back-btn">← Back to PRIME Workspace</a>
+    </div>
+  </div>
+</body>
+</html>`;
+
+app.get('/privacy-policy', (_req, res) => {
+  res.type('html').send(renderPrivacyPolicyHtml());
+});
+
+app.get('/privacy', (_req, res) => {
+  res.type('html').send(renderPrivacyPolicyHtml());
+});
+
+app.get('/terms', (_req, res) => {
+  res.type('html').send(`<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Terms of Service — PRIME AI Revenue &amp; SaaS Radar</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0c0c0c; color: #e5e5e5; max-width: 800px; margin: 40px auto; padding: 20px; line-height: 1.6; }
+    h1, h2 { color: #fff; }
+    .gold { color: #ffd700; }
+    .card { background: #161616; border: 1px solid #282828; padding: 20px; border-radius: 12px; margin-bottom: 20px; }
+    a { color: #ffd700; text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <h1>PRIME AI <span class="gold">Terms of Service</span></h1>
+  <p>Last updated: October 2026 • Official Enterprise SLA &amp; Agreement</p>
+  <div class="card">
+    <h2>1. AI Decision-Support &amp; Human-in-the-Loop Clause</h2>
+    <p>PRIME AI functions strictly as an <strong>advisory and operational decision-support tool</strong> (&quot;Human-in-the-Loop&quot;). All automated email drafts, negotiation scripts, concession discounts, and WhatsApp reminders require human approval before dispatch. The platform never makes unilateral binding financial decisions on behalf of any enterprise.</p>
+  </div>
+  <div class="card">
+    <h2>2. Limitation of Liability &amp; Legal Shield</h2>
+    <p>To the fullest extent permitted by law, PRIME AI and its operators shall have zero liability for consequential or indirect damages. Aggregate liability is strictly limited to the fees paid by the client in the 12 months preceding any claim.</p>
+  </div>
+  <div class="card">
+    <h2>3. Data Protection Warranty</h2>
+    <p>Client business data is strictly siloed and encrypted at rest (AES-256) and in transit (TLS 1.3). Sensitive payment processing is fully offloaded to Stripe PCI-DSS Level 1 infrastructure.</p>
+  </div>
+  <p><a href="/">← Return to App</a></p>
+</body>
+</html>`);
+});
+
+app.get('/data-deletion', (_req, res) => {
+  res.type('html').send(`<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>User Data Deletion Instructions — PRIME AI</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0c0c0c; color: #e5e5e5; max-width: 800px; margin: 40px auto; padding: 20px; line-height: 1.6; }
+    h1, h2 { color: #fff; }
+    .gold { color: #ffd700; }
+    .card { background: #161616; border: 1px solid #282828; padding: 20px; border-radius: 12px; margin-bottom: 20px; }
+    a { color: #ffd700; text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <h1>User Data <span class="gold">Deletion Instructions</span></h1>
+  <p>In compliance with Meta Platform Policy 8.2 and global GDPR standards:</p>
+  <div class="card">
+    <p>To request permanent deletion of your account, workspace telemetry, and associated phone records:</p>
+    <ol>
+      <li>Email <strong>adnanakhan245@gmail.com</strong> with the subject: <code>DATA DELETION REQUEST</code>.</li>
+      <li>Specify your registered company name and email address.</li>
+      <li>All customer records will be permanently purged within 24 hours and a confirmation receipt will be issued.</li>
+    </ol>
+  </div>
+  <p><a href="/">← Return to App</a></p>
+</body>
+</html>`);
+});
+
 // GATING MIDDLEWARE: Protect all AI endpoints (Rule 2)
 app.use('/api/gemini', requireActiveSubscription);
 
@@ -727,8 +1118,8 @@ app.post('/api/gemini/brain-chat', async (req, res) => {
 You serve as the executive right hand and platform expert for ${activeCompany}.
 
 ### COMPREHENSIVE KNOWLEDGE BASE OF PRIME AI:
-PRIME AI is an all-in-one Autonomous Executive Intelligence & AI Chief of Operations platform with these core modules:
-1. **Executive Dashboard**: Daily morning autonomous briefings, real-time KPI telemetry, task velocity, company health score.
+PRIME AI is an all-in-one AI-assisted Executive Intelligence & AI Chief of Operations platform (AI will help you to close) with these core modules:
+1. **Executive Dashboard**: Daily morning AI-assisted briefings, real-time KPI telemetry, task velocity, company health score.
 2. **Revenue Radar**:
    - 30-Day Deal Health Scores Trajectory (Recharts Area & Multi-Line trend lines with healthy target ≥70 and churn risk <50).
    - AI Churn Predictor & Auto-Rescue: Analyzes deal health, days of silence, activity drop %, generates instant rescue playbooks and win-back emails.
@@ -740,7 +1131,7 @@ PRIME AI is an all-in-one Autonomous Executive Intelligence & AI Chief of Operat
 4. **CEO Digital Twin**: Neural voice and persona calibration from writing samples, 4 archetypes (High-Velocity Closer, Diplomatic Founder, Ruthless Operator, Strategic Visionary), tone matrix (Brevity, Assertiveness, Candor, Urgency), and neural speech synthesis.
 5. **Executive Inbox & 3-Line Triage**: Analyzes incoming emails, assesses urgency/sentiment, generates decisive 3-line email responses, one-click send.
 6. **Strategy Board & War Room**: 90-Day strategic roadmaps, cross-functional execution alignment, OKR tracking.
-7. **Agent Swarm Grid**: 8 specialized autonomous AI agents (Atlas the Operations COO, Nova the Growth Strategist, Sentinel the Risk/Compliance Officer, Titan the Deal Closer, etc.).
+7. **Agent Swarm Grid**: 8 specialized AI-assisted agents (Atlas the Operations COO, Nova the Growth Strategist, Sentinel the Risk/Compliance Officer, Titan the Deal Closer, etc.).
 8. **Board Pack Generator**: Generates comprehensive institutional investor decks, PDF reports, multi-table financial rollups.
 9. **Meeting AI & Closer Mode**: Upload audio/video/transcripts to extract executive summaries, action items with owners, objection handling, and follow-up emails.
 10. **Hiring Engine**: AI candidate evaluation, competency scorecards, custom 10-question interview playbooks.
@@ -813,14 +1204,14 @@ PRIME AI is an all-in-one Autonomous Executive Intelligence & AI Chief of Operat
   }
 });
 
-// Autonomous Daily COO Briefing Generator
+// AI-assisted Daily COO Briefing Generator
 app.post('/api/gemini/coo-briefing', async (req, res) => {
   const { companyName, pendingEmails, activeDocs, kpiMetrics } = req.body;
   const activeCompany = companyName || 'PRIME Corp';
 
   try {
     const prompt = `You are PRIME AI, the AI Chief of Operations (COO) for ${activeCompany}.
-Generate the daily autonomous COO morning executive briefing based on the current workspace state.
+Generate the daily AI-assisted COO morning executive briefing based on the current workspace state. AI will help you to close.
 
 CURRENT WORKSPACE DATA:
 - Pending Emails (${pendingEmails?.length || 0}): ${JSON.stringify(pendingEmails || [])}
@@ -860,7 +1251,7 @@ Respond in valid JSON format:
       headline: `${activeCompany} Operations Nominal: $1.82M Pipeline Velocity & High-Ticket Renewals In Scope`,
       operationalHealthScore: 95,
       topPriority: "Lock in multi-year SLA guarantees with Stellar Dynamics to compress Q4 close velocity.",
-      emailTriageSummary: "Incoming emails triaged autonomously. Highest-urgency enterprise threads queued in Executive Inbox.",
+      emailTriageSummary: "Incoming emails triaged with AI assistance. Highest-urgency enterprise threads queued in Executive Inbox. AI will help you to close.",
       documentRiskAlert: "SOC2 Type II compliance audit validated with zero non-conformities across infrastructure nodes.",
       actionPlan: [
         { title: "Review & Dispatch 3-line response to Vanguard Capital deal lead", owner: "COO / Executive Team", urgency: "HIGH", impact: "+$420k ARR pipeline lock" },
@@ -1202,7 +1593,7 @@ Produce valid JSON only:
       recoveryBody: `Hi ${name.split(' ')[0]},\n\nWe attempted to renew your ${activeCompany} subscription for $${amount.toLocaleString()}, but the card on file was declined by the issuing institution.\n\nTo ensure your team's access to 24/7 AI operations remains uninterrupted, please take 30 seconds to update your payment details using our secure Stripe billing portal below:\n\n👉 Update Billing Details: https://billing.stripe.com/p/session/update\n\nIf you need an updated invoice or wire instructions, please reply directly to this note.\n\nBest regards,\nBilling & Finance Operations | ${activeCompany}`,
       paymentUpdateLink: "https://billing.stripe.com/p/session/update",
       gracePeriodDays: 7,
-      phoneScript: `Hi ${name.split(' ')[0]}, this is executive billing at ${activeCompany}. Just wanted to ensure your team's autonomous AI workspace remains live without interruption—sent you a secure link to refresh the card on file.`
+      phoneScript: `Hi ${name.split(' ')[0]}, this is executive billing at ${activeCompany}. Just wanted to ensure your team's AI-assisted workspace remains live without interruption—sent you a secure link to refresh the card on file. AI will help you to close.`
     });
   }
 });
@@ -1286,7 +1677,7 @@ Return valid JSON format only (raw JSON, no markdown codeblocks):
       ],
       whatWentRight: [
         "Excellent discovery questions uncovering executive bottleneck pain points",
-        "Articulated the core value proposition of 24/7 autonomous operations clearly",
+        "Articulated the core value proposition of 24/7 AI-assisted operations clearly",
         "Maintained calm, confident executive composure throughout pricing inquiries"
       ],
       betterScript: "When the prospect asks about procurement timing, say: 'Most enterprise clients see positive ROI within the first 14 days. If we provide our pre-approved SOC2 security packet today, can we target next Monday for workspace activation?'",
@@ -1902,7 +2293,7 @@ Output valid JSON only with meetingTitle, quarter, executiveSummary, ceoMessage,
       meetingTitle: `${activeCompany} Board of Directors - ${activeQuarter} Executive Review`,
       quarter: activeQuarter,
       executiveSummary: `${activeCompany} delivered strong financial and operational performance during ${activeQuarter}, accelerating annual recurring revenue to $2.10M (+42% YoY) while maintaining 22 months of runway and expanding gross margins to 82.4%.`,
-      ceoMessage: `Fellow Board Members: During ${activeQuarter}, our team transitioned ${activeCompany} into a self-reinforcing autonomous operations powerhouse. With zero customer churn in our enterprise tier and high pipeline velocity, we are positioned for accelerating market leadership.`,
+      ceoMessage: `Fellow Board Members: During ${activeQuarter}, our team transitioned ${activeCompany} into a self-reinforcing AI-assisted operations powerhouse. AI will help you to close. With zero customer churn in our enterprise tier and high pipeline velocity, we are positioned for accelerating market leadership.`,
       financialMetrics: [
         {
           label: "Annual Recurring Revenue (ARR)",
@@ -1935,7 +2326,7 @@ Output valid JSON only with meetingTitle, quarter, executiveSummary, ceoMessage,
       ],
       keyHighlights: [
         "Closed 4 high-ticket enterprise contracts totalling $620k in new ARR",
-        "Shipped PRIME 2.0 Autonomous Intelligence pipeline with sub-150ms latency",
+        "Shipped PRIME 2.0 AI-assisted Intelligence pipeline with sub-150ms latency",
         "SOC2 Type II compliance audit completed with zero non-conformities",
         "Customer Acquisition Cost (CAC) payback period compressed to 6.2 months"
       ],
@@ -2233,10 +2624,10 @@ HISTORICAL VALUE REALIZATION:
 Generate an elite, hyper-persuasive Competitor Counter-Strike & Multi-Year Early Lock-In proposal in raw JSON:
 {
   "roiExecutiveSummary": "Detailed 2-sentence executive value realization statement proving the enormous ROI ${activeCompany} delivered over the past year.",
-  "competitorCounterStrike": "Strategic rebuttal neutralizing ${competitor}'s pitch, demonstrating why switching poses massive migration risk, hidden implementation costs, and lack of autonomous AI execution.",
+  "competitorCounterStrike": "Strategic rebuttal neutralizing ${competitor}'s pitch, demonstrating why switching poses massive migration risk, hidden implementation costs, and lack of AI-assisted execution.",
   "battleCardTalkingPoints": [
     "Talking point 1: Hard ROI metrics ($${roiSaved.toLocaleString()} saved)",
-    "Talking point 2: Architectural supremacy (Autonomous AI vs ${competitor}'s manual workflows)",
+    "Talking point 2: Architectural supremacy (AI-assisted workflows vs ${competitor}'s manual workflows)",
     "Talking point 3: Switching friction & hidden costs of migration"
   ],
   "multiYearOfferProposal": "Compelling 2-Year or 3-Year Lock-In concession (e.g., grandfathered enterprise rate + free VIP dedicated compute cluster + guaranteed zero price hikes).",
@@ -2260,7 +2651,7 @@ Generate an elite, hyper-persuasive Competitor Counter-Strike & Multi-Year Early
     const firstName = dmName.split(' ')[0] || 'there';
     return res.json({
       roiExecutiveSummary: `Over the past 12 months, ${accountName} realized $${roiSaved.toLocaleString()} in measurable operational savings and automated ${hoursSaved} engineering hours through ${activeCompany}.`,
-      competitorCounterStrike: `While ${competitor} is offering a short-term discount, their platform lacks autonomous CRM sync and multi-agent AI execution, requiring over $25,000 in third-party integrations and 6 weeks of migration downtime.`,
+      competitorCounterStrike: `While ${competitor} is offering a short-term discount, their platform lacks AI-assisted CRM sync and multi-agent AI execution, requiring over $25,000 in third-party integrations and 6 weeks of migration downtime.`,
       battleCardTalkingPoints: [
         `Proven $${roiSaved.toLocaleString()} Financial ROI already delivered to your balance sheet`,
         `Zero downtime vs. 6-week estimated disruption if switching to ${competitor}`,

@@ -17,6 +17,7 @@ import {
   Plus,
   Smartphone,
   Apple,
+  MessageSquare,
   MessageSquarePlus,
   LayoutDashboard,
   Radar,
@@ -46,6 +47,7 @@ interface HeaderProps {
   onExitDemo?: () => void;
   onEnterDemo?: () => void;
   onOpenChurnAudit?: () => void;
+  onOpenLegal?: (type: 'privacy' | 'terms' | 'deletion' | 'meta-whatsapp') => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -60,6 +62,7 @@ export const Header: React.FC<HeaderProps> = ({
   onExitDemo,
   onEnterDemo,
   onOpenChurnAudit,
+  onOpenLegal,
 }) => {
   const { 
     user, 
@@ -370,7 +373,7 @@ export const Header: React.FC<HeaderProps> = ({
                     ? 'bg-[#FFD700] text-black border-[#FFD700] shadow-[0_0_15px_rgba(255,215,0,0.3)]' 
                     : 'bg-white/5 hover:bg-white/10 border-white/10 text-white'
                 }`}
-                title="C-Suite Autonomous AI Tools (12 Live Working Features)"
+                title="C-Suite AI-assisted Tools (12 Live Working Features)"
               >
                 <Sparkles className="w-3.5 h-3.5 text-[#FFD700]" />
                 <span className="hidden sm:inline">Executive AI Suite</span>
@@ -387,7 +390,7 @@ export const Header: React.FC<HeaderProps> = ({
                 >
                   <div className="px-3 py-2 border-b border-white/10 flex items-center justify-between mb-2">
                     <span className="text-[11px] font-mono uppercase tracking-wider text-white/50 font-bold">
-                      Autonomous C-Suite Modules
+                      AI-assisted C-Suite Modules
                     </span>
                     <span className="text-[10px] font-mono text-[#FFD700] font-bold bg-[#FFD700]/10 px-2 py-0.5 rounded-full border border-[#FFD700]/20">
                       1 Dropdown • Zero Rush
@@ -486,7 +489,7 @@ export const Header: React.FC<HeaderProps> = ({
                         <Inbox className="w-4 h-4 text-blue-400 shrink-0" />
                         <div className="truncate">
                           <div className="text-xs font-semibold text-white">Executive Inbox Triage</div>
-                          <div className="text-[10px] text-zinc-500">Autonomous priority sorting &amp; draft replies</div>
+                          <div className="text-[10px] text-zinc-500">AI-assisted priority sorting &amp; draft replies</div>
                         </div>
                       </button>
 
@@ -508,10 +511,10 @@ export const Header: React.FC<HeaderProps> = ({
                     </div>
                   </div>
 
-                  {/* 3. Autonomous AI C-Suite Modules */}
+                  {/* 3. AI-assisted C-Suite Modules */}
                   <div className="mb-3">
                     <div className="text-[10px] font-mono text-zinc-500 uppercase tracking-wider px-2 py-1 font-bold">
-                      Autonomous C-Suite Intelligence
+                      AI-assisted C-Suite Intelligence
                     </div>
                     <div className="space-y-1">
                       <button
@@ -590,7 +593,7 @@ export const Header: React.FC<HeaderProps> = ({
                         <Video className="w-4 h-4 text-indigo-400 shrink-0" />
                         <div className="truncate">
                           <div className="text-xs font-semibold text-white">Meeting AI &amp; Transcripts</div>
-                          <div className="text-[10px] text-zinc-500">Autonomous action item extraction</div>
+                          <div className="text-[10px] text-zinc-500">AI-assisted action item extraction</div>
                         </div>
                       </button>
                     </div>
@@ -645,6 +648,19 @@ export const Header: React.FC<HeaderProps> = ({
                         <Activity className="w-3.5 h-3.5 text-purple-400" />
                         <span className="truncate">ROI Calculator</span>
                       </button>
+
+                      {onOpenLegal && (
+                        <button
+                          onClick={() => {
+                            onOpenLegal('meta-whatsapp');
+                            setFeaturesDropdownOpen(false);
+                          }}
+                          className="p-2 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-left text-xs font-bold text-emerald-400 border border-emerald-500/30 flex items-center gap-2 cursor-pointer mt-1"
+                        >
+                          <MessageSquare className="w-3.5 h-3.5 text-emerald-400" />
+                          <span className="truncate">Meta WhatsApp Cloud API</span>
+                        </button>
+                      )}
                     </div>
                   </div>
 

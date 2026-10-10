@@ -487,7 +487,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               {/* Policy Controls */}
               <div className="space-y-3 pt-2">
                 <h4 className="text-xs font-bold text-white uppercase tracking-wider text-zinc-400">
-                  Autonomous Operation Safeguards
+                  AI-Assisted Operation Safeguards
                 </h4>
 
                 {/* Switch 1: Human Approval on Outbound Emails */}
@@ -536,7 +536,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 <div className="p-4 rounded-2xl bg-black/40 border border-white/5 flex items-center justify-between gap-4">
                   <div>
                     <p className="text-xs font-bold text-white flex items-center gap-2">
-                      <span>Autonomous 2-Minute Safety Undo Window</span>
+                      <span>AI-Assisted 2-Minute Safety Undo Window</span>
                       <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#FFD700]/10 text-[#FFD700] border border-[#FFD700]/30 font-mono">
                         {undoWindowSeconds}s ACTIVE
                       </span>
@@ -639,7 +639,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                     </div>
 
                     <p className="text-xs text-zinc-300 leading-relaxed">
-                      Your complimentary 14-day trial includes 50 free autonomous operations, full Revenue Radar telemetry, and contract risk audits. Upgrade to unlock unlimited AI action volume and dedicated COO speed.
+                      Your complimentary 14-day trial includes 50 free AI-assisted operations, full Revenue Radar telemetry, and contract risk audits. Upgrade to unlock unlimited AI action volume and dedicated COO speed. AI will help you to close.
                     </p>
 
                     <button
@@ -661,7 +661,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                       <Check className="w-3.5 h-3.5" /> Full Enterprise Operations Unlocked
                     </p>
                     <p className="text-zinc-400">
-                      Unlimited Revenue Radar telemetry, automated dunning recovery, and 24/7 autonomous COO inbox triage are fully active.
+                      Unlimited Revenue Radar telemetry, automated dunning recovery, and 24/7 AI-assisted COO inbox triage are fully active. AI will help you to close.
                     </p>
                   </div>
                 )}
@@ -832,7 +832,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                           ACTIVE
                         </span>
                       </div>
-                      <p className="text-[11px] text-zinc-400 mt-0.5">Autonomous triage scanning for contract redlines, payment disputes, and VIP buyer requests.</p>
+                      <p className="text-[11px] text-zinc-400 mt-0.5">AI-assisted triage scanning for contract redlines, payment disputes, and VIP buyer requests. AI will help you to close.</p>
                     </div>
                   </div>
                   <span className="text-[10px] font-mono text-zinc-500 hidden sm:inline">24/7 Monitor</span>

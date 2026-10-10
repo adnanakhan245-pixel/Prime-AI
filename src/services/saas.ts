@@ -472,7 +472,7 @@ export function generateSeedRenewalDefenseItems(companyId: string, companyName: 
         competitorName: 'Gong.io + Chorus Enterprise',
         perceivedAdvantage: 'Offered 25% buyout incentive ($58k/yr) and promised migration assistance',
         criticalWeaknesses: [
-          'No autonomous Churn Rescue & 1-click executive email deployment',
+          'No AI-assisted Churn Rescue & 1-click executive email deployment. AI will help you to close.',
           'Lacks real-time Supabase/Stripe bi-directional CRM writeback',
           'Requires 8-week implementation timeline with $15k onboarding fee'
         ],
@@ -499,7 +499,7 @@ export function generateSeedRenewalDefenseItems(companyId: string, companyName: 
         competitorName: 'HubSpot Sales Hub Pro',
         perceivedAdvantage: 'Bundled with their existing marketing automation software',
         criticalWeaknesses: [
-          'Lacks autonomous PQL Behavioral Signal Detection',
+          'Lacks AI-assisted PQL Behavioral Signal Detection. AI will help you to close.',
           'No automated Dunning & Stripe telemetric cashflow recovery engine',
           'Rigid seat pricing scales exponentially without custom AI reasoning'
         ],

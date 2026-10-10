@@ -236,7 +236,7 @@ export const GrowthLabView: React.FC = () => {
                 </span>
               </div>
               <p className="text-xs text-white/50">
-                Autonomous Revenue & CRO Intelligence: Growth Score Index, Top 3 Unlocked Levers & 30-Day Execution Roadmap.
+                AI-assisted Revenue &amp; CRO Intelligence: Growth Score Index, Top 3 Unlocked Levers &amp; 30-Day Execution Roadmap. AI will help you to close.
               </p>
             </div>
           </div>

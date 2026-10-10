@@ -46,6 +46,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   const [industry, setIndustry] = useState('Enterprise SaaS');
   const [verificationCode, setVerificationCode] = useState('');
   const [activeGeneratedPin, setActiveGeneratedPin] = useState<string | null>(null);
+  const [agreeAiSuggestions, setAgreeAiSuggestions] = useState(false);
   
   const [error, setError] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
@@ -112,6 +113,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         onSuccess();
         onClose();
       } else if (mode === 'signup') {
+        if (!agreeAiSuggestions) {
+          setError('I agree AI is only for suggestions and I am responsible for final decisions.');
+          setLoading(false);
+          return;
+        }
         const effectiveCompanyName = companyName.trim() || (fullName.trim() ? `${fullName.trim()}'s Workspace` : `${email.split('@')[0] || 'Enterprise'} Workspace`);
         await signUpWithEmail(email, password, effectiveCompanyName, fullName, industry);
         setSuccessMsg(`Welcome, ${fullName || 'Executive'}! Your 14-day Pro workspace has been created. Launching Command Center...`);
@@ -619,9 +625,35 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 )}
               </div>
 
+              {/* Mandatory Disclaimer Checkbox at Signup */}
+              {mode === 'signup' && (
+                <div className="pt-2 pb-1">
+                  <label className="flex items-start gap-2.5 text-xs cursor-pointer select-none group p-2.5 rounded-xl bg-white/5 border border-white/10 hover:border-[#FFD700]/30 transition-colors">
+                    <input
+                      type="checkbox"
+                      checked={agreeAiSuggestions}
+                      onChange={(e) => setAgreeAiSuggestions(e.target.checked)}
+                      required
+                      className="mt-0.5 w-4 h-4 rounded bg-[#101010] border border-white/20 text-[#FFD700] focus:ring-[#FFD700] focus:ring-offset-0 cursor-pointer accent-[#FFD700]"
+                    />
+                    <span className="text-[11px] leading-relaxed text-zinc-300">
+                      I agree AI is only for suggestions and I am responsible for final decisions.{' '}
+                      <a 
+                        href="/privacy-policy" 
+                        target="_blank" 
+                        rel="noreferrer"
+                        className="text-[#FFD700] hover:underline font-semibold"
+                      >
+                        (View Policy)
+                      </a>
+                    </span>
+                  </label>
+                </div>
+              )}
+
               <button
                 type="submit"
-                disabled={loading}
+                disabled={loading || (mode === 'signup' && !agreeAiSuggestions)}
                 className="w-full py-3 rounded-xl text-xs font-bold text-black bg-gradient-to-r from-[#FFD700] via-amber-300 to-[#FFC700] hover:brightness-110 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 mt-3 shadow-[0_0_25px_rgba(255,215,0,0.25)]"
               >
                 {loading ? (

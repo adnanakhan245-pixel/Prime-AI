@@ -216,7 +216,7 @@ export const StrategyView: React.FC = () => {
                 </span>
               </div>
               <p className="text-xs text-white/50">
-                Autonomous Chief Strategy Officer (CSO) synthesizing CRM, Deals, Growth Audits & Meeting transcripts into a unified 90-day battleplan.
+                AI-assisted Chief Strategy Officer (CSO) synthesizing CRM, Deals, Growth Audits &amp; Meeting transcripts into a unified 90-day battleplan. AI will help you to close.
               </p>
             </div>
           </div>

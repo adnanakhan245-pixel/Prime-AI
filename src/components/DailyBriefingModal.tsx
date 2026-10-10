@@ -20,6 +20,7 @@ import {
   ArrowRight
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { AISuggestionBadge } from './AIGuidanceDisclaimer';
 import { 
   DailyBriefingItem, 
   BriefingSettings, 
@@ -171,7 +172,7 @@ export const DailyBriefingModal: React.FC<DailyBriefingModalProps> = ({
                 </span>
               </div>
               <p className="text-xs text-white/50 mt-0.5">
-                Autonomous $250k/year COO Synthesis: Brutally honest, data-driven, top 3 priorities only.
+                AI-assisted $250k/year COO Synthesis: Brutally honest, data-driven, top 3 priorities only. AI will help you to close.
               </p>
             </div>
           </div>
@@ -242,7 +243,7 @@ export const DailyBriefingModal: React.FC<DailyBriefingModalProps> = ({
                       [GOOD MORNING BRIEFING — {currentBriefing.dateFormatted}]
                     </span>
                     <h3 className="text-xl sm:text-2xl font-black text-white tracking-tight mt-1">
-                      {companyName} Autonomous Executive Briefing
+                      {companyName} AI-Assisted Executive Briefing
                     </h3>
                   </div>
 
@@ -340,13 +341,11 @@ export const DailyBriefingModal: React.FC<DailyBriefingModalProps> = ({
 
                 {/* Section 3: Decisions Needed From You */}
                 <div className="space-y-3 pt-2">
-                  <div className="flex items-center justify-between">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
                     <span className="text-xs font-black uppercase tracking-wider text-[#FFD700]">
                       3. DECISIONS NEEDED FROM YOU
                     </span>
-                    <span className="text-[11px] text-white/40">
-                      1-Click Executive Clearances
-                    </span>
+                    <AISuggestionBadge size="sm" />
                   </div>
 
                   <div className="space-y-2.5">
@@ -382,7 +381,7 @@ export const DailyBriefingModal: React.FC<DailyBriefingModalProps> = ({
                                   onClick={() => handleDecisionAction(dec.id, 'APPROVED')}
                                   className="px-3 py-1.5 rounded-xl bg-[#FFD700] hover:bg-[#FFE55C] text-black text-xs font-bold transition-all cursor-pointer shadow-sm"
                                 >
-                                  Approve
+                                  Human Approval: Approve
                                 </button>
                                 <button
                                   onClick={() => handleDecisionAction(dec.id, 'REJECTED')}
@@ -402,7 +401,7 @@ export const DailyBriefingModal: React.FC<DailyBriefingModalProps> = ({
                 {/* Direct Action Hub Links */}
                 <div className="flex flex-wrap items-center justify-between gap-3 pt-4 border-t border-white/10 text-xs">
                   <span className="text-white/40">
-                    Dispatched autonomously to <strong className="text-white">{currentBriefing.recipientEmail}</strong> via Supabase
+                    Dispatched with approval to <strong className="text-white">{currentBriefing.recipientEmail}</strong> via Supabase. AI will help you to close.
                   </span>
 
                   <div className="flex items-center gap-3">

@@ -384,6 +384,18 @@ export const Sidebar: React.FC<SidebarProps> = ({
             <Shield className="w-2.5 h-2.5" /> Bank-Grade
           </span>
         </div>
+
+        {/* Privacy Policy & Disclaimer Link */}
+        <div className="pt-1.5 text-center">
+          <a
+            href="/privacy-policy"
+            target="_blank"
+            rel="noreferrer"
+            className="text-[10px] text-white/40 hover:text-[#FFD700] transition-colors"
+          >
+            Privacy Policy &amp; Disclaimer
+          </a>
+        </div>
       </div>
     </aside>
   );

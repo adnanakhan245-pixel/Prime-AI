@@ -225,11 +225,11 @@ export const CEODigitalTwinView: React.FC = () => {
             </div>
 
             <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extralight tracking-tight text-white font-serif">
-              Autonomous <span className="font-semibold text-[#FFD700]">{config.ceoName}&apos;s</span> Voice Clone
+              AI-Assisted <span className="font-semibold text-[#FFD700]">{config.ceoName}&apos;s</span> Voice Clone
             </h1>
 
             <p className="text-sm text-white/60 max-w-3xl leading-relaxed">
-              Trained on your decision heuristics, signature hooks, and communication DNA. Your Digital Twin drafts high-stakes emails, executes team directives, and rejects unviable vendor contracts in your exact tone.
+              Trained on your decision heuristics, signature hooks, and communication DNA. Your Digital Twin drafts high-stakes emails, executes team directives, and rejects unviable vendor contracts in your exact tone. AI will help you to close.
             </p>
           </div>
 
@@ -837,10 +837,10 @@ export const CEODigitalTwinView: React.FC = () => {
           <div className="border-b border-white/10 pb-4">
             <h3 className="text-base font-bold text-white flex items-center gap-2">
               <ShieldCheck className="w-5 h-5 text-emerald-400" />
-              <span>Autonomous Decision Heuristics & Guardrails</span>
+              <span>AI-Assisted Decision Heuristics & Guardrails</span>
             </h3>
             <p className="text-xs text-white/50 mt-1">
-              Specify exact financial and legal boundaries for what the Digital Twin can autonomously authorize vs. what must alert your phone.
+              Specify exact financial and legal boundaries for what the Digital Twin can recommend vs. what must alert your phone. AI will help you to close.
             </p>
           </div>
 
@@ -858,7 +858,7 @@ export const CEODigitalTwinView: React.FC = () => {
                   className="w-full bg-black/60 border border-white/10 focus:border-[#FFD700] rounded-xl px-3 py-2 text-xs text-white font-mono"
                 />
               </div>
-              <p className="text-[10px] text-white/40">Invoices & vendor renewals under this amount will be signed autonomously.</p>
+              <p className="text-[10px] text-white/40">Invoices & vendor renewals under this amount will be prepared for approval. 100% Human Approval Required.</p>
             </div>
 
             <div className="space-y-2 p-5 rounded-2xl bg-black/40 border border-white/5">
