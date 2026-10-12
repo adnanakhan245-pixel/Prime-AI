@@ -59,51 +59,46 @@ export const LandingPage: React.FC<LandingPageProps> = ({
     <div className="w-full min-h-screen bg-[#070707] text-white flex flex-col items-center selection:bg-rose-500 selection:text-white">
       
       {/* ========================================================================= */}
-      {/* 1. ہیرو سیکشن (HERO SECTION) — خالص اردو ہیڈ لائن اور فوری ریونیو بچاؤ */}
+      {/* 1. HERO SECTION — Bold English Headline & Immediate Revenue Rescue */}
       {/* ========================================================================= */}
       <header className="w-full max-w-5xl mx-auto px-4 pt-12 pb-14 sm:pt-16 sm:pb-20 flex flex-col items-center text-center">
         
-        {/* Urgent Live Loss Alert Badge in Urdu */}
+        {/* Urgent Live Loss Alert Badge */}
         <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-rose-500/15 border border-rose-500/40 text-xs font-bold text-rose-300 mb-6 shadow-[0_0_25px_rgba(244,63,94,0.2)] animate-pulse">
           <span className="w-2 h-2 rounded-full bg-rose-500" />
           <span className="font-sans tracking-wide">
-            سٹرائپ چرن اور فیلڈ کارڈز کا لائیو رڈار • 1-کلک رقم کی واپسی
+            Stripe Churn &amp; Failed Payment Live Radar • 1-Click Recovery
           </span>
         </div>
 
-        {/* Urdu Main Bold Headline */}
+        {/* Main Bold Headline */}
         <h1 className="text-3xl sm:text-5xl md:text-6xl font-black tracking-tight text-white max-w-4xl leading-[1.25] sm:leading-[1.2]">
-          پچھلے مہینے آپ <span className="text-rose-500 underline decoration-rose-500/50 decoration-wavy font-mono">${interactiveLostAmount.toLocaleString()}</span> صرف کارڈ فیل ہونے سے ہار گئے۔ <br />
+          You Lost <span className="text-rose-500 underline decoration-rose-500/50 decoration-wavy font-mono">${interactiveLostAmount.toLocaleString()}</span> Last Month to Failed Payments. <br />
           <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-teal-300 to-emerald-400">
-            ہم 1 کلک میں واپس لائیں گے۔
+            We Bring It Back in 1-Click.
           </span>
         </h1>
 
-        {/* English Sub-Headline */}
-        <p className="mt-3 text-sm sm:text-base text-zinc-400 font-mono tracking-tight">
-          You Lost ${interactiveLostAmount.toLocaleString()} Last Month to Failed Payments. We Bring It Back in 1-Click.
-        </p>
-
-        {/* Urdu Sub-headline Description */}
+        {/* Sub-headline Description */}
         <p className="mt-5 text-sm sm:text-lg text-zinc-300 max-w-2xl leading-relaxed font-normal">
-          پرائم ریڈار آپ کے سٹرائپ اکاؤنٹ کو اسکین کرتا ہے، فیل شدہ کارڈز اور کینسل ہونے والی سبسکرپشنز کو پکڑتا ہے، اور آپ کے سوتے ہوئے رقم خودکار طور پر واپس لاتا ہے۔ سیٹ اپ صرف 3 منٹ میں۔
+          PRIME Radar analyzes your customer data, catches failed card renewals and silent accounts before they cancel, and prepares personalized Day 1 Email and Day 3 WhatsApp rescue messages with strict human-in-the-loop approval.
         </p>
 
-        {/* Visual Comparison: Red Loss vs. Green Recovery in Urdu */}
-        <div className="mt-8 w-full max-w-3xl grid grid-cols-1 sm:grid-cols-2 gap-3.5 text-right dir-rtl">
+        {/* Visual Comparison: Red Loss vs. Green Recovery */}
+        <div className="mt-8 w-full max-w-3xl grid grid-cols-1 sm:grid-cols-2 gap-3.5 text-left">
           
-          {/* سرخ کارڈ: نقصان (The Loss) */}
-          <div className="p-5 rounded-2xl bg-gradient-to-br from-rose-950/40 via-[#181010] to-black border-2 border-rose-500/50 shadow-[0_0_30px_rgba(244,63,94,0.15)] flex items-center justify-between gap-3 text-right">
+          {/* Red Card: The Loss */}
+          <div className="p-5 rounded-2xl bg-gradient-to-br from-rose-950/40 via-[#181010] to-black border-2 border-rose-500/50 shadow-[0_0_30px_rgba(244,63,94,0.15)] flex items-center justify-between gap-3">
             <div className="space-y-1">
-              <span className="text-[11px] font-bold text-rose-400 uppercase tracking-wider flex items-center gap-1.5 justify-end">
+              <span className="text-[11px] font-bold text-rose-400 uppercase tracking-wider flex items-center gap-1.5">
                 <span className="w-2 h-2 rounded-full bg-rose-500 animate-ping" />
-                پچھلے مہینے ضائع شدہ رقم (خاموش نقصان)
+                Lost Last Month (Silent Inactivity)
               </span>
-              <div className="text-2xl sm:text-3xl font-black text-rose-400 font-mono dir-ltr text-right">
+              <div className="text-2xl sm:text-3xl font-black text-rose-400 font-mono">
                 -${interactiveLostAmount.toLocaleString()}
               </div>
               <p className="text-xs text-zinc-400">
-                5 فیل شدہ سٹرائپ انوائسز اور 7 زائد المعیاد کارڈز
+                5 failed Stripe renewals &amp; 7 expired credit cards
               </p>
             </div>
             <div className="w-11 h-11 rounded-2xl bg-rose-500/20 text-rose-400 flex items-center justify-center shrink-0 border border-rose-500/30">
@@ -111,18 +106,18 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             </div>
           </div>
 
-          {/* سبز کارڈ: واپسی (The Recovery) */}
-          <div className="p-5 rounded-2xl bg-gradient-to-br from-emerald-950/40 via-[#0d1612] to-black border-2 border-emerald-500/50 shadow-[0_0_30px_rgba(16,185,129,0.15)] flex items-center justify-between gap-3 text-right">
+          {/* Green Card: The Recovery */}
+          <div className="p-5 rounded-2xl bg-gradient-to-br from-emerald-950/40 via-[#0d1612] to-black border-2 border-emerald-500/50 shadow-[0_0_30px_rgba(16,185,129,0.15)] flex items-center justify-between gap-3">
             <div className="space-y-1">
-              <span className="text-[11px] font-bold text-emerald-400 uppercase tracking-wider flex items-center gap-1.5 justify-end">
+              <span className="text-[11px] font-bold text-emerald-400 uppercase tracking-wider flex items-center gap-1.5">
                 <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-                1-کلک خودکار واپسی (ریکوری)
+                1-Click Verified Recovery
               </span>
-              <div className="text-2xl sm:text-3xl font-black text-emerald-400 font-mono dir-ltr text-right">
+              <div className="text-2xl sm:text-3xl font-black text-emerald-400 font-mono">
                 +${interactiveRecoveredAmount.toLocaleString()}
               </div>
               <p className="text-xs text-zinc-400">
-                86% رقم ڈے 1 ای میل اور ڈے 3 واٹس ایپ سے واپس
+                86% recovered via Day 1 Email &amp; Day 3 WhatsApp
               </p>
             </div>
             <div className="w-11 h-11 rounded-2xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0 border border-emerald-500/30">
@@ -132,17 +127,17 @@ export const LandingPage: React.FC<LandingPageProps> = ({
 
         </div>
 
-        {/* CTA Buttons in Urdu */}
+        {/* CTA Buttons */}
         <div className="mt-9 flex flex-col sm:flex-row items-center justify-center gap-3.5 w-full max-w-3xl">
           
-          {/* PRIMARY CTA: Opens Stripe Connect / Free Churn Report */}
+          {/* PRIMARY CTA: Opens Free Churn Report / CSV Upload */}
           <button
             type="button"
             onClick={handleOpenAuditOrTour}
             className="w-full sm:w-auto px-7 py-4 bg-gradient-to-r from-rose-500 via-red-500 to-rose-600 hover:brightness-110 text-white font-black text-sm rounded-2xl shadow-[0_0_35px_rgba(244,63,94,0.4)] hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer"
           >
             <Zap className="w-4 h-4 text-white animate-pulse" />
-            <span>[ Free Churn Report دیکھیں - 2 منٹ ]</span>
+            <span>[ Free Churn Report — 2 Min Audit ]</span>
           </button>
 
           {/* SECONDARY CTA: Interactive Demo */}
@@ -152,42 +147,42 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             className="w-full sm:w-auto px-5 py-4 bg-white/5 hover:bg-white/10 text-zinc-200 hover:text-white font-bold text-sm rounded-2xl border border-white/10 hover:border-white/20 transition-all flex items-center justify-center gap-2 cursor-pointer"
           >
             <Sparkles className="w-4 h-4 text-[#FFD700]" />
-            <span>لائیو ڈیمو (Live Tour)</span>
+            <span>Interactive Demo (Live Tour)</span>
           </button>
 
         </div>
 
-        {/* Trust Line in Urdu */}
+        {/* Trust Line */}
         <div className="mt-5 flex items-center justify-center gap-2 text-xs text-zinc-400 font-medium flex-wrap">
           <ShieldCheck className="w-4 h-4 text-emerald-400" />
-          <span>سٹرائپ کنیکٹ (Read-Only • 100% محفوظ) • کسی کریڈٹ کارڈ کی ضرورت نہیں • فوری 2 منٹ رپورٹ</span>
+          <span>Upload CSV or Connect Stripe • Zero Credit Card Required • Instant 2-Minute Audit</span>
         </div>
 
       </header>
 
       {/* ========================================================================= */}
-      {/* SECTION 2 - PAIN: سٹرائپ کا ڈیش بورڈ سچ نہیں بتاتا */}
+      {/* SECTION 2 - PAIN: Stripe Dashboard Doesn't Tell You The Truth */}
       {/* ========================================================================= */}
       <section className="w-full max-w-5xl mx-auto px-4 py-12 border-t border-white/5 text-center">
         
         <div className="space-y-3 mb-10">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs font-bold uppercase tracking-wider">
             <ShieldAlert className="w-3.5 h-3.5" />
-            <span>خاموش مالیاتی نقصان کا پردہ فاش</span>
+            <span>Silent Revenue Leaks Uncovered</span>
           </div>
           <h2 className="text-2xl sm:text-4xl font-black text-white tracking-tight">
-            Stripe Dashboard Doesn't Tell You The Truth
+            Stripe Dashboard Doesn&apos;t Tell You The Truth
           </h2>
           <h3 className="text-lg sm:text-xl font-bold text-rose-400">
-            سٹرائپ کا ڈیش بورڈ صرف کامیاب پیمنٹس دکھاتا ہے اور خاموش نقصان چھپا دیتا ہے!
+            Standard billing dashboards only show successful charges and hide silent churn!
           </h3>
           <p className="text-xs sm:text-sm text-zinc-400 max-w-2xl mx-auto">
-            ہر مہینے آپ کی جیب سے پیسے نکل رہے ہیں اور آپ کو اندازہ بھی نہیں ہوتا:
+            Every month, recurring revenue quietly slips away without triggering alarm bells:
           </p>
         </div>
 
         {/* 3 Red Pain Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5 text-right dir-rtl">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5 text-left">
           
           {/* Card 1: $ Lost to Failed Payments */}
           <div className="p-6 rounded-3xl bg-gradient-to-b from-rose-950/30 via-[#140e0e] to-black border-2 border-rose-500/50 shadow-[0_0_30px_rgba(244,63,94,0.12)] space-y-4 hover:border-rose-500 transition-all flex flex-col justify-between">
@@ -203,21 +198,21 @@ export const LandingPage: React.FC<LandingPageProps> = ({
 
               <div className="space-y-1">
                 <h3 className="text-lg font-black text-white">
-                  1. فیل پیمنٹس میں ضائع شدہ رقم
+                  1. Revenue Lost to Failed Cards
                 </h3>
                 <div className="text-xs font-bold text-rose-400 font-sans">
-                  23% of your churn is just expired cards.
+                  23% of SaaS churn is simply expired cards and temporary bank holds.
                 </div>
               </div>
 
               <p className="text-xs text-zinc-300 leading-relaxed">
-                کسٹمر سروس چھوڑنا نہیں چاہتا تھا، مگر اس کا کارڈ ایکسپائر ہو گیا یا بینک نے چارج بلاک کر دیا۔ سٹرائپ نے 3 بے اثر ای میلز بھیج کر سبسکرپشن کینسل کر دی۔ آپ کا تیار کسٹمر ضائع ہو گیا!
+                Customers didn&apos;t want to leave—their cards expired or their banks blocked charges. Standard dunning emails land in spam, and subscriptions get canceled silently.
               </p>
             </div>
 
-            <div className="pt-3 border-t border-rose-500/20 flex items-center justify-between text-[11px] text-rose-400 font-mono dir-ltr">
+            <div className="pt-3 border-t border-rose-500/20 flex items-center justify-between text-[11px] text-rose-400 font-mono">
               <span>-$1,850 avg / client</span>
-              <span>خاموش نقصان</span>
+              <span>Silent Churn</span>
             </div>
           </div>
 
@@ -235,21 +230,21 @@ export const LandingPage: React.FC<LandingPageProps> = ({
 
               <div className="space-y-1">
                 <h3 className="text-lg font-black text-white">
-                  2. جانے والے کسٹمر کی پیشگی خبر
+                  2. Early Silent Inactivity Warnings
                 </h3>
                 <div className="text-xs font-bold text-rose-400 font-sans">
-                  We detect them 7 days before they leave.
+                  Detect churn risks 7 days before they hit the cancel button.
                 </div>
               </div>
 
               <p className="text-xs text-zinc-300 leading-relaxed">
-                کوئی بھی سبسکرائبر اچانک کینسل نہیں کرتا؛ وہ پہلے 7 سے 10 دن ایپ میں لاگ ان کرنا بند کر دیتا ہے۔ سٹرائپ یہ کبھی نہیں بتاتا، لیکن PRIME AI بروقت سرخ الرٹ دکھاتا ہے: "یہ کسٹمر جانے والا ہے"۔
+                Subscribers never cancel unexpectedly: they stop logging in for 7 to 10 days first. PRIME flags inactive accounts and drafts proactive retention offers before they leave.
               </p>
             </div>
 
-            <div className="pt-3 border-t border-rose-500/20 flex items-center justify-between text-[11px] text-rose-400 font-mono dir-ltr">
+            <div className="pt-3 border-t border-rose-500/20 flex items-center justify-between text-[11px] text-rose-400 font-mono">
               <span>Early Churn Flag</span>
-              <span>7 دن خاموش</span>
+              <span>7+ Days Silent</span>
             </div>
           </div>
 
@@ -258,7 +253,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <span className="text-[10px] font-mono font-black text-rose-300 bg-rose-500/20 px-2.5 py-1 rounded-lg border border-rose-500/30">
-                  HANDS-FREE
+                  STRICT APPROVAL
                 </span>
                 <div className="w-8 h-8 rounded-xl bg-rose-500/20 text-rose-400 flex items-center justify-center">
                   <RotateCcw className="w-4 h-4" />
@@ -267,21 +262,21 @@ export const LandingPage: React.FC<LandingPageProps> = ({
 
               <div className="space-y-1">
                 <h3 className="text-lg font-black text-white">
-                  3. زیرو دستی محنت (No Manual Work)
+                  3. Founder-Controlled Execution
                 </h3>
                 <div className="text-xs font-bold text-rose-400 font-sans">
-                  No more writing "your payment failed" emails.
+                  No automated mistakes. 100% human-in-the-loop sign-off.
                 </div>
               </div>
 
               <p className="text-xs text-zinc-300 leading-relaxed">
-                نہ آپ کو خود بیٹھ کر فیلڈ پیمنٹس چیک کرنی ہیں نہ کسٹمرز کو ای میلز لکھنی ہیں۔ پہلے دن خودکار ای میل اور تیسرے دن براہ راست واٹس ایپ میسج خود بخود چلا جاتا ہے۔
+                You never have to draft recovery copy from scratch. PRIME prepares Day 1 Email and Day 3 WhatsApp drafts and queues them up until you click &quot;Approve &amp; Dispatch&quot;.
               </p>
             </div>
 
-            <div className="pt-3 border-t border-rose-500/20 flex items-center justify-between text-[11px] text-rose-400 font-mono dir-ltr">
-              <span>100% Hands-Free</span>
-              <span>خودکار نظام</span>
+            <div className="pt-3 border-t border-rose-500/20 flex items-center justify-between text-[11px] text-rose-400 font-mono">
+              <span>Zero Rogue Dispatch</span>
+              <span>Human Approval</span>
             </div>
           </div>
 
@@ -290,30 +285,30 @@ export const LandingPage: React.FC<LandingPageProps> = ({
       </section>
 
       {/* ========================================================================= */}
-      {/* SECTION 3 - SOLUTION: پرائم آپ کا پیسہ کیسے واپس لاتا ہے؟ */}
+      {/* SECTION 3 - SOLUTION: How PRIME Recovers Your Money */}
       {/* ========================================================================= */}
       <section className="w-full max-w-5xl mx-auto px-4 py-12 border-t border-white/5 text-center">
         
         <div className="space-y-3 mb-10">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-bold uppercase tracking-wider">
             <Sparkles className="w-3.5 h-3.5" />
-            <span>سبز ریکوری فارمولا</span>
+            <span>Proven Recovery Architecture</span>
           </div>
           <h2 className="text-2xl sm:text-4xl font-black text-white tracking-tight">
-            How PRIME Recovers Your Money
+            How PRIME Recovers Your Revenue
           </h2>
           <h3 className="text-lg sm:text-xl font-bold text-emerald-400">
-            PRIME آپ کا پیسہ کیسے واپس لاتا ہے؟ (سرخ نقصان سے سبز منافع تک)
+            Three synchronized engines that prevent cancellation and reclaim declined MRR
           </h3>
           <p className="text-xs sm:text-sm text-zinc-400 max-w-2xl mx-auto">
-            تین ایسے خودکار طریقے جو کسٹمر کو کینسل کرنے نہیں دیتے اور رکی ہوئی رقم واپس لاتے ہیں:
+            From failed invoice detection to multi-channel outreach with human approval:
           </p>
         </div>
 
-        {/* 3 Solution Features in Urdu */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5 text-right dir-rtl">
+        {/* 3 Solution Features */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5 text-left">
           
-          {/* Feature 1: ہر فیل پیمنٹ پر فوری الرٹ */}
+          {/* Feature 1: Immediate Alert on Failed Payments */}
           <div className="p-6 rounded-3xl bg-gradient-to-b from-emerald-950/30 via-[#0e1612] to-black border-2 border-emerald-500/50 shadow-[0_0_30px_rgba(16,185,129,0.12)] space-y-4 hover:border-emerald-400 transition-all flex flex-col justify-between">
             <div className="space-y-3">
               <div className="flex items-center justify-between">
@@ -326,24 +321,24 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               </div>
 
               <div className="space-y-1">
-                <span className="text-[11px] font-mono text-emerald-400 font-bold">Stripe Dunning Telemetry</span>
+                <span className="text-[11px] font-mono text-emerald-400 font-bold">Multi-Channel Dunning</span>
                 <h3 className="text-lg font-black text-white">
-                  ہر فیل پیمنٹ پر فوری الرٹ
+                  Payment Decline Rescue
                 </h3>
               </div>
 
               <p className="text-xs text-zinc-300 leading-relaxed">
-                سٹرائپ میں کارڈ فیل ہوتے ہی پہلے دن ای میل جاتی ہے: <em>"آپ کی ادائیگی ناکام ہو گئی، ایک کلک میں ٹھیک کریں"</em>۔ اور تیسرے دن واٹس ایپ پر نوٹس: <em>"آپ کا اکاؤنٹ دو دن میں بند ہو جائے گا"</em>۔
+                When a payment fails, PRIME drafts a Day 1 direct inbox email with 1-click update links and a Day 3 WhatsApp mobile escalation if payment remains pending.
               </p>
             </div>
 
-            <div className="p-3 rounded-xl bg-black/40 border border-emerald-500/20 text-[11px] text-emerald-300 font-mono flex items-center justify-between dir-ltr">
+            <div className="p-3 rounded-xl bg-black/40 border border-emerald-500/20 text-[11px] text-emerald-300 font-mono flex items-center justify-between">
               <span>98% WhatsApp Open</span>
               <span>1-Click Pay Link</span>
             </div>
           </div>
 
-          {/* Feature 2: AI خود کسٹمر کو روک کر رکھے */}
+          {/* Feature 2: Inactivity Retention Concession */}
           <div className="p-6 rounded-3xl bg-gradient-to-b from-emerald-950/30 via-[#0e1612] to-black border-2 border-emerald-500/50 shadow-[0_0_30px_rgba(16,185,129,0.12)] space-y-4 hover:border-emerald-400 transition-all flex flex-col justify-between">
             <div className="space-y-3">
               <div className="flex items-center justify-between">
@@ -356,29 +351,29 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               </div>
 
               <div className="space-y-1">
-                <span className="text-[11px] font-mono text-emerald-400 font-bold">AI-assisted Churn Prevention</span>
+                <span className="text-[11px] font-mono text-emerald-400 font-bold">Inactivity Intervention</span>
                 <h3 className="text-lg font-black text-white">
-                  AI خود کسٹمر کو روک کر رکھے
+                  Silent Churn Sentry
                 </h3>
               </div>
 
               <p className="text-xs text-zinc-300 leading-relaxed">
-                جب کوئی یوزر 7 دن تک لاگ ان نہ کرے تو PRIME ریڈ الرٹ دیتا ہے: <em>"یہ کسٹمر جانے والا ہے"</em> اور AI مشورہ دیتا ہے: <em>"اس کو بیس فیصد رعایت دو"</em> (SAVE20NOW) تاکہ کسٹمر ضائع نہ ہو۔
+                When a subscriber goes silent for 7+ days, PRIME alerts you and pre-configures a targeted 20% concession (code: SAVE20NOW) and VIP check-in to preserve the contract.
               </p>
             </div>
 
-            <div className="p-3 rounded-xl bg-black/40 border border-emerald-500/20 text-[11px] text-emerald-300 font-mono flex items-center justify-between dir-ltr">
+            <div className="p-3 rounded-xl bg-black/40 border border-emerald-500/20 text-[11px] text-emerald-300 font-mono flex items-center justify-between">
               <span>20% Discount Code</span>
               <span>Win-Back Playbook</span>
             </div>
           </div>
 
-          {/* Feature 3: اردو / English میں AI خود جواب دے، تم سوئے رہو */}
+          {/* Feature 3: Executive Retention Offers */}
           <div className="p-6 rounded-3xl bg-gradient-to-b from-emerald-950/30 via-[#0e1612] to-black border-2 border-emerald-500/50 shadow-[0_0_30px_rgba(16,185,129,0.12)] space-y-4 hover:border-emerald-400 transition-all flex flex-col justify-between">
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <span className="text-[10px] font-mono font-black text-emerald-300 bg-emerald-500/20 px-2.5 py-1 rounded-lg border border-emerald-500/30">
-                  24/7 BILINGUAL
+                  VOLUNTARY RESCUE
                 </span>
                 <div className="w-8 h-8 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center">
                   <MessageSquare className="w-4 h-4" />
@@ -386,20 +381,20 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               </div>
 
               <div className="space-y-1">
-                <span className="text-[11px] font-mono text-emerald-400 font-bold">VIP Billing Inbox</span>
+                <span className="text-[11px] font-mono text-emerald-400 font-bold">Exit Intervention</span>
                 <h3 className="text-lg font-black text-white">
-                  اردو / English میں AI خود جواب دے، تم سوئے رہو
+                  Executive Rate Freeze
                 </h3>
               </div>
 
               <p className="text-xs text-zinc-300 leading-relaxed">
-                گاہک کی طرف سے بلنگ کا سوال آئے یا کارڈ اپڈیٹ کی پریشانی، AI سیکنڈوں میں شائستہ اور پیشہ ورانہ جواب دے کر پیمنٹ مکمل کرواتا ہے۔ آپ کے سوتے ہوئے بھی ریکوری چلتی رہے گی۔
+                For subscribers requesting cancellation, PRIME prepares tailored contract lock-in propositions and rate guarantees before they churn to competitors.
               </p>
             </div>
 
-            <div className="p-3 rounded-xl bg-black/40 border border-emerald-500/20 text-[11px] text-emerald-300 font-mono flex items-center justify-between dir-ltr">
-              <span>Zero Human Delay</span>
-              <span>اردو + English</span>
+            <div className="p-3 rounded-xl bg-black/40 border border-emerald-500/20 text-[11px] text-emerald-300 font-mono flex items-center justify-between">
+              <span>Rate Freeze Offer</span>
+              <span>100% Sign-Off</span>
             </div>
           </div>
 
@@ -408,62 +403,62 @@ export const LandingPage: React.FC<LandingPageProps> = ({
       </section>
 
       {/* ========================================================================= */}
-      {/* SECTION 4 - HOW IT WORKS: صرف 3 آسان اقدامات میں رقم کی واپسی */}
+      {/* SECTION 4 - HOW IT WORKS: 3 Simple Steps */}
       {/* ========================================================================= */}
       <section className="w-full max-w-5xl mx-auto px-4 py-12 border-t border-white/5 text-center">
         
         <div className="space-y-3 mb-10">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#FFD700]/10 border border-[#FFD700]/30 text-[#FFD700] text-xs font-mono font-bold uppercase tracking-wider">
             <Clock className="w-3.5 h-3.5" />
-            <span>3 منٹ میں سیٹ اپ</span>
+            <span>3-Minute Setup</span>
           </div>
           <h2 className="text-2xl sm:text-4xl font-black text-white tracking-tight">
-            صرف 3 آسان اقدامات میں رقم کی واپسی
+            Start Recovering Revenue in 3 Steps
           </h2>
           <p className="text-xs sm:text-sm text-zinc-400 max-w-xl mx-auto">
-            کوئی لمبا چوڑا کوڈ نہیں، نہ کوئی پیچیدہ فارم۔ صرف 3 کلکس:
+            No complex engineering or multi-week migrations required:
           </p>
         </div>
 
-        {/* 3 Steps Grid in Urdu */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5 text-right dir-rtl">
+        {/* 3 Steps Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5 text-left">
           
           {/* Step 1 */}
           <div className="p-6 rounded-3xl bg-[#101010] border border-white/10 relative space-y-3 hover:border-[#FFD700]/50 transition-all">
-            <div className="w-10 h-10 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center font-mono font-black text-[#FFD700] text-sm dir-ltr">
+            <div className="w-10 h-10 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center font-mono font-black text-[#FFD700] text-sm">
               01
             </div>
             <h3 className="text-base font-extrabold text-white">
-              مرحلہ 1: سٹرائپ کنیکٹ کرو (Read-only، 100% محفوظ)
+              Step 1: Upload CSV or Connect Stripe
             </h3>
             <p className="text-xs text-zinc-400 leading-relaxed">
-              صرف ریڈ اونلی سٹرائپ کی درج کرو یا سیدھی CSV فائل ڈالو۔ کوئی کریڈٹ کارڈ یا والٹ پاس ورڈ کی ضرورت نہیں۔ آپ کا ڈیٹا 100% محفوظ ہے۔
+              Upload your customer CSV spreadsheet or connect Stripe Read-Only. No credit card or sensitive write access required.
             </p>
           </div>
 
           {/* Step 2 */}
           <div className="p-6 rounded-3xl bg-[#101010] border border-white/10 relative space-y-3 hover:border-rose-500/50 transition-all">
-            <div className="w-10 h-10 rounded-2xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center font-mono font-black text-rose-400 text-sm dir-ltr">
+            <div className="w-10 h-10 rounded-2xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center font-mono font-black text-rose-400 text-sm">
               02
             </div>
             <h3 className="text-base font-extrabold text-white">
-              مرحلہ 2: ہم تمہیں Free Report دکھائیں گے کہ کتنا نقصان ہوا
+              Step 2: Instant Churn Risk Breakdown
             </h3>
             <p className="text-xs text-zinc-400 leading-relaxed">
-              PRIME پچھلے 30 دن کا مکمل حساب کھول دے گا: کتنے ڈالر فیل پیمنٹس میں برباد ہوئے، کتنے گاہک 7 دن سے خاموش ہیں، اور کن کے کارڈز فیل ہونے والے ہیں۔
+              PRIME instantly audits your accounts: how much MRR is trapped in declined cards, which users are silent, and who is about to churn.
             </p>
           </div>
 
           {/* Step 3 */}
           <div className="p-6 rounded-3xl bg-[#101010] border border-white/10 relative space-y-3 hover:border-emerald-500/50 transition-all">
-            <div className="w-10 h-10 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center font-mono font-black text-emerald-400 text-sm dir-ltr">
+            <div className="w-10 h-10 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center font-mono font-black text-emerald-400 text-sm">
               03
             </div>
             <h3 className="text-base font-extrabold text-white">
-              مرحلہ 3: 1-Click دباؤ، پیسے واپس آنا شروع
+              Step 3: Review &amp; Approve to Recover
             </h3>
             <p className="text-xs text-zinc-400 leading-relaxed">
-              صرف ایک بٹن دباؤ، خودکار ای میل اور واٹس ایپ ریسکیو شروع ہو جائے گا اور سپا بیس میں کسٹمرز واپس آنے کا اندراج خودکار طور پر ہوتا رہے گا۔
+              Review pre-composed email and WhatsApp recovery copy. Click &quot;Approve &amp; Dispatch&quot; to restore customer subscriptions.
             </p>
           </div>
 
@@ -472,25 +467,25 @@ export const LandingPage: React.FC<LandingPageProps> = ({
       </section>
 
       {/* ========================================================================= */}
-      {/* 5. FOOTER CTA: پرانے 14 دن کے ٹرائلز چھوڑیں */}
+      {/* 5. FOOTER CTA */}
       {/* ========================================================================= */}
       <section className="w-full max-w-5xl mx-auto px-4 py-12">
         <div className="p-8 sm:p-12 rounded-3xl bg-gradient-to-br from-rose-950/40 via-[#161010] to-[#0A0A0A] border-2 border-rose-500/60 shadow-[0_0_60px_rgba(244,63,94,0.25)] text-center space-y-6 relative overflow-hidden">
           
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-rose-500/20 border border-rose-500/40 text-rose-300 text-xs font-mono font-bold uppercase tracking-wider">
             <Flame className="w-4 h-4 text-rose-400" />
-            <span>نقصان آج ہی روکیں</span>
+            <span>Stop Churn Today</span>
           </div>
 
           <div className="space-y-3 max-w-3xl mx-auto">
             <h2 className="text-2xl sm:text-4xl md:text-5xl font-black text-white tracking-tight leading-tight">
-              Don't offer another 14-day trial. <br />
+              Don&apos;t offer another 14-day trial. <br />
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-rose-400 via-amber-300 to-emerald-400">
                 Show them the money they already lost.
               </span>
             </h2>
             <p className="text-sm sm:text-lg text-zinc-200 max-w-xl mx-auto leading-relaxed">
-              پرانے بورنگ 14 دن کے ٹرائلز چھوڑیں۔ کسٹمر کو وہ رقم دکھائیں جو وہ پہلے ہی کارڈ فیل ہونے کی وجہ سے ہار چکے ہیں!
+              Skip speculative vanity metrics. See exactly how much recurring revenue has failed and reclaim it with founder-approved outreach.
             </p>
           </div>
 
@@ -501,21 +496,21 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               className="w-full sm:w-auto px-7 py-4 rounded-2xl bg-gradient-to-r from-emerald-400 via-teal-400 to-emerald-500 hover:brightness-110 text-black font-black text-base shadow-[0_0_35px_rgba(16,185,129,0.35)] transition-all hover:scale-105 active:scale-95 cursor-pointer flex items-center justify-center gap-2"
             >
               <Zap className="w-5 h-5 text-black" />
-              <span>مفت آڈٹ سے شروع کریں — پیسے تب دیں جب ریکوری ہو</span>
+              <span>Start Free Churn Audit — Pay Only When Recovered</span>
             </button>
           </div>
 
           <div className="pt-2 flex items-center justify-center gap-4 text-xs text-zinc-400 font-mono flex-wrap">
-            <span>⚡ سٹرائپ ریڈ اونلی محفوظ</span>
+            <span>⚡ Read-Only &amp; CSV Privacy Shield</span>
             <span>•</span>
-            <span>🚀 صرف 2 منٹ رپورٹ</span>
+            <span>🚀 2-Minute Audit</span>
           </div>
 
         </div>
       </section>
 
       {/* ========================================================================= */}
-      {/* CLEAN FOOTER IN URDU */}
+      {/* CLEAN FOOTER */}
       {/* ========================================================================= */}
       <footer className="w-full border-t border-white/5 py-8 text-center text-xs text-zinc-500">
         <div className="max-w-5xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-4">
@@ -524,7 +519,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               P
             </div>
             <span className="text-zinc-300 font-bold">PRIME AI</span>
-            <span>— خودکار ریونیو ریکوری اور چرن ڈیفنس</span>
+            <span>— Revenue Recovery &amp; Churn Defense</span>
           </div>
 
           {/* Legal Compliance & Meta WhatsApp Review Quick Links */}
@@ -571,28 +566,28 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               onClick={handleOpenAuditOrTour}
               className="text-rose-400 hover:underline transition-colors cursor-pointer font-bold"
             >
-              مفت چرن رپورٹ
+              Free Churn Report
             </button>
             <button
               type="button"
               onClick={handleLaunchTour}
               className="text-zinc-400 hover:text-white transition-colors cursor-pointer"
             >
-              پراڈکٹ ڈیمو
+              Product Tour
             </button>
             <button
               type="button"
               onClick={() => onOpenAuth('login')}
               className="hover:text-white transition-colors cursor-pointer"
             >
-              سائن ان
+              Sign In
             </button>
             <button
               type="button"
               onClick={() => onOpenAuth('signup')}
               className="px-3.5 py-1.5 rounded-xl bg-rose-500 hover:bg-rose-400 text-white transition-colors font-bold cursor-pointer shadow-sm"
             >
-              اکاؤنٹ بنائیں
+              Create Account
             </button>
           </div>
         </div>

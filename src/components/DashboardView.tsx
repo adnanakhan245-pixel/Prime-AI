@@ -129,14 +129,14 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigate, onOpen
     const effectiveCompId = companyId || 'comp_apex_01';
     const updated = await applyInactivity20PercentConcession(effectiveCompId, id);
     setInactivityRiskItems(updated);
-    showRescueToast('✓ AI مشورہ نافذ: 20% رعایت اور ری-انگیجمنٹ میسج سپا بیس میں سنک ہو گیا!');
+    showRescueToast('✓ AI Recommendation Deployed: 20% Retention Concession synced to Supabase!');
   };
 
   const handleSendDay1Email = async (id: string) => {
     const effectiveCompId = companyId || 'comp_apex_01';
     const updated = await triggerDay1Email(effectiveCompId, id);
     setDunningRescueItems(updated);
-    showRescueToast('✓ Day 1 Email Sent: "آپ کی ادائیگی ناکام ہو گئی، ایک کلک میں ٹھیک کریں"');
+    showRescueToast('✓ Day 1 Email Sent: "Your payment failed, fix it in 1 click"');
   };
 
   const handleSendDay3WhatsApp = async (item: DunningRecoveryItem) => {
@@ -144,11 +144,11 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigate, onOpen
     const updated = await triggerDay3WhatsApp(effectiveCompId, item.id);
     setDunningRescueItems(updated);
     const phone = item.customerPhone ? item.customerPhone.replace(/[^0-9]/g, '') : '';
-    const text = encodeURIComponent(`آپ کا اکاؤنٹ دو دن میں بند ہو جائے گا۔ سروس بحال رکھنے کے لیے براہ کرم فوری رابطہ یا تصدیق کریں۔`);
+    const text = encodeURIComponent(`URGENT: Your account will be suspended in 48 hours due to failed payment. Please update your payment method to maintain continuous access.`);
     if (phone) {
       window.open(`https://wa.me/${phone}?text=${text}`, '_blank');
     }
-    showRescueToast('✓ Day 3 WhatsApp Dispatched: "آپ کا اکاؤنٹ دو دن میں بند ہو جائے گا"');
+    showRescueToast('✓ Day 3 WhatsApp Dispatched: "Your account will be suspended in 48 hours"');
   };
 
   const handleCustomerStatusChange = async (id: string, status: 'RECOVERED' | 'CHURNED') => {
@@ -156,9 +156,9 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigate, onOpen
     const updated = await markCustomerStatus(effectiveCompId, id, status);
     setDunningRescueItems(updated);
     if (status === 'RECOVERED') {
-      showRescueToast('✓ سپا بیس میں اپڈیٹ: کسٹمر واپس آ گیا (Customer Returned)');
+      showRescueToast('✓ Supabase Updated: Customer Returned & Re-authorized');
     } else {
-      showRescueToast('⚠️ سپا بیس میں اپڈیٹ: کسٹمر چلا گیا (Customer Left / Churned)');
+      showRescueToast('⚠️ Supabase Updated: Customer Marked Churned / Left');
     }
   };
 
@@ -269,7 +269,20 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigate, onOpen
 
   useEffect(() => {
     loadDashboardData();
-  }, [user]);
+
+    const handleRescueUpdate = () => {
+      const effectiveCompId = companyId || 'comp_apex_01';
+      const dunning = getDunningRescueItems(effectiveCompId);
+      const inact = getInactivityRiskItems(effectiveCompId);
+      setDunningRescueItems(dunning);
+      setInactivityRiskItems(inact);
+    };
+
+    window.addEventListener('prime:rescue_data_updated', handleRescueUpdate);
+    return () => {
+      window.removeEventListener('prime:rescue_data_updated', handleRescueUpdate);
+    };
+  }, [user, companyId]);
 
   // Handle simulating a fresh high-stakes executive email via Gemini
   const handleSimulateIncomingEmail = async () => {
@@ -436,7 +449,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigate, onOpen
           <button
             onClick={() => onNavigate('rescue')}
             className="px-3 py-2 rounded-xl bg-gradient-to-r from-rose-500/20 to-red-500/10 hover:from-rose-500/30 hover:to-red-500/20 text-rose-300 border border-rose-500/40 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap shrink-0 shadow-sm"
-            title="Rescue Center: 1. فیل پیمنٹ واپسی 2. جانے والے کسٹمر کی خبر"
+            title="Rescue Center: 1. Failed Payment Recovery 2. Silent Churn Sentry"
           >
             <AlertTriangle className="w-3.5 h-3.5 text-rose-400" />
             <span>Rescue Center</span>
@@ -697,11 +710,11 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigate, onOpen
       </section>
 
       {/* ========================================================================= */}
-      {/* PRIME 2 RESCUE ENGINES: فیل پیمنٹ واپسی + جانے والے کسٹمر کی خبر */}
+      {/* PRIME 2 RESCUE ENGINES: FAILED PAYMENT RECOVERY + SILENT CHURN SENTRY */}
       {/* ========================================================================= */}
       <section className="space-y-4">
         
-        {/* 2. جانے والے کسٹمر کی خبر (7-DAY INACTIVITY RED ALERT + 20% CONCESSION ADVICE) */}
+        {/* 2. SILENT CHURN SENTRY (7-DAY INACTIVITY RED ALERT + 20% CONCESSION ADVICE) */}
         {inactivityRiskItems.some(i => i.status === 'AT_RISK') && (
           <div className="p-5 sm:p-6 rounded-3xl bg-gradient-to-br from-rose-950/40 via-[#181111] to-black border-2 border-rose-500/70 shadow-[0_0_40px_rgba(244,63,94,0.2)] space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-rose-500/20 pb-3">
@@ -710,14 +723,14 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigate, onOpen
                 <div>
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className="text-xs font-mono font-bold uppercase tracking-wider text-rose-400">
-                      🚨 خطرے کی گھنٹی • 7-Day Inactivity Sentry
+                      🚨 HIGH RISK ALERT • 7-Day Inactivity Sentry
                     </span>
                     <span className="px-2.5 py-0.5 rounded-full bg-rose-500 text-white font-black text-[11px] animate-pulse shadow-sm">
-                      یہ کسٹمر جانے والا ہے
+                      High Churn Risk
                     </span>
                   </div>
                   <h3 className="text-base sm:text-lg font-black text-white mt-0.5">
-                    جانے والے کسٹمر کی خبر: سات دن سے غیر حاضر صارفین (Inactivity Alert)
+                    Silent Churn Warning: Users Inactive for 7+ Days
                   </h3>
                 </div>
               </div>
@@ -730,7 +743,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigate, onOpen
                   onClick={() => onNavigate('rescue')}
                   className="text-xs px-3 py-1.5 rounded-xl bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 font-bold border border-rose-500/30 cursor-pointer transition-colors"
                 >
-                  اوپن ریسکیو سینٹر →
+                  Open Rescue Center →
                 </button>
               </div>
             </div>
@@ -751,7 +764,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigate, onOpen
                       <div className="flex items-center gap-2 flex-wrap">
                         <span className="text-sm font-bold text-white">{item.customerName}</span>
                         <span className="text-[10px] font-mono font-bold text-rose-400 bg-rose-500/20 px-2 py-0.5 rounded border border-rose-500/30">
-                          {item.daysSilent} دن سے لاگ ان نہیں
+                          {item.daysSilent} Days Inactive
                         </span>
                       </div>
                       <p className="text-xs text-zinc-400 mt-0.5">{item.customerEmail}</p>
@@ -762,12 +775,12 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigate, onOpen
                     </div>
                   </div>
 
-                  {/* AI Advice Box: "اس کو بیس فیصد رعایت دو" */}
+                  {/* AI Advice Box */}
                   <div className="p-3.5 rounded-xl bg-gradient-to-r from-amber-500/15 via-[#FFD700]/10 to-amber-500/15 border border-[#FFD700]/40 space-y-2">
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <span className="text-[11px] font-extrabold text-[#FFD700] flex items-center gap-1.5 uppercase font-mono">
                         <Sparkles className="w-3.5 h-3.5 text-[#FFD700]" />
-                        <span>AI مشورہ (AI Recommendation):</span>
+                        <span>AI Recommendation:</span>
                       </span>
                       <AISuggestionBadge size="sm" />
                     </div>
@@ -777,7 +790,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigate, onOpen
                       </span>
                     </div>
                     <p className="text-sm font-black text-white">
-                      "{item.aiAdvice}" (Give 20% Retention Concession)
+                      "{item.aiAdvice}" (Deploy 20% Retention Concession)
                     </p>
                     <p className="text-[11px] text-zinc-300 leading-relaxed italic">
                       "{item.suggestedMessage}"
@@ -791,7 +804,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigate, onOpen
 
                     {item.status === 'CONCESSION_APPLIED' ? (
                       <span className="px-3 py-1.5 rounded-xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-xs font-bold flex items-center gap-1 font-mono">
-                        <CheckCircle2 className="w-3.5 h-3.5" /> 20% رعایت لاگو ہو گئی (RESCUED)
+                        <CheckCircle2 className="w-3.5 h-3.5" /> 20% Concession Applied (RESCUED)
                       </span>
                     ) : (
                       <button
@@ -799,7 +812,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigate, onOpen
                         className="px-4 py-2 rounded-xl bg-gradient-to-r from-[#FFD700] via-amber-400 to-[#FFD700] hover:brightness-110 text-black font-black text-xs shadow-md cursor-pointer transition-all flex items-center gap-1.5 active:scale-95"
                       >
                         <Zap className="w-3.5 h-3.5 text-black" />
-                        <span>Human Approval: 20% رعایت اور ری-انگیجمنٹ میسج بھیجیں</span>
+                        <span>Human Approval: Send 20% Concession &amp; Re-engagement</span>
                       </button>
                     )}
                   </div>
@@ -809,7 +822,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigate, onOpen
           </div>
         )}
 
-        {/* 1. فیل پیمنٹ واپسی (STRIPE MULTI-CHANNEL DUNNING: EMAIL & WHATSAPP) */}
+        {/* 1. FAILED PAYMENT RECOVERY (STRIPE MULTI-CHANNEL DUNNING: EMAIL & WHATSAPP) */}
         <div className="p-5 sm:p-6 rounded-3xl bg-[#121212] border border-white/10 space-y-4 shadow-xl">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/5 pb-3">
             <div className="flex items-center gap-3">
@@ -818,13 +831,13 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigate, onOpen
               </div>
               <div>
                 <h4 className="text-sm sm:text-base font-bold text-white flex items-center gap-2">
-                  <span>1. فیل پیمنٹ واپسی (Stripe Multi-Channel Dunning)</span>
+                  <span>1. Failed Payment Recovery (Stripe Multi-Channel Dunning)</span>
                   <span className="text-[9px] font-mono px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
                     Day 1 Email + Day 3 WhatsApp
                   </span>
                 </h4>
                 <p className="text-xs text-zinc-400">
-                  سٹرائپ میں ادائیگی فیل ہونے پر خودکار ایکشن: پہلے دن ایمیل، تیسرے دن واٹس ایپ، اور سپا بیس میں کسٹمر کی واپسی/روانگی کا اندراج۔
+                  Automated action on failed Stripe charges: Day 1 email, Day 3 WhatsApp escalation, and Supabase status updates.
                 </p>
               </div>
             </div>
@@ -842,7 +855,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigate, onOpen
                 onClick={() => onNavigate('rescue')}
                 className="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/15 text-white font-bold text-xs transition-all cursor-pointer"
               >
-                مکمل تفصیلات →
+                Full Details →
               </button>
             </div>
           </div>
@@ -864,7 +877,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigate, onOpen
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className="text-sm font-bold text-white">{item.customerName}</span>
                     <span className="text-xs font-mono font-bold text-rose-400 bg-rose-500/10 px-2.5 py-0.5 rounded-lg border border-rose-500/20">
-                      ${item.failedAmount} فیل شدہ رقم
+                      ${item.failedAmount} Failed Charge
                     </span>
                     <span className="text-zinc-500 text-xs font-mono">({item.customerEmail})</span>
                   </div>
@@ -874,18 +887,18 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigate, onOpen
                     <span className={`px-2 py-0.5 rounded font-mono text-[10px] font-bold flex items-center gap-1 ${
                       item.day1EmailSent ? 'bg-blue-500/20 text-blue-300' : 'bg-zinc-800 text-zinc-400'
                     }`}>
-                      <Mail className="w-3 h-3" /> Day 1 Email: {item.day1EmailSent ? '✓ بھیجی گئی ("آپ کی ادائیگی ناکام ہو گئی")' : 'Pending'}
+                      <Mail className="w-3 h-3" /> Day 1 Email: {item.day1EmailSent ? '✓ Sent ("Payment Failed Alert")' : 'Pending'}
                     </span>
 
                     <span className={`px-2 py-0.5 rounded font-mono text-[10px] font-bold flex items-center gap-1 ${
                       item.day3WhatsAppSent ? 'bg-emerald-500/20 text-emerald-300' : 'bg-amber-500/20 text-amber-300'
                     }`}>
-                      <MessageSquare className="w-3 h-3" /> Day 3 WhatsApp: {item.day3WhatsAppSent ? '✓ بھیجی گئی ("اکاؤنٹ دو دن میں بند ہو جائے گا")' : 'Scheduled'}
+                      <MessageSquare className="w-3 h-3" /> Day 3 WhatsApp: {item.day3WhatsAppSent ? '✓ Sent ("Suspension Notice")' : 'Scheduled'}
                     </span>
                   </div>
                 </div>
 
-                {/* Supabase Action Buttons: کسٹمر واپس آیا یا چلا گیا */}
+                {/* Supabase Action Buttons */}
                 <div className="flex items-center gap-2 shrink-0 self-end md:self-auto flex-wrap">
                   {item.status === 'PENDING' ? (
                     <>
@@ -895,7 +908,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigate, onOpen
                           className="px-2.5 py-1.5 rounded-xl bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 font-bold border border-blue-500/30 text-xs cursor-pointer flex items-center gap-1"
                         >
                           <Mail className="w-3 h-3" />
-                          <span>Human Approval: ای میل</span>
+                          <span>Human Approval: Email</span>
                         </button>
                       )}
                       {!item.day3WhatsAppSent && (
@@ -904,7 +917,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigate, onOpen
                           className="px-2.5 py-1.5 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 font-bold border border-emerald-500/30 text-xs cursor-pointer flex items-center gap-1"
                         >
                           <MessageSquare className="w-3 h-3" />
-                          <span>Human Approval: واٹس ایپ</span>
+                          <span>Human Approval: WhatsApp</span>
                         </button>
                       )}
                       <button
@@ -912,23 +925,23 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigate, onOpen
                         className="px-3 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-black font-extrabold text-xs transition-all cursor-pointer flex items-center gap-1 shadow-sm active:scale-95"
                       >
                         <UserCheck className="w-3.5 h-3.5" />
-                        <span>کسٹمر واپس آیا (Mark Returned)</span>
+                        <span>Mark Returned (Recovered)</span>
                       </button>
                       <button
                         onClick={() => handleCustomerStatusChange(item.id, 'CHURNED')}
                         className="px-3 py-1.5 rounded-xl bg-rose-500/20 hover:bg-rose-500/30 border border-rose-500/30 text-rose-300 font-bold text-xs transition-all cursor-pointer flex items-center gap-1 active:scale-95"
                       >
                         <UserX className="w-3.5 h-3.5" />
-                        <span>کسٹمر چلا گیا (Mark Left)</span>
+                        <span>Mark Left (Churned)</span>
                       </button>
                     </>
                   ) : item.status === 'RECOVERED' ? (
                     <span className="px-3 py-1.5 rounded-xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-bold text-xs flex items-center gap-1.5 font-mono">
-                      <UserCheck className="w-3.5 h-3.5" /> سپا بیس: کسٹمر واپس آ گیا (RECOVERED)
+                      <UserCheck className="w-3.5 h-3.5" /> Supabase: Customer Returned (RECOVERED)
                     </span>
                   ) : (
                     <span className="px-3 py-1.5 rounded-xl bg-rose-500/20 text-rose-400 border border-rose-500/30 font-bold text-xs flex items-center gap-1.5 font-mono">
-                      <UserX className="w-3.5 h-3.5" /> سپا بیس: کسٹمر چلا گیا (CHURNED)
+                      <UserX className="w-3.5 h-3.5" /> Supabase: Customer Marked Left (CHURNED)
                     </span>
                   )}
                 </div>

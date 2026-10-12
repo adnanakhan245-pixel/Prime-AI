@@ -1,5 +1,6 @@
 import { ChurnAuditResult, ChurnAuditAccount } from '../types';
 import { getSupabaseClient } from './crm';
+import { importCsvToRescueCenter } from './dunningRescue';
 
 const CHURN_AUDIT_STORAGE_KEY = 'prime_latest_churn_audit';
 
@@ -226,6 +227,11 @@ export async function runChurnAuditFromCsv(
   };
 
   await saveChurnAudit(result);
+  try {
+    await importCsvToRescueCenter(csvText, companyId);
+  } catch (err) {
+    console.warn('Auto-import to Rescue Center notice:', err);
+  }
   return result;
 }
 

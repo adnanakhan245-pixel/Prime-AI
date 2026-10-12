@@ -161,7 +161,7 @@ export const LegalModals: React.FC<LegalModalProps> = ({ type, onClose }) => {
                   <span>Meta App Review Ready &amp; 100% WhatsApp Cloud API Compliant</span>
                 </div>
                 <p className="text-xs text-emerald-200/80">
-                  اگر میٹا پورٹل پر ایپ کا اسٹیٹس ٹیسٹ موڈ میں ہے، تو نیچے دی گئی ویریفکیشن معلومات میٹا فارم میں درج کریں تاکہ آپ کی ایپ فوری لائیو اور منظور (Approve) ہو جائے۔
+                  If your app status is in Development / Test Mode on the Meta Developer Portal, enter the verification details below into your Meta WhatsApp App Review form to authorize live messaging.
                 </p>
               </div>
 

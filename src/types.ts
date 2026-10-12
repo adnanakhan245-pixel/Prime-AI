@@ -179,6 +179,10 @@ export interface DunningRecoveryItem {
   supabaseStatusText?: string;
   paymentUpdateUrl?: string;
   recoveredAt?: string;
+  humanApproved?: boolean;
+  humanApprovedAt?: string;
+  humanApprovedBy?: string;
+  source?: 'CSV_UPLOAD' | 'STRIPE_WEBHOOK' | 'DEMO';
 }
 
 export interface InactivityRiskItem {
@@ -190,14 +194,39 @@ export interface InactivityRiskItem {
   mrr: number;
   arr: number;
   daysSilent: number;
-  alertTitle: string; // "یہ کسٹمر جانے والا ہے"
-  aiAdvice: string; // "اس کو بیس فیصد رعایت دو"
+  alertTitle: string; // "High Churn Risk: Inactive Account"
+  aiAdvice: string; // "Apply 20% Retention Concession"
   discountConcessionPercentage: number; // 20
   discountCode: string; // "SAVE20NOW"
   status: 'AT_RISK' | 'CONCESSION_APPLIED' | 'RESCUED' | 'LOST';
   suggestedMessage: string;
   detectedAt: string;
   supabaseSynced?: boolean;
+  humanApproved?: boolean;
+  humanApprovedAt?: string;
+  humanApprovedBy?: string;
+  source?: 'CSV_UPLOAD' | 'TELEMETRY' | 'DEMO';
+}
+
+export interface VoluntaryChurnItem {
+  id: string;
+  companyId: string;
+  customerName: string;
+  customerEmail: string;
+  customerPhone?: string;
+  planName: string;
+  mrr: number;
+  arr: number;
+  daysSilent?: number;
+  churnReason: string;
+  retentionOffer: string;
+  suggestedMessage: string;
+  status: 'AT_RISK' | 'CONCESSION_APPLIED' | 'RESCUED' | 'LOST';
+  detectedAt: string;
+  humanApproved?: boolean;
+  humanApprovedAt?: string;
+  humanApprovedBy?: string;
+  source?: 'CSV_UPLOAD' | 'STRIPE_EVENT' | 'DEMO';
 }
 
 export interface InAppEvent {

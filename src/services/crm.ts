@@ -114,22 +114,65 @@ export async function fetchCRMRecords(companyId: string, userId?: string): Promi
         }
       }
 
+      // 3. Fallback to user-created 'prime_customer' or 'prime_customers' tables
+      if (error || !data || data.length === 0) {
+        const primeCustRes = await supabase
+          .from('prime_customer')
+          .select('*')
+          .limit(100);
+        
+        if (!primeCustRes.error && primeCustRes.data && primeCustRes.data.length > 0) {
+          data = primeCustRes.data;
+          error = null;
+        } else {
+          const primeCustsRes = await supabase
+            .from('prime_customers')
+            .select('*')
+            .limit(100);
+          if (!primeCustsRes.error && primeCustsRes.data && primeCustsRes.data.length > 0) {
+            data = primeCustsRes.data;
+            error = null;
+          }
+        }
+      }
+
+      // 4. Fallback to user-created 'prime_production' or 'prime_productions' tables
+      if (error || !data || data.length === 0) {
+        const primeProdRes = await supabase
+          .from('prime_production')
+          .select('*')
+          .limit(100);
+        if (!primeProdRes.error && primeProdRes.data && primeProdRes.data.length > 0) {
+          data = primeProdRes.data;
+          error = null;
+        } else {
+          const primeProdsRes = await supabase
+            .from('prime_productions')
+            .select('*')
+            .limit(100);
+          if (!primeProdsRes.error && primeProdsRes.data && primeProdsRes.data.length > 0) {
+            data = primeProdsRes.data;
+            error = null;
+          }
+        }
+      }
+
       if (!error && data && data.length > 0) {
         // Map Supabase rows to CRMRecord ensuring companyId is enforced
         const mappedRecords: CRMRecord[] = data.map((row: any) => {
-          const lastDate = row.last_contact || row.last_contact_date || row.lastContactDate || new Date().toISOString();
+          const lastDate = row.last_contact || row.last_contact_date || row.lastContactDate || row.updated_at || row.created_at || new Date().toISOString();
           const daysAgo = Math.max(0, Math.floor((Date.now() - new Date(lastDate).getTime()) / (1000 * 60 * 60 * 24)));
           
           return {
             id: String(row.id || 'supa_' + Math.random().toString(36).substr(2, 9)),
             companyId: row.company_id || resolvedCompanyId,
             userId: row.user_id || resolvedUserId,
-            accountName: row.account_name || row.name || row.accountName || 'Unnamed Account',
-            contactName: row.contact_name || row.contactName || (row.name ? row.name + ' Lead' : 'Lead Contact'),
-            contactEmail: row.contact_email || row.contactEmail || 'contact@domain.com',
-            contactRole: row.contact_role || row.contactRole || 'Decision Maker',
-            dealValue: Number(row.deal_value || row.revenue || row.dealValue || row.value || 0),
-            stage: row.stage || (row.churn_risk === 'HIGH' ? 'Renewal At Risk' : 'Active Client'),
+            accountName: row.account_name || row.customer_name || row.client_name || row.name || row.accountName || row.title || 'Customer Account',
+            contactName: row.contact_name || row.customer_name || row.contactName || (row.name ? row.name : 'Primary Contact'),
+            contactEmail: row.contact_email || row.email || row.customer_email || row.contactEmail || 'contact@client.com',
+            contactRole: row.contact_role || row.role || row.contactRole || 'Decision Maker',
+            dealValue: Number(row.deal_value || row.revenue || row.amount || row.mrr || row.dealValue || row.value || 0),
+            stage: row.stage || row.status || (row.churn_risk === 'HIGH' ? 'Renewal At Risk' : 'Active Client'),
             type: (row.type === 'LEAD' || row.account_type === 'LEAD') ? 'LEAD' : 'CLIENT',
             lastContactDate: lastDate,
             daysSinceLastContact: daysAgo,
@@ -137,7 +180,7 @@ export async function fetchCRMRecords(companyId: string, userId?: string): Promi
             riskFactors: Array.isArray(row.risk_factors) 
               ? row.risk_factors 
               : (row.churn_risk ? [`Churn Risk Flag: ${row.churn_risk}`] : []),
-            notes: row.notes || '',
+            notes: row.notes || row.description || '',
             source: 'Supabase',
             aiAction: row.ai_action || row.aiAction,
             createdAt: row.created_at || row.createdAt || new Date().toISOString(),

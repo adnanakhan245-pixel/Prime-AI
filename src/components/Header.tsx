@@ -446,7 +446,7 @@ export const Header: React.FC<HeaderProps> = ({
                           <div className="text-xs font-bold text-white flex items-center gap-1.5">
                             <span>Rescue Center: 2 Engines</span>
                           </div>
-                          <div className="text-[10px] text-zinc-400">فیل پیمنٹ (ایمیل/واٹس ایپ) اور 7 دن خاموش الرٹ</div>
+                          <div className="text-[10px] text-zinc-400">Failed payments (Email/WhatsApp) &amp; 7-day silent churn</div>
                         </div>
                       </div>
                       <span className="text-[9px] px-1.5 py-0.5 rounded bg-rose-500/20 text-rose-300 border border-rose-500/30 font-mono font-bold">

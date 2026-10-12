@@ -483,11 +483,6 @@ function AppContent() {
                 onOpenAuth={handleOpenAuth} 
               />
             )}
-            {currentView === 'rescue' && (
-              <RescueCenterView 
-                onNavigate={handleNavigate} 
-              />
-            )}
           </main>
 
           {/* Mobile Bottom Navigation Bar (4 Clean Pillars Only) */}
