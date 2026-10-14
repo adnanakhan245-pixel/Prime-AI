@@ -57,7 +57,11 @@ import {
   ShieldCheck,
   Brain,
   Lightbulb,
-  Settings
+  Settings,
+  DollarSign,
+  AlertTriangle,
+  X,
+  Activity
 } from 'lucide-react';
 
 function AppContent() {
@@ -80,6 +84,7 @@ function AppContent() {
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
   const [voiceHUDOpen, setVoiceHUDOpen] = useState(false);
   const [dailyBriefingOpen, setDailyBriefingOpen] = useState(false);
+  const [mobileSuiteDrawerOpen, setMobileSuiteDrawerOpen] = useState(false);
   const [mobileInstallModalOpen, setMobileInstallModalOpen] = useState(false);
   const [isDemoMode, setIsDemoMode] = useState(false);
   const [pendingEmailsCount, setPendingEmailsCount] = useState(0);
@@ -383,7 +388,7 @@ function AppContent() {
           />
 
           {/* Main App Container */}
-          <main className="flex-1 p-6 sm:p-8 lg:p-10 overflow-y-auto pb-24 md:pb-10 max-w-7xl">
+          <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto pb-24 md:pb-10 w-full max-w-7xl mx-auto">
             {(currentView === 'dashboard' || currentView === 'radar') && (
               <FeaturePaywallOverlay 
                 featureName="PRIME REVENUE & SAAS RADAR" 
@@ -485,8 +490,8 @@ function AppContent() {
             )}
           </main>
 
-          {/* Mobile Bottom Navigation Bar (4 Clean Pillars Only) */}
-          <div className={`md:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#0E0E0E]/95 backdrop-blur-xl border-t border-white/5 grid ${isAdmin ? 'grid-cols-5' : 'grid-cols-4'} items-center py-2.5 px-1`}>
+          {/* Mobile Bottom Navigation Bar (5 Seamless Responsive Pillars) */}
+          <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#0E0E0E]/95 backdrop-blur-xl border-t border-white/10 grid grid-cols-5 items-center py-2 px-1">
             <button
               onClick={() => handleNavigate('radar')}
               className={`flex flex-col items-center justify-center gap-1 text-[10px] font-bold relative ${
@@ -494,8 +499,26 @@ function AppContent() {
               }`}
             >
               <Radar className="w-4 h-4" />
-              <span className="truncate">Revenue Radar</span>
-              <span className="absolute top-0.5 right-4 w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
+              <span className="truncate">Radar</span>
+              <span className="absolute top-0.5 right-3 w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
+            </button>
+            <button
+              onClick={() => handleNavigate('rescue')}
+              className={`flex flex-col items-center justify-center gap-1 text-[10px] font-bold relative ${
+                currentView === 'rescue' ? 'text-amber-400' : 'text-white/40'
+              }`}
+            >
+              <AlertTriangle className="w-4 h-4 text-amber-400" />
+              <span className="truncate">Rescue</span>
+            </button>
+            <button
+              onClick={() => setMobileSuiteDrawerOpen(true)}
+              className="flex flex-col items-center justify-center gap-0.5 text-[10px] font-bold text-white group cursor-pointer"
+            >
+              <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-[#FFD700] to-amber-500 text-black flex items-center justify-center shadow-[0_0_15px_rgba(255,215,0,0.3)] group-active:scale-95 transition-transform">
+                <Sparkles className="w-4 h-4 text-black" />
+              </div>
+              <span className="text-[9px] text-[#FFD700] font-extrabold truncate">All Tools</span>
             </button>
             <button
               onClick={() => handleNavigate('approvals')}
@@ -504,21 +527,12 @@ function AppContent() {
               }`}
             >
               <ShieldCheck className="w-4 h-4" />
-              <span className="truncate">Approvals</span>
+              <span className="truncate">Audit</span>
               {pendingEmailsCount > 0 && (
-                <span className="absolute top-0 right-4 w-3.5 h-3.5 rounded-full bg-[#FFD700] text-black text-[8px] font-extrabold flex items-center justify-center">
+                <span className="absolute top-0 right-3 w-3 h-3 rounded-full bg-[#FFD700] text-black text-[7px] font-extrabold flex items-center justify-center">
                   {pendingEmailsCount}
                 </span>
               )}
-            </button>
-            <button
-              onClick={() => handleNavigate('plans')}
-              className={`flex flex-col items-center justify-center gap-1 text-[10px] font-bold ${
-                currentView === 'plans' ? 'text-[#FFD700]' : 'text-white/40 hover:text-white'
-              }`}
-            >
-              <CreditCard className="w-4 h-4" />
-              <span className="truncate">Plans</span>
             </button>
             <button
               onClick={() => handleNavigate('settings')}
@@ -529,18 +543,84 @@ function AppContent() {
               <Settings className="w-4 h-4" />
               <span className="truncate">Settings</span>
             </button>
-            {isAdmin && (
-              <button
-                onClick={() => handleNavigate('admin')}
-                className={`flex flex-col items-center justify-center gap-1 text-[10px] font-bold ${
-                  currentView === 'admin' ? 'text-emerald-400' : 'text-white/40'
-                }`}
-              >
-                <Crown className="w-4 h-4" />
-                <span className="truncate">Admin</span>
-              </button>
-            )}
           </div>
+
+          {/* Mobile All Tools Quick Drawer Modal */}
+          {mobileSuiteDrawerOpen && (
+            <div className="fixed inset-0 z-50 md:hidden bg-black/80 backdrop-blur-md flex flex-col justify-end animate-in fade-in duration-200">
+              <div 
+                className="w-full max-h-[85vh] bg-[#121212] border-t border-[#FFD700]/30 rounded-t-3xl p-5 overflow-y-auto space-y-4 shadow-[0_-10px_40px_rgba(0,0,0,0.9)]"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="flex items-center justify-between pb-3 border-b border-white/10">
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-[#FFD700] to-amber-500 text-black flex items-center justify-center font-black">
+                      <Sparkles className="w-4 h-4 text-black" />
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-bold text-white">Executive C-Suite Tools</h3>
+                      <p className="text-[10px] text-white/50">Tap any tool to open in full screen</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setMobileSuiteDrawerOpen(false)}
+                    className="p-1.5 rounded-full bg-white/5 hover:bg-white/10 text-white/60 hover:text-white transition-colors cursor-pointer"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+
+                {/* Grid of All Working Tools */}
+                <div className="grid grid-cols-2 gap-2.5">
+                  {[
+                    { id: 'radar', label: 'Revenue Radar', tag: 'RADAR', icon: Radar, color: 'text-rose-400' },
+                    { id: 'rescue', label: 'Rescue Center', tag: 'RESCUE', icon: AlertTriangle, color: 'text-amber-400' },
+                    { id: 'closer', label: 'Closer AI', tag: 'SALES', icon: Mic, color: 'text-rose-400' },
+                    { id: 'twin', label: 'CEO Twin 3.0', tag: 'DELEGATE', icon: Sparkles, color: 'text-[#FFD700]' },
+                    { id: 'brain', label: 'Brain Copilot', tag: 'AI BRAIN', icon: Brain, color: 'text-purple-400' },
+                    { id: 'strategy', label: 'Strategy Board', tag: 'STRATEGY', icon: Target, color: 'text-teal-400' },
+                    { id: 'cashflow-guard', label: 'Cash Flow Guard', tag: 'FINANCE', icon: DollarSign, color: 'text-emerald-400' },
+                    { id: 'ad-spend', label: 'Ad Spend Optimizer', tag: 'MARKETING', icon: TrendingUp, color: 'text-amber-400' },
+                    { id: 'board-pack', label: 'Board Pack Gen', tag: 'BOARD', icon: FileText, color: 'text-emerald-400' },
+                    { id: 'docs', label: 'Contract Audit', tag: 'LEGAL', icon: FileText, color: 'text-blue-400' },
+                    { id: 'inbox', label: 'Executive Inbox', tag: 'INBOX', icon: Inbox, color: 'text-cyan-400' },
+                    { id: 'meetings', label: 'Meeting AI', tag: 'MEETINGS', icon: Video, color: 'text-indigo-400' },
+                    { id: 'hiring', label: 'Hiring AI', tag: 'RECRUITING', icon: Users, color: 'text-amber-400' },
+                    { id: 'roi-calculator', label: 'ROI Calculator', tag: 'ROI', icon: Activity, color: 'text-emerald-400' },
+                    { id: 'approvals', label: 'Approvals & Audit', tag: 'AUDIT', icon: ShieldCheck, color: 'text-emerald-400' },
+                    { id: 'plans', label: 'Plans & Payment', tag: 'BILLING', icon: CreditCard, color: 'text-[#FFD700]' },
+                  ].map((t) => {
+                    const Icon = t.icon;
+                    const isActive = currentView === t.id;
+                    return (
+                      <button
+                        key={t.id}
+                        onClick={() => {
+                          handleNavigate(t.id);
+                          setMobileSuiteDrawerOpen(false);
+                        }}
+                        className={`p-3 rounded-2xl border text-left transition-all cursor-pointer flex flex-col justify-between gap-2 ${
+                          isActive
+                            ? 'bg-[#FFD700]/15 border-[#FFD700]/40 text-[#FFD700] shadow-sm'
+                            : 'bg-white/[0.03] hover:bg-white/[0.08] border-white/5 text-white'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <Icon className={`w-4 h-4 ${isActive ? 'text-[#FFD700]' : t.color}`} />
+                          <span className="text-[8px] font-mono px-1.5 py-0.5 rounded bg-white/5 text-white/60">
+                            {t.tag}
+                          </span>
+                        </div>
+                        <div className="text-xs font-bold truncate text-white">
+                          {t.label}
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       )}
 

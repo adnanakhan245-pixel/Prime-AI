@@ -22,20 +22,26 @@ import {
   Globe,
   Plus,
   Crown,
+  MessageSquare,
   ChevronRight,
   Shield,
-  FileCheck
+  FileCheck,
+  FileText,
+  MapPin,
+  Briefcase
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { AIGuidanceDisclaimer } from './AIGuidanceDisclaimer';
 
+import { GatewaySettingsModal } from './GatewaySettingsModal';
+
 interface SettingsViewProps {
-  initialTab?: 'general' | 'safety' | 'billing' | 'team' | 'integrations' | 'security';
+  initialTab?: 'general' | 'safety' | 'gateways' | 'billing' | 'team' | 'integrations' | 'security';
   onNavigate?: (view: string) => void;
   onOpenAuth?: (mode?: 'login' | 'signup' | 'verify-email') => void;
 }
 
-export type SettingsTabId = 'general' | 'safety' | 'billing' | 'team' | 'integrations' | 'security';
+export type SettingsTabId = 'general' | 'safety' | 'gateways' | 'billing' | 'team' | 'integrations' | 'security';
 
 export const SettingsView: React.FC<SettingsViewProps> = ({ 
   initialTab = 'general',
@@ -58,6 +64,9 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
 
   const [activeTab, setActiveTab] = useState<SettingsTabId>(initialTab);
   const [companyName, setCompanyName] = useState(profile?.companyName || company?.name || 'Apex Global Enterprise');
+  const [companyDomain, setCompanyDomain] = useState('apexenterprise.io');
+  const [taxId, setTaxId] = useState('US-EIN 84-2910394');
+  const [billingAddress, setBillingAddress] = useState('100 Montgomery St, Suite 1400, San Francisco, CA 94104');
   const [role, setRole] = useState(profile?.role || 'Chief Executive Officer');
   const [displayName, setDisplayName] = useState(profile?.displayName || user?.displayName || 'Executive Leader');
   const [timezone, setTimezone] = useState('America/New_York (EST)');
@@ -139,6 +148,10 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
     const dataSnapshot = {
       workspaceId: company?.id || 'comp_current',
       workspaceName: companyName,
+      corporateDomain: companyDomain,
+      taxId: taxId,
+      billingAddress: billingAddress,
+      slaTier: 'Enterprise 99.95% Guaranteed SLA',
       executiveRole: role,
       executiveUser: displayName,
       email: user?.email,
@@ -180,6 +193,13 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
       description: 'Human approval gates & compliance',
       icon: ShieldCheck,
       badge: 'Enforced'
+    },
+    {
+      id: 'gateways' as SettingsTabId,
+      name: 'Messaging Gateways',
+      description: 'WhatsApp API & Transactional Email',
+      icon: MessageSquare,
+      badge: 'Active API'
     },
     {
       id: 'billing' as SettingsTabId,
@@ -266,10 +286,10 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           <h2 className="text-xs font-mono uppercase tracking-wider text-zinc-400 font-bold">
             Select Settings Module (Click to Open Clean Full Page)
           </h2>
-          <span className="text-[11px] text-zinc-500 font-mono">6 Modules Available</span>
+          <span className="text-[11px] text-zinc-500 font-mono">7 Modules Available</span>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-3">
           {settingsTabs.map((tab) => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;
@@ -472,6 +492,74 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                   </div>
                   <p className="text-[11px] text-zinc-500 mt-1.5">Controls the 9:00 AM daily executive briefing dispatch and deal SLA timestamps.</p>
                 </div>
+
+                {/* Enterprise B2B Corporate Details */}
+                <div>
+                  <label className="block text-xs font-bold text-zinc-300 uppercase tracking-wider mb-2">
+                    Corporate Domain &amp; SSO Realm
+                  </label>
+                  <div className="relative">
+                    <Globe className="w-4 h-4 text-zinc-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                    <input
+                      type="text"
+                      value={companyDomain}
+                      onChange={(e) => setCompanyDomain(e.target.value)}
+                      className="w-full bg-[#181818] border border-white/10 rounded-xl pl-10 pr-4 py-3 text-sm text-white focus:outline-none focus:border-[#FFD700] transition-colors"
+                      placeholder="e.g. yourcompany.com"
+                    />
+                  </div>
+                  <p className="text-[11px] text-zinc-500 mt-1.5">Enforces domain match for corporate seats and SAML SSO routing.</p>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-zinc-300 uppercase tracking-wider mb-2">
+                    Tax / VAT Identification Number
+                  </label>
+                  <div className="relative">
+                    <FileText className="w-4 h-4 text-zinc-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                    <input
+                      type="text"
+                      value={taxId}
+                      onChange={(e) => setTaxId(e.target.value)}
+                      className="w-full bg-[#181818] border border-white/10 rounded-xl pl-10 pr-4 py-3 text-sm text-white focus:outline-none focus:border-[#FFD700] transition-colors"
+                      placeholder="e.g. US-EIN 84-2910394 / GB9283719"
+                    />
+                  </div>
+                  <p className="text-[11px] text-zinc-500 mt-1.5">Appears on B2B procurement invoices, Stripe receipts, and contracts.</p>
+                </div>
+
+                <div className="md:col-span-2">
+                  <label className="block text-xs font-bold text-zinc-300 uppercase tracking-wider mb-2">
+                    Corporate Legal Headquarters Address
+                  </label>
+                  <div className="relative">
+                    <MapPin className="w-4 h-4 text-zinc-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                    <input
+                      type="text"
+                      value={billingAddress}
+                      onChange={(e) => setBillingAddress(e.target.value)}
+                      className="w-full bg-[#181818] border border-white/10 rounded-xl pl-10 pr-4 py-3 text-sm text-white focus:outline-none focus:border-[#FFD700] transition-colors"
+                      placeholder="e.g. 100 Montgomery St, Suite 1400, San Francisco, CA"
+                    />
+                  </div>
+                  <p className="text-[11px] text-zinc-500 mt-1.5">Official billing entity address for compliance contracts and board resolutions.</p>
+                </div>
+              </div>
+
+              {/* B2B Enterprise Guarantees Banner */}
+              <div className="p-4 rounded-2xl bg-amber-500/5 border border-amber-500/20 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-xl bg-amber-500/10 flex items-center justify-center text-[#FFD700] shrink-0">
+                    <Briefcase className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-bold text-white">B2B Enterprise SLA &amp; Support Tier: Active</p>
+                    <p className="text-[11px] text-zinc-400">99.95% Guaranteed Uptime · 1-Hour High-Priority Response · Dedicated Tenant Isolation</p>
+                  </div>
+                </div>
+                <span className="text-[10px] px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-mono font-bold self-start sm:self-auto">
+                  ENTERPRISE CERTIFIED
+                </span>
               </div>
 
               <div className="pt-6 border-t border-white/5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -623,6 +711,15 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                 </button>
               )}
             </div>
+          </div>
+        )}
+
+        {/* ======================================================== */}
+        {/* MESSAGING GATEWAYS & AUTONOMOUS CHURN DISPATCH */}
+        {/* ======================================================== */}
+        {activeTab === 'gateways' && (
+          <div className="space-y-8 animate-in fade-in duration-150">
+            <GatewaySettingsModal isEmbedded={true} />
           </div>
         )}
 

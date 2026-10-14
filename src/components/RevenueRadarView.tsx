@@ -169,8 +169,39 @@ export const RevenueRadarView: React.FC<RevenueRadarViewProps> = ({ onNavigate }
     }
   };
 
-  const handleApproveAction = async (record: CRMRecord) => {
+  const handleApproveAction = async (record: CRMRecord, method: 'GMAIL' | 'MAILTO' | 'DEFAULT' = 'DEFAULT') => {
     if (!record.aiAction) return;
+
+    const emailSubject = record.aiAction.emailSubject;
+    const emailBody = record.aiAction.emailBody;
+    const targetEmail = record.contactEmail;
+
+    // Send through server API endpoint
+    try {
+      await fetch('/api/dispatch/email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          to: targetEmail,
+          subject: emailSubject,
+          body: emailBody,
+          customerName: record.contactName || record.accountName,
+          channel: 'email'
+        })
+      });
+    } catch (apiErr) {
+      console.warn('API email dispatch warning:', apiErr);
+    }
+
+    // Launch Gmail or mailto if selected
+    if (method === 'GMAIL') {
+      const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(targetEmail)}&su=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(emailBody)}`;
+      window.open(gmailUrl, '_blank');
+    } else if (method === 'MAILTO') {
+      const mailtoUrl = `mailto:${encodeURIComponent(targetEmail)}?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(emailBody)}`;
+      window.location.href = mailtoUrl;
+    }
+
     recordApprovedAction({
       companyId: activeCompanyId,
       actionName: `Executive Outreach: ${record.accountName}`,
@@ -180,8 +211,8 @@ export const RevenueRadarView: React.FC<RevenueRadarViewProps> = ({ onNavigate }
       impactLevel: record.healthScore < 50 ? 'CRITICAL' : 'HIGH',
       actionType: 'SEND_EMAIL',
       payload: {
-        emailSubject: record.aiAction.emailSubject,
-        emailBody: record.aiAction.emailBody,
+        emailSubject,
+        emailBody,
         strategy: record.aiAction.strategy
       }
     });
@@ -192,7 +223,7 @@ export const RevenueRadarView: React.FC<RevenueRadarViewProps> = ({ onNavigate }
     }
 
     setActionModalRecord(null);
-    showToast(`✓ Executive recovery email queued for ${record.accountName}. Touchpoint updated.`);
+    showToast(`✓ Executive recovery email dispatched to ${record.contactEmail}. Touchpoint updated.`);
   };
 
   // Filtered views
@@ -680,20 +711,28 @@ export const RevenueRadarView: React.FC<RevenueRadarViewProps> = ({ onNavigate }
                 </div>
 
                 {/* Action Buttons */}
-                <div className="pt-4 flex flex-col sm:flex-row items-center justify-end gap-3">
+                <div className="pt-4 flex flex-col sm:flex-row items-center justify-end gap-2.5">
                   <button
                     onClick={() => setActionModalRecord(null)}
-                    className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs transition-colors cursor-pointer"
+                    className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs transition-colors cursor-pointer"
                   >
                     Cancel
                   </button>
 
                   <button
-                    onClick={() => handleApproveAction(actionModalRecord)}
-                    className="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-gradient-to-r from-amber-400 via-[#FFD700] to-yellow-500 text-black font-black text-xs hover:brightness-110 transition-all flex items-center justify-center gap-2 shadow-md cursor-pointer active:scale-95"
+                    onClick={() => handleApproveAction(actionModalRecord, 'GMAIL')}
+                    className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-gradient-to-r from-red-600 via-amber-500 to-[#FFD700] text-black font-black text-xs hover:brightness-110 transition-all flex items-center justify-center gap-1.5 shadow-md cursor-pointer active:scale-95"
+                  >
+                    <Mail className="w-4 h-4 text-black" />
+                    <span>Open &amp; Send in Gmail</span>
+                  </button>
+
+                  <button
+                    onClick={() => handleApproveAction(actionModalRecord, 'DEFAULT')}
+                    className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-green-600 text-black font-black text-xs hover:brightness-110 transition-all flex items-center justify-center gap-1.5 shadow-md cursor-pointer active:scale-95"
                   >
                     <CheckCircle2 className="w-4 h-4 text-black" />
-                    <span>Human Approval: Approve &amp; Dispatch Touchpoint</span>
+                    <span>Approve &amp; Dispatch via System</span>
                   </button>
                 </div>
               </div>

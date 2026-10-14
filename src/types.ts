@@ -536,48 +536,63 @@ export interface GrowthAuditRecord {
 
 // Strategy Board Types (Saved to Supabase 'strategies')
 export interface StrategyRisk {
-  title: string;
-  category: 'REVENUE' | 'CHURN' | 'PIPELINE' | 'EXECUTION' | 'COMPLIANCE';
-  severity: 'CRITICAL' | 'HIGH' | 'MEDIUM';
-  description: string;
-  mitigationPlan: string;
+  title?: string;
+  category?: 'REVENUE' | 'CHURN' | 'PIPELINE' | 'EXECUTION' | 'COMPLIANCE' | string;
+  severity?: 'CRITICAL' | 'HIGH' | 'MEDIUM' | string;
+  description?: string;
+  mitigationPlan?: string;
   impactScore?: number;
+  risk?: string;
+  mitigation?: string;
+  owner?: string;
 }
 
 export interface StrategyOpportunity {
-  title: string;
-  category: 'UPSELL' | 'NEW_LOGOS' | 'PRODUCT_EXPANSION' | 'CONVERSION' | 'PARTNERSHIP';
-  potentialARR: string;
-  description: string;
-  actionRequired: string;
+  title?: string;
+  category?: 'UPSELL' | 'NEW_LOGOS' | 'PRODUCT_EXPANSION' | 'CONVERSION' | 'PARTNERSHIP' | string;
+  potentialARR?: string;
+  description?: string;
+  actionRequired?: string;
   confidenceScore?: number;
+  opportunity?: string;
+  estimated_arr?: string;
+  timeframe?: string;
+  action_items?: string[];
 }
 
 export interface StrategyGoal {
   id?: string;
-  targetMetric: string;
-  currentBaseline: string;
-  deadline: string;
-  description: string;
-  status?: 'ON_TRACK' | 'AT_RISK' | 'PLANNED';
-  keyResults: string[];
+  targetMetric?: string;
+  currentBaseline?: string;
+  deadline?: string;
+  description?: string;
+  status?: 'ON_TRACK' | 'AT_RISK' | 'PLANNED' | 'IN_PROGRESS';
+  keyResults?: string[];
+  goal?: string;
+  target_date?: string;
+  kpis?: string[];
 }
 
 export interface StrategyTeamAssignment {
-  roleOrLeader: string;
-  focusArea: string;
-  keyDeliverables: string[];
+  roleOrLeader?: string;
+  focusArea?: string;
+  keyDeliverables?: string[];
   allocatedBudgetOrFTE?: string;
-  priority: 'P0' | 'P1' | 'P2';
+  priority?: 'P0' | 'P1' | 'P2' | string;
+  role?: string;
+  focus?: string;
+  key_deliverables?: string[];
 }
 
 export interface StrategyMilestoneItem {
-  timeframe: string;
-  milestoneTitle: string;
-  actions: string[];
-  expectedKpiImpact: string;
-  owner: string;
+  timeframe?: string;
+  milestoneTitle?: string;
+  actions?: string[];
+  expectedKpiImpact?: string;
+  owner?: string;
   completed?: boolean;
+  phase?: string;
+  focus?: string;
 }
 
 export interface StrategyPlan {

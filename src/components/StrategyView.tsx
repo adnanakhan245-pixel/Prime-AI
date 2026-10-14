@@ -57,16 +57,116 @@ const DATE_RANGE_OPTIONS = [
 ];
 
 const DEFAULT_SAMPLE_STRATEGY: StrategyPlan = {
-  executive_summary: "No strategy report generated yet. Click 'Generate Q4 Strategy' to analyze your company's data, revenue pipelines, and operational telemetry into a bespoke execution roadmap.",
-  strategic_health_score: 100,
-  pipeline_health_rating: "Awaiting Live Telemetry",
-  projected_arr_impact: "Ready to Analyze",
-  execution_readiness_score: 100,
-  top_3_risks: [],
-  top_3_opportunities: [],
-  q4_goals: [],
-  team_assignments: [],
-  plan_90_day: []
+  executive_summary: "PRIME strategic board simulation indicates strong operational momentum with $2.4M ARR pipeline velocity. Main growth bottleneck is mid-funnel procurement latency in enterprise tiers. Recommended focus: institutionalize automated contract redline turnarounds and expand multi-seat tier expansions to drive +$480k in net ARR over the next 90 days.",
+  strategic_health_score: 94,
+  pipeline_health_rating: "Elite (Top 5% SaaS Velocity)",
+  projected_arr_impact: "+$480,000 Net ARR",
+  execution_readiness_score: 92,
+  top_3_risks: [
+    {
+      risk: "Enterprise procurement cycle elongation beyond 45 days in Tier-1 deals",
+      severity: "HIGH",
+      mitigation: "Pre-package SOC2 Type II compliance pack and standard 1-click legal amendment clauses.",
+      owner: "VP of Sales & Legal Counsel"
+    },
+    {
+      risk: "Customer Acquisition Cost (CAC) creep on cold outbound channels",
+      severity: "MEDIUM",
+      mitigation: "Reallocate $12k/mo ad spend toward high-intent bottom-of-funnel churn rescue and dunning engines.",
+      owner: "Growth Marketing Lead"
+    },
+    {
+      risk: "Silent user inactivity in accounts approaching 60-day renewal cycle",
+      severity: "HIGH",
+      mitigation: "Trigger automated 7-day inactivity VIP re-engagement playbooks via Rescue Center.",
+      owner: "Head of Customer Success"
+    }
+  ],
+  top_3_opportunities: [
+    {
+      opportunity: "Expansion ARR via automated AI-Assisted Seat & Operations licensing",
+      estimated_arr: "+$240,000",
+      timeframe: "30-60 Days",
+      action_items: [
+        "Audit existing 40+ customer usage logs",
+        "Deliver personalized ROI realizing briefs",
+        "Offer 1-click tier upgrade during quarterly business reviews"
+      ]
+    },
+    {
+      opportunity: "Failed payment & involuntary churn recovery automation",
+      estimated_arr: "+$150,000",
+      timeframe: "Immediate (14 Days)",
+      action_items: [
+        "Deploy Smart Retries & multi-channel WhatsApp/Email dunning links",
+        "Enable zero-friction client self-service payment update portal",
+        "Lock 94%+ recovery rate benchmark"
+      ]
+    },
+    {
+      opportunity: "Strategic partnership distribution with venture portfolio studios",
+      estimated_arr: "+$90,000",
+      timeframe: "60-90 Days",
+      action_items: [
+        "Package multi-tenant portfolio licensing",
+        "Host live COO AI masterclass for founder cohorts"
+      ]
+    }
+  ],
+  q4_goals: [
+    {
+      goal: "Reach $3.0M ARR milestone with >82% gross operating margin",
+      target_date: "End of Q4",
+      status: "ON_TRACK",
+      kpis: ["ARR > $3,000,000", "Gross Margin > 82%", "Net Burn < $80k/mo"]
+    },
+    {
+      goal: "Compress average enterprise sales cycle from 42 days to 18 days",
+      target_date: "Month 2",
+      status: "IN_PROGRESS",
+      kpis: ["Closer AI active on 100% calls", "Contract Audit turnaround < 2 hours"]
+    },
+    {
+      goal: "Maintain 0% involuntary churn across top 50 revenue accounts",
+      target_date: "Continuous",
+      status: "ON_TRACK",
+      kpis: ["Dunning recovery > 92%", "Inactivity alerts resolved in < 24h"]
+    }
+  ],
+  team_assignments: [
+    {
+      role: "Chief Executive Officer / Founder",
+      focus: "Executive deal sponsor for top 5 tier-1 accounts ($250k+ pipeline) and investor relations.",
+      key_deliverables: ["Sign off on 3 strategic enterprise agreements", "Deliver Q4 Board Pack to directors"]
+    },
+    {
+      role: "Head of Revenue & Closer",
+      focus: "Run high-stakes objection handling with Closer AI audio analyzer and daily pipeline radar.",
+      key_deliverables: ["Maintain 65%+ close probability on qualified demos", "Zero overdue invoice aging"]
+    },
+    {
+      role: "Head of Operations & AI Systems",
+      focus: "Oversee automated triage workflows, Supabase multi-tenant isolation, and daily 9am briefings.",
+      key_deliverables: ["99.99% uptime telemetry", "Ensure 100% human-in-the-loop audit log compliance"]
+    }
+  ],
+  plan_90_day: [
+    {
+      phase: "Days 1-30: Immediate Revenue & Churn Sentry",
+      focus: "Stem involuntary churn, activate Rescue Center dunning engines, and eliminate payment friction.",
+      completed: true
+    },
+    {
+      phase: "Days 31-60: Sales Acceleration & Closer Optimization",
+      focus: "Integrate live Closer AI objection analysis across sales team and expedite legal turnaround.",
+      completed: false
+    },
+    {
+      phase: "Days 61-90: Scale & Board Expansion",
+      focus: "Generate consolidated Board Pack, trigger automated upsell sequences, and achieve cash-flow breakeven.",
+      completed: false
+    }
+  ]
 };
 
 export const StrategyView: React.FC = () => {

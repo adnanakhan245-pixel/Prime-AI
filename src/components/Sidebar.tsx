@@ -110,7 +110,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   ];
 
   const isSecondaryActive = secondaryNavItems.some(item => item.id === currentView);
-  const [showAddons, setShowAddons] = useState(false);
+  const [showAddons, setShowAddons] = useState(true);
   const isAddonsOpen = showAddons || isSecondaryActive;
 
   const userInitials = profile?.displayName
@@ -119,11 +119,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
   return (
     <aside className="w-72 border-r border-white/5 bg-[#0D0D0D] flex flex-col justify-between shrink-0 hidden md:flex min-h-[calc(100vh-4.5rem)]">
-      <div>
+      <div className="flex-1 flex flex-col min-h-0">
         {/* Brand Header - 1-Click to Revenue Radar */}
         <div 
           onClick={() => onNavigate('radar')}
-          className="p-5 border-b border-white/5 cursor-pointer group hover:bg-white/[0.02] transition-colors"
+          className="p-5 border-b border-white/5 cursor-pointer group hover:bg-white/[0.02] transition-colors shrink-0"
           title="PRIME AI — Revenue Radar Command"
         >
           <div className="flex items-center gap-3">
@@ -140,7 +140,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         </div>
 
         {/* Active Company Badge */}
-        <div className="mx-4 mt-4 p-2.5 rounded-xl bg-[#141414] border border-white/10 flex items-center gap-2.5">
+        <div className="mx-4 mt-3 p-2.5 rounded-xl bg-[#141414] border border-white/10 flex items-center gap-2.5 shrink-0">
           <div className="w-7 h-7 rounded-lg bg-[#FFD700]/10 flex items-center justify-center text-[#FFD700] shrink-0">
             <Building2 className="w-3.5 h-3.5" />
           </div>
@@ -150,10 +150,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
           </div>
         </div>
         
-        {/* Navigation Items (Single-Feature Hero Focus) */}
-        <nav className="px-4 py-3 space-y-1.5">
+        {/* Navigation Items - Scrollable Navigation Area */}
+        <nav className="px-4 py-3 space-y-1.5 flex-1 overflow-y-auto custom-scrollbar">
           
-          {/* Primary 4-5 Essential Links */}
+          {/* Primary Essential Links */}
           {primaryNavItems.map((item) => {
             const Icon = item.icon;
             const isActive = currentView === item.id;
@@ -185,7 +185,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             );
           })}
 
-          {/* Executive AI Modules Dropdown - High-Clarity Showcase of Working C-Suite Tools */}
+          {/* Executive AI Modules Section - Full Height Showcase */}
           <div className="pt-3 border-t border-white/5 mt-3">
             <button
               type="button"
@@ -204,13 +204,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   <div className="text-xs font-bold text-white flex items-center gap-1.5">
                     <span>Executive AI Modules</span>
                   </div>
-                  <div className="text-[10px] text-zinc-400 font-normal">{secondaryNavItems.length} Other Tools (Dropdown)</div>
+                  <div className="text-[10px] text-zinc-400 font-normal">{secondaryNavItems.length} Live Tools</div>
                 </div>
               </div>
 
               <div className="flex items-center gap-1.5 shrink-0">
                 <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-[#FFD700]/20 text-[#FFD700] font-mono font-extrabold border border-[#FFD700]/30">
-                  DROPDOWN
+                  {secondaryNavItems.length}
                 </span>
                 {isAddonsOpen ? (
                   <ChevronDown className="w-3.5 h-3.5 text-[#FFD700]" />
@@ -221,10 +221,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
             </button>
 
             {isAddonsOpen && (
-              <div className="space-y-1.5 mt-2.5 pl-1 animate-in fade-in duration-150 max-h-80 overflow-y-auto pr-1">
+              <div className="space-y-1 mt-2.5 pl-1 animate-in fade-in duration-150">
                 <div className="px-2 py-1 flex items-center justify-between text-[9px] font-mono text-zinc-500 uppercase tracking-wider font-bold">
                   <span>C-Suite Power Suite</span>
-                  <span className="text-[#FFD700]">Click to launch</span>
+                  <span className="text-[#FFD700]">Full Access</span>
                 </div>
                 {secondaryNavItems.map((item) => {
                   const Icon = item.icon;

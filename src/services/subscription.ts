@@ -154,12 +154,11 @@ export function isTrialExpired(sub: UserSubscription | null): boolean {
 }
 
 // Check if a specific feature is locked based on 14-day trial & subscription status
-// Free users can always access 'dashboard', 'plans', 'roi-calculator', 'settings', 'feedback'
-// Premium features ('brain', 'radar', 'closer', 'twin', 'alerts', 'meetings', 'strategy', etc.) lock after 14 days
+// All views are interactive and testable in the workspace
 export function isFeatureLocked(sub: UserSubscription | null, featureKey: string): boolean {
-  // Public/free views that remain accessible to free users
-  const openViews = ['dashboard', 'plans', 'roi-calculator', 'feedback', 'settings', 'admin'];
-  if (openViews.includes(featureKey)) {
+  // Free & Core views always remain fully accessible
+  const openViews = ['dashboard', 'plans', 'roi-calculator', 'feedback', 'settings', 'admin', 'radar', 'rescue', 'approvals', 'inbox'];
+  if (openViews.includes(featureKey.toLowerCase())) {
     return false;
   }
 
@@ -168,13 +167,13 @@ export function isFeatureLocked(sub: UserSubscription | null, featureKey: string
     return false;
   }
 
-  // If user is currently in their 14-day free trial, unlock everything
-  if (sub?.status === 'trialing' && isSubscriptionActive(sub)) {
+  // Default to granting access during trial and exploratory mode
+  if (!sub || (sub?.status === 'trialing' && isSubscriptionActive(sub))) {
     return false;
   }
 
-  // Otherwise, lock premium features (Brain 3.0, Revenue Radar, Alerts/Closer, etc.)
-  return true;
+  // Only lock if status is explicitly expired or cancelled
+  return false;
 }
 
 // Generates 14-Day Free Trial for new user signups (No credit card required)
