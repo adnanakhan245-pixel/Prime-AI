@@ -1,6 +1,6 @@
 {
   "name": "PRIME AI",
-  "description": "PRIME Radar connects to your Stripe, finds every dollar lost to churn & failed cards, and auto-recovers it in 1-click while you sleep.",
+  "description": "PRIME Radar catches failed card renewals & churn risks, drafts personalized recovery messages, and lets you approve in 1-click.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

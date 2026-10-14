@@ -70,6 +70,30 @@ export async function recordVisitorHit(params?: {
   userName?: string | null;
   companyName?: string | null;
 }): Promise<VisitorRecord> {
+  // Exclude master platform owner (adnanakhan245@gmail.com) from all visitor analytics
+  const cleanEmail = params?.userEmail?.trim().toLowerCase();
+  const isOwner = cleanEmail === 'adnanakhan245@gmail.com' || 
+                  cleanEmail?.includes('adnan') ||
+                  (typeof window !== 'undefined' && localStorage.getItem('prime_is_owner_admin') === 'true');
+  if (isOwner) {
+    return {
+      id: 'owner_session',
+      visitorId: 'owner_session',
+      firstSeen: new Date().toISOString(),
+      lastSeen: new Date().toISOString(),
+      hits: 0,
+      device: detectDevice(),
+      referrer: 'Owner Console',
+      timezone: 'UTC',
+      language: 'en',
+      isRegistered: true,
+      userEmail: 'adnanakhan245@gmail.com',
+      userName: 'Platform Owner',
+      companyName: 'HQ',
+      lastPath: params?.path || '/'
+    };
+  }
+
   const visitorId = getOrCreateVisitorId();
   const firstSeen = localStorage.getItem(VISITOR_FIRST_SEEN_KEY) || new Date().toISOString();
   const now = new Date().toISOString();

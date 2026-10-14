@@ -227,6 +227,13 @@ function AppContent() {
       setCurrentView('radar');
       return;
     }
+    if (view === 'admin') {
+      const isOwner = user?.email?.toLowerCase().trim() === 'adnanakhan245@gmail.com' || isAdmin;
+      if (!isOwner) {
+        handleOpenAuth('login', 'Admin Dashboard is exclusively for the Platform Owner (adnanakhan245@gmail.com). Please sign in with your owner email.');
+        return;
+      }
+    }
     if (['inbox', 'approvals', 'plans', 'admin', 'closer', 'hiring', 'meetings', 'growth', 'strategy', 'board-pack', 'docs', 'brain', 'twin', 'ad-spend', 'cashflow-guard', 'roi-calculator', 'feedback', 'settings', 'rescue'].includes(view)) {
       setCurrentView(view as any);
     } else {
@@ -403,7 +410,12 @@ function AppContent() {
             {currentView === 'inbox' && <InboxView />}
             {currentView === 'approvals' && <ApprovalLogView />}
             {currentView === 'plans' && <PlansView onNavigate={handleNavigate} />}
-            {currentView === 'admin' && <AdminDashboard onNavigate={handleNavigate} />}
+            {currentView === 'admin' && (
+              <AdminDashboard 
+                onNavigate={handleNavigate} 
+                onOpenAuth={handleOpenAuth} 
+              />
+            )}
             {currentView === 'closer' && (
               <FeaturePaywallOverlay 
                 featureName="PRIME Deal Closer AI"
