@@ -210,24 +210,24 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
     },
     {
       id: 'team' as SettingsTabId,
-      name: 'Team & RBAC',
-      description: 'Executive seats & permissions',
+      name: 'Team Members',
+      description: 'Workspace access & member roles',
       icon: Users,
-      badge: `${teamMembers.length} Members`
+      badge: `${teamMembers.length} Active`
     },
     {
       id: 'integrations' as SettingsTabId,
-      name: 'Integrations & Sync',
-      description: 'Stripe, Supabase, CRM & AI models',
+      name: 'Integrations & Channels',
+      description: 'Stripe, Email, WhatsApp & Database sync',
       icon: Database,
-      badge: '4 Active'
+      badge: 'Connected'
     },
     {
       id: 'security' as SettingsTabId,
       name: 'Security & Privacy',
-      description: 'Multi-tenant isolation & data export',
+      description: 'Private workspace & encrypted data',
       icon: Lock,
-      badge: 'SOC-2'
+      badge: 'Encrypted'
     }
   ];
 
@@ -857,8 +857,8 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                   <Users className="w-5 h-5" />
                 </div>
                 <div>
-                  <h2 className="text-xl font-bold text-white">Team Roster & Role-Based Access (RBAC)</h2>
-                  <p className="text-xs text-zinc-400">Provision executive seats, assign authorization roles, and audit member activity.</p>
+                  <h2 className="text-xl font-bold text-white">Team Members & Access Roles</h2>
+                  <p className="text-xs text-zinc-400">Invite workspace members, assign account roles, and manage permissions.</p>
                 </div>
               </div>
             </div>
@@ -965,8 +965,8 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                   <Database className="w-5 h-5" />
                 </div>
                 <div>
-                  <h2 className="text-xl font-bold text-white">Integrations & Pipeline Sync Connectors</h2>
-                  <p className="text-xs text-zinc-400">Live operational connectors feeding real-time deal data, ARR telemetry, and payment dunning.</p>
+                  <h2 className="text-xl font-bold text-white">Integrations & Service Channels</h2>
+                  <p className="text-xs text-zinc-400">Connected services powering Stripe dunning, automated drafts, and secure cloud database.</p>
                 </div>
               </div>
             </div>
@@ -980,8 +980,8 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                       <Database className="w-5 h-5" />
                     </div>
                     <div>
-                      <h3 className="text-sm font-bold text-white">PostgreSQL & Supabase CRM</h3>
-                      <p className="text-[11px] text-zinc-400">Bi-directional pipeline synchronization</p>
+                      <h3 className="text-sm font-bold text-white">Secure Cloud Database</h3>
+                      <p className="text-[11px] text-zinc-400">Real-time recovery synchronization</p>
                     </div>
                   </div>
                   <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-mono font-bold">
@@ -989,11 +989,11 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                   </span>
                 </div>
                 <p className="text-xs text-zinc-400 leading-relaxed">
-                  Real-time synchronization with CRM records, tracking 45 enterprise accounts, deal health scores, and ARR at risk.
+                  Live synchronized storage for recovery drafts, dunning logs, and customer health telemetry.
                 </p>
                 <div className="pt-2 border-t border-white/5 flex items-center justify-between text-[11px] text-zinc-500 font-mono">
-                  <span>Latency: ~180ms</span>
-                  <span className="text-emerald-400">Sync: Realtime Active</span>
+                  <span>Cloud Storage</span>
+                  <span className="text-emerald-400">Sync Active</span>
                 </div>
               </div>
 
@@ -1005,20 +1005,20 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                       <CreditCard className="w-5 h-5" />
                     </div>
                     <div>
-                      <h3 className="text-sm font-bold text-white">Stripe Telemetry & Webhooks</h3>
-                      <p className="text-[11px] text-zinc-400">Failed invoices & ARR telemetry</p>
+                      <h3 className="text-sm font-bold text-white">Stripe Billing Connector</h3>
+                      <p className="text-[11px] text-zinc-400">Failed invoices & card renewal events</p>
                     </div>
                   </div>
-                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-mono font-bold">
-                    LIVE WEBHOOKS
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20 font-mono font-bold">
+                    READY
                   </span>
                 </div>
                 <p className="text-xs text-zinc-400 leading-relaxed">
-                  Automated dunning triggers on failed charges, seat expansion signals, and immediate ARR churn recalculation.
+                  Monitors failed invoice charges and expired credit cards without sensitive write access to banking funds.
                 </p>
                 <div className="pt-2 border-t border-white/5 flex items-center justify-between text-[11px] text-zinc-500 font-mono">
-                  <span>Events: invoice.payment_failed</span>
-                  <span className="text-blue-400">Telemetry Active</span>
+                  <span>Read-Only Mode</span>
+                  <span className="text-blue-400">Zero Write Risk</span>
                 </div>
               </div>
 
@@ -1030,20 +1030,20 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                       <Mail className="w-5 h-5" />
                     </div>
                     <div>
-                      <h3 className="text-sm font-bold text-white">Executive Inbox IMAP/SMTP Gateway</h3>
-                      <p className="text-[11px] text-zinc-400">VIP email triage & draft synthesis</p>
+                      <h3 className="text-sm font-bold text-white">Email Recovery Dispatch Gateway</h3>
+                      <p className="text-[11px] text-zinc-400">Day 1 transactional email delivery</p>
                     </div>
                   </div>
                   <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-mono font-bold">
-                    MONITORED
+                    READY
                   </span>
                 </div>
                 <p className="text-xs text-zinc-400 leading-relaxed">
-                  Monitors executive inbound messages for contract objections, procurement redlines, and payment disputes with zero human delay.
+                  Delivers personalized, polite card update links to customers upon 1-click founder approval.
                 </p>
                 <div className="pt-2 border-t border-white/5 flex items-center justify-between text-[11px] text-zinc-500 font-mono">
-                  <span>SSL/TLS: Enforced</span>
-                  <span className="text-amber-400">24/7 Scanning</span>
+                  <span>Delivery: Secure TLS</span>
+                  <span className="text-amber-400">100% Sign-Off</span>
                 </div>
               </div>
 
@@ -1055,20 +1055,20 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                       <Server className="w-5 h-5" />
                     </div>
                     <div>
-                      <h3 className="text-sm font-bold text-white">Gemini 3.7 Ultra Neural Engine</h3>
-                      <p className="text-[11px] text-zinc-400">Dedicated operational reasoning</p>
+                      <h3 className="text-sm font-bold text-white">AI Recovery Draft Engine</h3>
+                      <p className="text-[11px] text-zinc-400">Powered by Google Gemini</p>
                     </div>
                   </div>
-                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#FFD700]/10 text-[#FFD700] border border-[#FFD700]/30 font-mono font-bold">
-                    DEDICATED
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-mono font-bold">
+                    ACTIVE
                   </span>
                 </div>
                 <p className="text-xs text-zinc-400 leading-relaxed">
-                  High-velocity neural reasoning powering contract liability auditing, negotiation scripts, and AI-assisted revenue forecasting. AI will help you to close.
+                  Synthesizes respectful Day 1 Email and Day 3 WhatsApp payment renewal drafts ready for 1-click human approval.
                 </p>
                 <div className="pt-2 border-t border-white/5 flex items-center justify-between text-[11px] text-zinc-500 font-mono">
-                  <span>Availability: 99.99%</span>
-                  <span className="text-[#FFD700]">Ultra Reasoning Ready</span>
+                  <span>Engine: Gemini AI</span>
+                  <span className="text-[#FFD700]">Drafting Active</span>
                 </div>
               </div>
             </div>
@@ -1086,8 +1086,8 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                   <Lock className="w-5 h-5" />
                 </div>
                 <div>
-                  <h2 className="text-xl font-bold text-white">Security, Multi-Tenant Isolation & Privacy</h2>
-                  <p className="text-xs text-zinc-400">SOC2 Type-II compliance, cryptographic tenant isolation, and GDPR-compliant data export.</p>
+                  <h2 className="text-xl font-bold text-white">Data Privacy & Workspace Security</h2>
+                  <p className="text-xs text-zinc-400">100% private workspace data, encrypted cloud storage, and secure 1-click export.</p>
                 </div>
               </div>
             </div>
@@ -1096,20 +1096,20 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               <div className="p-5 rounded-2xl bg-black/40 border border-white/5 space-y-2">
                 <div className="flex items-center gap-2.5 text-sm font-bold text-white">
                   <ShieldCheck className="w-5 h-5 text-emerald-400" />
-                  <span>Strict Row-Level Tenant Isolation</span>
+                  <span>100% Private Workspace Isolation</span>
                 </div>
                 <p className="text-xs text-zinc-400 leading-relaxed">
-                  Every query is strictly partitioned by your tenant company ID (<code className="text-[#FFD700]">{companyId.slice(0, 14)}</code>). No cross-tenant data leakage is cryptographically possible.
+                  Your customer contacts, payment records, and recovery metrics are strictly private to your workspace. No other user can access your data.
                 </p>
               </div>
 
               <div className="p-5 rounded-2xl bg-black/40 border border-white/5 space-y-2">
                 <div className="flex items-center gap-2.5 text-sm font-bold text-white">
                   <Lock className="w-5 h-5 text-[#FFD700]" />
-                  <span>AES-256 & TLS 1.3 Encryption</span>
+                  <span>Bank-Grade Cloud Encryption</span>
                 </div>
                 <p className="text-xs text-zinc-400 leading-relaxed">
-                  All enterprise deal notes, client contracts, and executive audio are encrypted at rest with AES-256 and in transit with modern TLS 1.3 protocol.
+                  All payment failure records and draft messages are securely encrypted in transit and at rest using modern enterprise cloud protocols.
                 </p>
               </div>
             </div>

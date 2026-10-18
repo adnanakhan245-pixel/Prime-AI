@@ -96,7 +96,19 @@ function AppContent() {
   // 24/7 Client Self-Service Portals (Payment & Email - No Admin Approval Gating)
   const [clientPaymentModalOpen, setClientPaymentModalOpen] = useState(false);
   const [clientContactModalOpen, setClientContactModalOpen] = useState(false);
+  const [isContactOpen, setIsContactOpen] = useState(false);
   const [targetedInvoiceId, setTargetedInvoiceId] = useState<string | null>(null);
+
+  // Dedicated Client Contact opening handler (ensures onOpenClientContact is always defined)
+  const onOpenClientContact = () => {
+    setIsContactOpen(true);
+    setClientContactModalOpen(true);
+  };
+
+  const onCloseClientContact = () => {
+    setIsContactOpen(false);
+    setClientContactModalOpen(false);
+  };
 
   // Check URL path (/privacy-policy) and query parameters (?contact=true)
   useEffect(() => {
@@ -107,7 +119,7 @@ function AppContent() {
       }
       const params = new URLSearchParams(window.location.search);
       if (params.get('contact') === 'true') {
-        setClientContactModalOpen(true);
+        onOpenClientContact();
       }
     }
   }, []);
@@ -277,6 +289,7 @@ function AppContent() {
           setCurrentView('radar');
         }}
         onOpenChurnAudit={() => setChurnAuditModalOpen(true)}
+        onOpenClientContact={onOpenClientContact}
         onOpenLegal={(type) => {
           if (type === 'privacy') {
             if (typeof window !== 'undefined') {
@@ -363,7 +376,7 @@ function AppContent() {
             setTargetedInvoiceId(null);
             setClientPaymentModalOpen(true);
           }}
-          onOpenClientContact={() => setClientContactModalOpen(true)}
+          onOpenClientContact={onOpenClientContact}
           onOpenChurnAudit={() => setChurnAuditModalOpen(true)}
           onOpenLegal={(type) => {
             if (type === 'privacy') {
@@ -386,6 +399,7 @@ function AppContent() {
             onOpenSettings={() => {
               handleNavigate('settings');
             }}
+            onOpenClientContact={onOpenClientContact}
             isDemoMode={isDemoMode && !user}
             onOpenAuth={handleOpenAuth}
             onExitDemo={() => {
@@ -715,8 +729,8 @@ function AppContent() {
 
       {/* 24/7 Direct Client Inbound Email / Message Modal (No Admin Gating) */}
       <ClientContactModal
-        isOpen={clientContactModalOpen}
-        onClose={() => setClientContactModalOpen(false)}
+        isOpen={clientContactModalOpen || isContactOpen}
+        onClose={onCloseClientContact}
         targetCompanyId={company?.id}
       />
 

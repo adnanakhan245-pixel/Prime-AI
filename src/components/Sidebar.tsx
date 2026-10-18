@@ -35,6 +35,7 @@ interface SidebarProps {
   isDemoMode?: boolean;
   onOpenAuth?: (mode: 'login' | 'signup' | 'verify-email' | 'forgot-password') => void;
   onExitDemo?: () => void;
+  onOpenClientContact?: () => void;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
@@ -45,6 +46,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   isDemoMode = false,
   onOpenAuth,
   onExitDemo,
+  onOpenClientContact,
 }) => {
   const { 
     profile, 
@@ -385,16 +387,28 @@ export const Sidebar: React.FC<SidebarProps> = ({
           </span>
         </div>
 
-        {/* Privacy Policy & Disclaimer Link */}
-        <div className="pt-1.5 text-center">
+        {/* Privacy Policy & Contact Support */}
+        <div className="pt-1.5 flex items-center justify-center gap-2 text-[10px] text-white/40">
           <a
             href="/privacy-policy"
             target="_blank"
             rel="noreferrer"
-            className="text-[10px] text-white/40 hover:text-[#FFD700] transition-colors"
+            className="hover:text-[#FFD700] transition-colors"
           >
-            Privacy Policy &amp; Disclaimer
+            Privacy Policy
           </a>
+          {onOpenClientContact && (
+            <>
+              <span>•</span>
+              <button
+                type="button"
+                onClick={onOpenClientContact}
+                className="hover:text-emerald-400 transition-colors cursor-pointer"
+              >
+                Support
+              </button>
+            </>
+          )}
         </div>
       </div>
     </aside>

@@ -48,6 +48,7 @@ interface HeaderProps {
   onEnterDemo?: () => void;
   onOpenChurnAudit?: () => void;
   onOpenLegal?: (type: 'privacy' | 'terms' | 'deletion' | 'meta-whatsapp') => void;
+  onOpenClientContact?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -63,6 +64,7 @@ export const Header: React.FC<HeaderProps> = ({
   onEnterDemo,
   onOpenChurnAudit,
   onOpenLegal,
+  onOpenClientContact,
 }) => {
   const { 
     user, 

@@ -14,8 +14,12 @@ import {
   Smartphone,
   Eye,
   Check,
-  AlertTriangle
+  AlertTriangle,
+  UserX,
+  TrendingDown,
+  Quote
 } from 'lucide-react';
+import { ClientContactModal } from './ClientContactModal';
 
 interface LandingPageProps {
   onOpenAuth: (mode: 'login' | 'signup' | 'verify-email' | 'forgot-password') => void;
@@ -29,9 +33,22 @@ interface LandingPageProps {
 export const LandingPage: React.FC<LandingPageProps> = ({ 
   onOpenAuth, 
   onEnterDemo,
+  onOpenClientPayment,
+  onOpenClientContact: propOnOpenClientContact,
   onOpenChurnAudit,
   onOpenLegal
 }) => {
+  // Client contact modal state (always defined)
+  const [isContactOpen, setIsContactOpen] = useState(false);
+
+  // Safe client contact opener that satisfies requirements and fallback
+  const onOpenClientContact = () => {
+    setIsContactOpen(true);
+    if (propOnOpenClientContact) {
+      propOnOpenClientContact();
+    }
+  };
+
   // Element 1: Interactive Hero Demo Mockup State
   const [demoApproved, setDemoApproved] = useState(false);
 
@@ -198,6 +215,92 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             </p>
           </div>
 
+        </div>
+      </section>
+
+      {/* ========================================================================= */}
+      {/* 2.5 THE WALL OF REALITY: WHY CHURN ACTUALLY HAPPENS */}
+      {/* ========================================================================= */}
+      <section className="w-full max-w-5xl mx-auto px-4 py-12 border-t border-white/5">
+        <div className="text-center space-y-2 mb-8">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-500/10 border border-rose-500/20 text-rose-400 text-[11px] font-mono font-bold tracking-wide">
+            <AlertTriangle className="w-3.5 h-3.5" />
+            <span>THE SILENT LEAK BEHIND 80% OF SAAS CHURN</span>
+          </div>
+          <h2 className="text-2xl sm:text-3xl font-black text-white">
+            Why Most Customers Churn (And Why Standard Dunning Fails)
+          </h2>
+          <p className="text-xs sm:text-sm text-zinc-400 max-w-2xl mx-auto">
+            Founders pour thousands into user acquisition while leaking 5–15% MRR every single quarter to these 3 preventable blindspots:
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+          {/* Card 1: Champion Transition */}
+          <div className="p-6 rounded-2xl bg-gradient-to-b from-[#141414] to-[#0d0d0d] border border-white/10 hover:border-emerald-500/30 transition-all flex flex-col justify-between space-y-4">
+            <div className="space-y-3">
+              <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400">
+                <UserX className="w-5 h-5" />
+              </div>
+              <h3 className="font-bold text-white text-base">
+                1. The &quot;Departed Champion&quot;
+              </h3>
+              <p className="text-xs text-zinc-400 leading-relaxed">
+                Most churn signals arrive as a <strong className="text-zinc-200">change of contact</strong>, not a sudden drop in product usage. The internal champion who loved your app leaves the company, the new admin logs in once, and procurement cancels at the next renewal.
+              </p>
+            </div>
+            <div className="pt-3 border-t border-white/5 text-[11px] font-mono text-emerald-400 flex items-center gap-1.5">
+              <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
+              <span>PRIME drafts re-onboarding outreach to the new decision maker.</span>
+            </div>
+          </div>
+
+          {/* Card 2: Passive Failed Cards */}
+          <div className="p-6 rounded-2xl bg-gradient-to-b from-[#141414] to-[#0d0d0d] border border-white/10 hover:border-emerald-500/30 transition-all flex flex-col justify-between space-y-4">
+            <div className="space-y-3">
+              <div className="w-10 h-10 rounded-xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-400">
+                <CreditCard className="w-5 h-5" />
+              </div>
+              <h3 className="font-bold text-white text-base">
+                2. Involuntary Card Declines
+              </h3>
+              <p className="text-xs text-zinc-400 leading-relaxed">
+                Over <strong className="text-zinc-200">40% of churn is accidental</strong>. Expired cards, fraud false-positives, or bank limits block renewals. Generic automated dunning emails land in spam or look like robotic threats, pushing warm customers away.
+              </p>
+            </div>
+            <div className="pt-3 border-t border-white/5 text-[11px] font-mono text-emerald-400 flex items-center gap-1.5">
+              <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
+              <span>PRIME generates 10-second frictionless card update links.</span>
+            </div>
+          </div>
+
+          {/* Card 3: The Acquisition Blindspot */}
+          <div className="p-6 rounded-2xl bg-gradient-to-b from-[#141414] to-[#0d0d0d] border border-white/10 hover:border-emerald-500/30 transition-all flex flex-col justify-between space-y-4">
+            <div className="space-y-3">
+              <div className="w-10 h-10 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400">
+                <TrendingDown className="w-5 h-5" />
+              </div>
+              <h3 className="font-bold text-white text-base">
+                3. The Leaky Bucket Trap
+              </h3>
+              <p className="text-xs text-zinc-400 leading-relaxed">
+                Founders spend 90% of their mental bandwidth acquiring new signups while losing existing paying subscribers. Manual recovery feels awkward, uncomfortable, and gets pushed to &quot;tomorrow&quot;.
+              </p>
+            </div>
+            <div className="pt-3 border-t border-white/5 text-[11px] font-mono text-emerald-400 flex items-center gap-1.5">
+              <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
+              <span>PRIME prepares the copy. You review and click Approve.</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Real Quote Banner */}
+        <div className="mt-6 p-4 rounded-xl bg-white/[0.03] border border-white/10 flex items-center gap-3 max-w-3xl mx-auto text-left">
+          <Quote className="w-5 h-5 text-emerald-400 shrink-0 rotate-180" />
+          <p className="text-xs text-zinc-300 italic">
+            &quot;Most churn signals arrive as a change of contact, not a drop in usage. Fix the transition before procurement cancels.&quot;
+            <span className="not-italic text-[10px] text-zinc-500 block sm:inline sm:ml-2 font-mono font-bold">— B2B SaaS Benchmark</span>
+          </p>
         </div>
       </section>
 
@@ -550,6 +653,13 @@ export const LandingPage: React.FC<LandingPageProps> = ({
         </div>
       </footer>
 
+      {/* Fallback Inbound Client Contact Modal if parent modal handler is not present */}
+      {!propOnOpenClientContact && (
+        <ClientContactModal
+          isOpen={isContactOpen}
+          onClose={() => setIsContactOpen(false)}
+        />
+      )}
     </div>
   );
 };
