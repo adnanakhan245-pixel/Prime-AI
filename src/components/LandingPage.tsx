@@ -17,7 +17,9 @@ import {
   AlertTriangle,
   UserX,
   TrendingDown,
-  Quote
+  Quote,
+  ChevronDown,
+  HelpCircle
 } from 'lucide-react';
 import { ClientContactModal } from './ClientContactModal';
 
@@ -40,6 +42,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({
 }) => {
   // Client contact modal state (always defined)
   const [isContactOpen, setIsContactOpen] = useState(false);
+
+  // FAQ Accordion State (first item open by default)
+  const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(0);
 
   // Safe client contact opener that satisfies requirements and fallback
   const onOpenClientContact = () => {
@@ -107,24 +112,24 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           PRIME catches card renewals and inactive subscribers before they cancel, then drafts polite recovery messages ready for your 1-click approval.
         </p>
 
-        {/* Hero Action Buttons (Element 7) */}
+        {/* Hero Action Buttons */}
         <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3.5 w-full max-w-xl">
           <button
             type="button"
-            onClick={handleLaunchTour}
-            className="w-full sm:w-auto px-6 py-3.5 bg-gradient-to-r from-emerald-400 via-teal-300 to-emerald-400 hover:brightness-110 text-black font-black text-xs sm:text-sm rounded-xl shadow-[0_0_30px_rgba(16,185,129,0.3)] hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer"
+            onClick={() => onOpenAuth('signup')}
+            className="w-full sm:w-auto px-7 py-3.5 bg-gradient-to-r from-emerald-400 via-teal-300 to-emerald-400 hover:brightness-110 text-black font-black text-xs sm:text-sm rounded-xl shadow-[0_0_30px_rgba(16,185,129,0.35)] hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer"
           >
             <Sparkles className="w-4 h-4 text-black" />
-            <span>Test With Demo Data — No Signup</span>
+            <span>Start Free Trial - $29/mo</span>
           </button>
 
           <button
             type="button"
-            onClick={handleOpenAuditOrTour}
-            className="w-full sm:w-auto px-5 py-3.5 bg-white/5 hover:bg-white/10 text-white font-bold text-xs sm:text-sm rounded-xl border border-white/10 hover:border-white/20 transition-all flex items-center justify-center gap-2 cursor-pointer"
+            onClick={handleLaunchTour}
+            className="w-full sm:w-auto px-6 py-3.5 bg-white/5 hover:bg-white/10 text-white font-bold text-xs sm:text-sm rounded-xl border border-white/15 hover:border-white/30 transition-all flex items-center justify-center gap-2 cursor-pointer hover:scale-105 active:scale-95"
           >
-            <Zap className="w-4 h-4 text-[#FFD700]" />
-            <span>Upload CSV for Free 2-Min Audit</span>
+            <Eye className="w-4 h-4 text-[#FFD700]" />
+            <span>Try Live Demo - No Signup Needed</span>
           </button>
         </div>
 
@@ -180,10 +185,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({
       </header>
 
       {/* ========================================================================= */}
-      {/* 2. THE 3 FRICTION KILLERS (ELEMENT 2) */}
+      {/* 2. THE 4 CORE CAPABILITIES */}
       {/* ========================================================================= */}
       <section className="w-full max-w-5xl mx-auto px-4 py-10 border-t border-white/5">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           
           <div className="p-5 rounded-2xl bg-[#0f0f0f] border border-white/10 space-y-2">
             <div className="w-9 h-9 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
@@ -199,9 +204,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             <div className="w-9 h-9 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400">
               <Lock className="w-4 h-4" />
             </div>
-            <h3 className="font-bold text-white text-sm">2. Read-Only Stripe Security</h3>
+            <h3 className="font-bold text-white text-sm">2. Read-Only Stripe &amp; CSV Security</h3>
             <p className="text-xs text-zinc-400 leading-relaxed">
-              We only read failure event webhooks. Zero write permissions, zero access to sensitive funds.
+              We only read failure event webhooks or CSV files. Zero write permissions, zero access to sensitive funds.
             </p>
           </div>
 
@@ -212,6 +217,16 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             <h3 className="font-bold text-white text-sm">3. 2-Minute Zero-Code Setup</h3>
             <p className="text-xs text-zinc-400 leading-relaxed">
               Connect your billing or drop a CSV file in seconds. No engineering work or code required.
+            </p>
+          </div>
+
+          <div className="p-5 rounded-2xl bg-[#0f0f0f] border border-white/10 space-y-2">
+            <div className="w-9 h-9 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400">
+              <MessageSquare className="w-4 h-4" />
+            </div>
+            <h3 className="font-bold text-white text-sm">4. Multi-Channel 1-Click Recovery</h3>
+            <p className="text-xs text-zinc-400 leading-relaxed">
+              Automated Day 1 email and Day 3 WhatsApp nudges with frictionless 10-second card update links.
             </p>
           </div>
 
@@ -243,7 +258,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                 <UserX className="w-5 h-5" />
               </div>
               <h3 className="font-bold text-white text-base">
-                1. The &quot;Departed Champion&quot;
+                Blindspot A: The &quot;Departed Champion&quot;
               </h3>
               <p className="text-xs text-zinc-400 leading-relaxed">
                 Most churn signals arrive as a <strong className="text-zinc-200">change of contact</strong>, not a sudden drop in product usage. The internal champion who loved your app leaves the company, the new admin logs in once, and procurement cancels at the next renewal.
@@ -262,7 +277,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                 <CreditCard className="w-5 h-5" />
               </div>
               <h3 className="font-bold text-white text-base">
-                2. Involuntary Card Declines
+                Blindspot B: Involuntary Card Declines
               </h3>
               <p className="text-xs text-zinc-400 leading-relaxed">
                 Over <strong className="text-zinc-200">40% of churn is accidental</strong>. Expired cards, fraud false-positives, or bank limits block renewals. Generic automated dunning emails land in spam or look like robotic threats, pushing warm customers away.
@@ -281,7 +296,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                 <TrendingDown className="w-5 h-5" />
               </div>
               <h3 className="font-bold text-white text-base">
-                3. The Leaky Bucket Trap
+                Blindspot C: The Leaky Bucket Trap
               </h3>
               <p className="text-xs text-zinc-400 leading-relaxed">
                 Founders spend 90% of their mental bandwidth acquiring new signups while losing existing paying subscribers. Manual recovery feels awkward, uncomfortable, and gets pushed to &quot;tomorrow&quot;.
@@ -562,6 +577,138 @@ export const LandingPage: React.FC<LandingPageProps> = ({
       </section>
 
       {/* ========================================================================= */}
+      {/* 6.5 SIMPLE PRICING, 10X ROI */}
+      {/* ========================================================================= */}
+      <section className="w-full max-w-5xl mx-auto px-4 py-16 border-t border-white/5 text-center">
+        <div className="space-y-3 mb-12">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-mono font-bold">
+            <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
+            <span>TRANSPARENT VALUE-BASED PRICING</span>
+          </div>
+          <h2 className="text-3xl sm:text-4xl font-black text-white">
+            Simple Pricing, 10x ROI
+          </h2>
+          <p className="text-xs sm:text-sm text-zinc-400 max-w-xl mx-auto">
+            Recover just 1 failed card or saved renewal and your subscription pays for itself immediately.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl mx-auto text-left">
+          
+          {/* Card 1: Starter */}
+          <div className="p-7 rounded-3xl bg-[#0f0f0f] border border-white/10 hover:border-white/20 transition-all flex flex-col justify-between space-y-6">
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-xl font-bold text-white">Starter</h3>
+                  <p className="text-xs text-zinc-400 mt-0.5">For Early-Stage &amp; Indie SaaS</p>
+                </div>
+                <span className="text-[11px] font-mono px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-zinc-300">
+                  Launch Special
+                </span>
+              </div>
+
+              <div className="flex items-baseline gap-1 pt-2">
+                <span className="text-4xl sm:text-5xl font-black text-white font-mono">$29</span>
+                <span className="text-xs text-zinc-400">/ month</span>
+              </div>
+
+              <div className="pt-4 border-t border-white/5 space-y-3 text-xs text-zinc-300">
+                <div className="flex items-center gap-2.5">
+                  <Check className="w-4 h-4 text-emerald-400 shrink-0" />
+                  <span>Up to <strong className="text-white">$10k MRR</strong> Monitored</span>
+                </div>
+                <div className="flex items-center gap-2.5">
+                  <Check className="w-4 h-4 text-emerald-400 shrink-0" />
+                  <span><strong className="text-white">50 AI Recovery Drafts</strong> / month</span>
+                </div>
+                <div className="flex items-center gap-2.5">
+                  <Check className="w-4 h-4 text-emerald-400 shrink-0" />
+                  <span>1-Click Human Approval Queue</span>
+                </div>
+                <div className="flex items-center gap-2.5">
+                  <Check className="w-4 h-4 text-emerald-400 shrink-0" />
+                  <span>CSV Drag &amp; Drop Ingestion (Zero API needed)</span>
+                </div>
+                <div className="flex items-center gap-2.5">
+                  <Check className="w-4 h-4 text-emerald-400 shrink-0" />
+                  <span>Email Support &amp; 24h Auto-Purge Privacy</span>
+                </div>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => onOpenAuth('signup')}
+              className="w-full py-3.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs transition-all border border-white/15 cursor-pointer shadow-md flex items-center justify-center gap-2 active:scale-95"
+            >
+              <span>Start Free Trial</span>
+              <ArrowRight className="w-4 h-4" />
+            </button>
+          </div>
+
+          {/* Card 2: Growth (Most Popular) */}
+          <div className="p-7 rounded-3xl bg-gradient-to-b from-[#16241c] via-[#0e1713] to-[#0A0A0A] border-2 border-emerald-500/50 shadow-[0_0_40px_rgba(16,185,129,0.15)] flex flex-col justify-between space-y-6 relative overflow-hidden">
+            
+            {/* Most Popular Badge */}
+            <div className="absolute top-0 right-0 bg-gradient-to-l from-emerald-400 to-teal-400 text-black text-[10px] font-black font-mono px-3 py-1 rounded-bl-xl uppercase tracking-wider">
+              Most Popular
+            </div>
+
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                    <span>Growth</span>
+                    <Sparkles className="w-4 h-4 text-emerald-400" />
+                  </h3>
+                  <p className="text-xs text-zinc-400 mt-0.5">For Scaling B2B SaaS</p>
+                </div>
+              </div>
+
+              <div className="flex items-baseline gap-1 pt-2">
+                <span className="text-4xl sm:text-5xl font-black text-emerald-400 font-mono">$99</span>
+                <span className="text-xs text-zinc-400">/ month</span>
+              </div>
+
+              <div className="pt-4 border-t border-white/5 space-y-3 text-xs text-zinc-300">
+                <div className="flex items-center gap-2.5">
+                  <Check className="w-4 h-4 text-emerald-400 shrink-0" />
+                  <span>Up to <strong className="text-white">$50k MRR</strong> Monitored</span>
+                </div>
+                <div className="flex items-center gap-2.5">
+                  <Check className="w-4 h-4 text-emerald-400 shrink-0" />
+                  <span><strong className="text-white">Unlimited</strong> AI Recovery Drafts</span>
+                </div>
+                <div className="flex items-center gap-2.5">
+                  <Check className="w-4 h-4 text-emerald-400 shrink-0" />
+                  <span><strong className="text-white">WhatsApp Recovery</strong> &amp; Polite Email Sequences</span>
+                </div>
+                <div className="flex items-center gap-2.5">
+                  <Check className="w-4 h-4 text-emerald-400 shrink-0" />
+                  <span>Departed Champion Transition Detection</span>
+                </div>
+                <div className="flex items-center gap-2.5">
+                  <Check className="w-4 h-4 text-emerald-400 shrink-0" />
+                  <span>Priority Support &amp; Custom Gateway Relay</span>
+                </div>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => onOpenAuth('signup')}
+              className="w-full py-3.5 rounded-xl bg-gradient-to-r from-emerald-400 via-teal-300 to-emerald-400 hover:brightness-110 text-black font-black text-xs transition-all shadow-lg shadow-emerald-500/20 cursor-pointer flex items-center justify-center gap-2 active:scale-95"
+            >
+              <span>Start Free Trial</span>
+              <ArrowRight className="w-4 h-4 text-black" />
+            </button>
+          </div>
+
+        </div>
+      </section>
+
+      {/* ========================================================================= */}
       {/* 7. STRICT HUMAN-IN-THE-LOOP PROMISE & FRICTIONLESS CTA (ELEMENT 7) */}
       {/* ========================================================================= */}
       <section className="w-full max-w-4xl mx-auto px-4 py-12">
@@ -584,20 +731,20 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
             <button
               type="button"
-              onClick={handleLaunchTour}
+              onClick={() => onOpenAuth('signup')}
               className="w-full sm:w-auto px-7 py-3.5 bg-gradient-to-r from-emerald-400 to-teal-400 hover:brightness-110 text-black font-extrabold text-xs sm:text-sm rounded-xl shadow-lg transition-all hover:scale-105 active:scale-95 cursor-pointer flex items-center justify-center gap-2"
             >
               <Sparkles className="w-4 h-4 text-black" />
-              <span>Launch Interactive Tour — No Signup</span>
+              <span>Start Free Trial - $29/mo</span>
             </button>
 
             <button
               type="button"
-              onClick={handleOpenAuditOrTour}
-              className="w-full sm:w-auto px-6 py-3.5 bg-white/5 hover:bg-white/10 text-white font-bold text-xs sm:text-sm rounded-xl border border-white/15 transition-all flex items-center justify-center gap-2 cursor-pointer"
+              onClick={handleLaunchTour}
+              className="w-full sm:w-auto px-6 py-3.5 bg-white/5 hover:bg-white/10 text-white font-bold text-xs sm:text-sm rounded-xl border border-white/15 transition-all flex items-center justify-center gap-2 cursor-pointer hover:scale-105 active:scale-95"
             >
-              <Zap className="w-4 h-4 text-[#FFD700]" />
-              <span>Free 2-Minute Churn Audit</span>
+              <Eye className="w-4 h-4 text-[#FFD700]" />
+              <span>Try Live Demo - No Signup Needed</span>
             </button>
           </div>
 
@@ -605,51 +752,146 @@ export const LandingPage: React.FC<LandingPageProps> = ({
       </section>
 
       {/* ========================================================================= */}
-      {/* CLEAN FOOTER */}
+      {/* 8. FREQUENTLY ASKED QUESTIONS (FAQ) */}
       {/* ========================================================================= */}
-      <footer className="w-full border-t border-white/5 py-8 text-center text-xs text-zinc-500">
-        <div className="max-w-5xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded-lg bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400 font-black text-xs">
-              P
+      <section className="w-full max-w-3xl mx-auto px-4 py-16 border-t border-white/5">
+        <div className="text-center space-y-3 mb-10">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-zinc-400 text-xs font-mono font-bold">
+            <HelpCircle className="w-3.5 h-3.5 text-emerald-400" />
+            <span>COMMON QUESTIONS</span>
+          </div>
+          <h2 className="text-2xl sm:text-3xl font-black text-white">
+            Frequently Asked Questions
+          </h2>
+          <p className="text-xs text-zinc-400">
+            Clear answers on security, founder control, and data protection.
+          </p>
+        </div>
+
+        <div className="space-y-3">
+          {[
+            {
+              q: "کیا یہ خودبخود گاہکوں کے پیسے کاٹے گا یا کوئی ایکشن لے گا؟ (Will it take automatic rogue actions?)",
+              a: "بالکل نہیں! PRIME AI سختی سے 100% 'Human-in-the-Loop' اصول پر کام کرتا ہے۔ یہ کبھی بھی آپ کی اجازت کے بغیر کوئی ای میل نہیں بھیجے گا اور نہ ہی کسی کارڈ کو چارج کرے گا۔ ہر ریکوری میسج ڈرافٹ ہو کر آپ کے سامنے ڈیش بورڈ میں آئے گا، اور صرف آپ کے 1-Click اپروول کے بعد ہی سینڈ ہوگا۔"
+            },
+            {
+              q: "کیا یہ میرے کسٹمرز کو اسپیم کرے گا؟ (Will it spam customers or harm my brand?)",
+              a: "ہرگز نہیں! روایتی ٹولز کی سب سے بڑی خامی یہی ہوتی ہے کہ وہ دھمکی آمیز اور روبوٹک ای میلز بھیج کر کلائنٹس کو ناراض کر دیتے ہیں۔ PRIME AI انتہائی نرم، احترام والے اور ہمدردانہ Day 1 اور Day 3 میسجز تیار کرتا ہے جن میں 10 سیکنڈ کا کارڈ اپ ڈیٹ لنک ہوتا ہے، تاکہ آپ کے برانڈ کی عزت برقرار رہے اور کسٹمر خوشی سے ادائیگی کرے۔"
+            },
+            {
+              q: "کیا میرا سٹرائپ (Stripe) اور کسٹمر ڈیٹا محفوظ ہے؟ (Is Stripe and client data secure?)",
+              a: "سو فیصد محفوظ اور بینک گریڈ! PRIME AI کو آپ کے بینک یا سٹرائپ میں کسی 'Write' پرمیشن یا پاسورڈ کی ضرورت نہیں ہے۔ حتیٰ کہ آپ کو سٹرائپ جوڑنے کی بھی ضرورت نہیں ہے — آپ صرف فیلڈ انوائسز کی CSV فائل ڈراپ کر سکتے ہیں۔ تمام اپلوڈ شدہ ڈیٹا 24 گھنٹے بعد خود بخود تلف (Auto-Purged) ہو جاتا ہے۔"
+            },
+            {
+              q: "میں جب چاہوں کینسل کیسے کر سکتا ہوں؟ (How does cancellation work?)",
+              a: "کسی بھی وقت، صرف ایک کلک سے! کوئی طویل مدتی لاک ان یا پوشیدہ فیسیں نہیں ہیں۔ آپ اپنے ڈیش بورڈ کے سیٹنگز پینل سے جب چاہیں ایک سیکنڈ میں اپنی سبسکرپشن کینسل کر سکتے ہیں۔"
+            }
+          ].map((faq, idx) => {
+            const isOpen = openFaqIndex === idx;
+            return (
+              <div 
+                key={idx}
+                className="rounded-2xl bg-[#0f0f0f] border border-white/10 overflow-hidden transition-all hover:border-white/20"
+              >
+                <button
+                  type="button"
+                  onClick={() => setOpenFaqIndex(isOpen ? null : idx)}
+                  className="w-full p-5 text-left flex items-center justify-between gap-4 cursor-pointer"
+                >
+                  <span className="font-bold text-white text-xs sm:text-sm">
+                    {faq.q}
+                  </span>
+                  <ChevronDown className={`w-4 h-4 text-zinc-400 shrink-0 transition-transform duration-200 ${isOpen ? 'rotate-180 text-emerald-400' : ''}`} />
+                </button>
+                {isOpen && (
+                  <div className="px-5 pb-5 pt-1 text-xs text-zinc-300 leading-relaxed border-t border-white/5 font-sans">
+                    {faq.a}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </section>
+
+      {/* ========================================================================= */}
+      {/* 9. COMPLETE PRODUCTION FOOTER */}
+      {/* ========================================================================= */}
+      <footer className="w-full border-t border-white/10 bg-[#060606] pt-12 pb-10 text-xs text-zinc-500">
+        <div className="max-w-5xl mx-auto px-4 space-y-8">
+          
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-6 pb-8 border-b border-white/5">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center text-black font-black text-sm shadow-md">
+                P
+              </div>
+              <div className="text-left">
+                <span className="font-black text-white tracking-tight text-sm block">PRIME AI</span>
+                <span className="text-[11px] text-zinc-400 font-mono block">Zero-Friction B2B Churn &amp; Revenue Defense</span>
+              </div>
             </div>
-            <span className="font-bold text-white tracking-tight">PRIME AI</span>
-            <span className="text-[11px] text-zinc-600 font-mono">• Human-in-the-Loop Retention</span>
+
+            <div className="flex flex-wrap items-center justify-center gap-5 text-xs text-zinc-400">
+              <button 
+                type="button" 
+                onClick={() => onOpenAuth('signup')} 
+                className="hover:text-emerald-400 transition-colors font-medium cursor-pointer"
+              >
+                Pricing ($29/mo)
+              </button>
+              <span>•</span>
+              <button 
+                type="button" 
+                onClick={handleLaunchTour} 
+                className="hover:text-white transition-colors cursor-pointer"
+              >
+                Live Product Tour
+              </button>
+              {onOpenLegal && (
+                <>
+                  <span>•</span>
+                  <button 
+                    type="button" 
+                    onClick={() => onOpenLegal('privacy')}
+                    className="hover:text-white transition-colors cursor-pointer"
+                  >
+                    Privacy Policy
+                  </button>
+                  <span>•</span>
+                  <button 
+                    type="button" 
+                    onClick={() => onOpenLegal('terms')}
+                    className="hover:text-white transition-colors cursor-pointer"
+                  >
+                    Terms of Service
+                  </button>
+                </>
+              )}
+              {onOpenClientContact && (
+                <>
+                  <span>•</span>
+                  <button 
+                    type="button" 
+                    onClick={onOpenClientContact}
+                    className="hover:text-emerald-400 transition-colors cursor-pointer font-bold"
+                  >
+                    Contact Support
+                  </button>
+                </>
+              )}
+            </div>
           </div>
 
-          <div className="flex items-center gap-4 text-[11px] text-zinc-400">
-            {onOpenLegal && (
-              <>
-                <button 
-                  type="button" 
-                  onClick={() => onOpenLegal('privacy')}
-                  className="hover:text-white transition-colors cursor-pointer"
-                >
-                  Privacy Policy
-                </button>
-                <span>•</span>
-                <button 
-                  type="button" 
-                  onClick={() => onOpenLegal('terms')}
-                  className="hover:text-white transition-colors cursor-pointer"
-                >
-                  Terms of Service
-                </button>
-              </>
-            )}
-            {onOpenClientContact && (
-              <>
-                <span>•</span>
-                <button 
-                  type="button" 
-                  onClick={onOpenClientContact}
-                  className="hover:text-emerald-400 transition-colors cursor-pointer font-medium"
-                >
-                  Contact Support
-                </button>
-              </>
-            )}
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-[11px] text-zinc-500">
+            <div className="flex items-center gap-2">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              <span>Bank-Grade 256-bit Encryption • 24h Auto-Purge Privacy • 100% Human Approval</span>
+            </div>
+            <div>
+              &copy; 2026 PRIME AI. All rights reserved. Built for B2B SaaS Founders.
+            </div>
           </div>
+
         </div>
       </footer>
 
