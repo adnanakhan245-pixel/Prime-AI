@@ -771,20 +771,20 @@ export const LandingPage: React.FC<LandingPageProps> = ({
         <div className="space-y-3">
           {[
             {
-              q: "کیا یہ خودبخود گاہکوں کے پیسے کاٹے گا یا کوئی ایکشن لے گا؟ (Will it take automatic rogue actions?)",
-              a: "بالکل نہیں! PRIME AI سختی سے 100% 'Human-in-the-Loop' اصول پر کام کرتا ہے۔ یہ کبھی بھی آپ کی اجازت کے بغیر کوئی ای میل نہیں بھیجے گا اور نہ ہی کسی کارڈ کو چارج کرے گا۔ ہر ریکوری میسج ڈرافٹ ہو کر آپ کے سامنے ڈیش بورڈ میں آئے گا، اور صرف آپ کے 1-Click اپروول کے بعد ہی سینڈ ہوگا۔"
+              q: "Will PRIME AI take automatic actions or charge cards without my permission?",
+              a: "Never. PRIME AI operates strictly under a 100% 'Human-in-the-Loop' architecture. The system only drafts empathetic recovery emails and WhatsApp notices with secure 10-second payment links. Zero emails are dispatched and zero cards are charged without your explicit 1-click review and sign-off in your dashboard queue."
             },
             {
-              q: "کیا یہ میرے کسٹمرز کو اسپیم کرے گا؟ (Will it spam customers or harm my brand?)",
-              a: "ہرگز نہیں! روایتی ٹولز کی سب سے بڑی خامی یہی ہوتی ہے کہ وہ دھمکی آمیز اور روبوٹک ای میلز بھیج کر کلائنٹس کو ناراض کر دیتے ہیں۔ PRIME AI انتہائی نرم، احترام والے اور ہمدردانہ Day 1 اور Day 3 میسجز تیار کرتا ہے جن میں 10 سیکنڈ کا کارڈ اپ ڈیٹ لنک ہوتا ہے، تاکہ آپ کے برانڈ کی عزت برقرار رہے اور کسٹمر خوشی سے ادائیگی کرے۔"
+              q: "Will it spam my customers or hurt my company's brand reputation?",
+              a: "Absolutely not. Traditional dunning tools fail because they blast cold, threatening, robotic notices that frustrate customers into cancelling. PRIME drafts polite, respectful Day 1 and Day 3 notes tailored to corporate card updates. It protects your brand dignity and preserves valuable customer relationships."
             },
             {
-              q: "کیا میرا سٹرائپ (Stripe) اور کسٹمر ڈیٹا محفوظ ہے؟ (Is Stripe and client data secure?)",
-              a: "سو فیصد محفوظ اور بینک گریڈ! PRIME AI کو آپ کے بینک یا سٹرائپ میں کسی 'Write' پرمیشن یا پاسورڈ کی ضرورت نہیں ہے۔ حتیٰ کہ آپ کو سٹرائپ جوڑنے کی بھی ضرورت نہیں ہے — آپ صرف فیلڈ انوائسز کی CSV فائل ڈراپ کر سکتے ہیں۔ تمام اپلوڈ شدہ ڈیٹا 24 گھنٹے بعد خود بخود تلف (Auto-Purged) ہو جاتا ہے۔"
+              q: "Is my Stripe integration and customer data completely secure?",
+              a: "100% bank-grade security. PRIME operates on read-only event webhooks—we have zero write access to your funds or bank accounts. Furthermore, connecting Stripe is entirely optional: you can simply drag and drop your failed charges CSV file. All uploaded records are protected by our strict 24-hour auto-purge privacy guarantee."
             },
             {
-              q: "میں جب چاہوں کینسل کیسے کر سکتا ہوں؟ (How does cancellation work?)",
-              a: "کسی بھی وقت، صرف ایک کلک سے! کوئی طویل مدتی لاک ان یا پوشیدہ فیسیں نہیں ہیں۔ آپ اپنے ڈیش بورڈ کے سیٹنگز پینل سے جب چاہیں ایک سیکنڈ میں اپنی سبسکرپشن کینسل کر سکتے ہیں۔"
+              q: "How does cancellation work if I change my mind?",
+              a: "Instantly in 1 click at any time. There are no lock-in contracts, no termination penalties, and no cancellation fees. You can cancel your subscription directly from your settings panel whenever you want without having to talk to sales."
             }
           ].map((faq, idx) => {
             const isOpen = openFaqIndex === idx;
